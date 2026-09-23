@@ -67,6 +67,15 @@ export const authApi = {
     return data;
   },
 
+  async googleAuth(idToken: string): Promise<AuthResponse> {
+    const data = await request<AuthResponse>('/api/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ idToken }),
+    });
+    setStoredToken(data.token);
+    return data;
+  },
+
   async getMe(): Promise<User> {
     const data = await request<{ user: User }>('/api/auth/me', {
       method: 'GET',

@@ -72,3 +72,9 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+export const googleAuthSchema = z.object({
+  idToken: z.string().min(1, 'ID Token is required'),
+});
+
+export type GoogleAuthInput = z.infer<typeof googleAuthSchema>;

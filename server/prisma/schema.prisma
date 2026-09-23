@@ -47,11 +47,13 @@ enum TransactionType {
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
-  passwordHash String
+  passwordHash String?
+  googleId     String?  @unique
   name         String
   role         Role     @default(BUYER)
   bio          String?
   avatarUrl    String?
+  isVerified   Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
