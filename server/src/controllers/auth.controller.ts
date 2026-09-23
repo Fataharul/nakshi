@@ -6,6 +6,7 @@ import {
   updateProfileSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  googleAuthSchema,
 } from '../utils/validation';
 
 export class AuthController {
@@ -23,6 +24,16 @@ export class AuthController {
     try {
       const validatedData = loginSchema.parse(req.body);
       const result = await AuthService.login(validatedData);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public static async google(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const validatedData = googleAuthSchema.parse(req.body);
+      const result = await AuthService.googleAuth(validatedData.idToken);
       res.status(200).json(result);
     } catch (error) {
       next(error);

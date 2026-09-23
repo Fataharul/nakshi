@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../services/auth.service';
 import { ArrowRight, AlertCircle, Sparkles, KeyRound, X, CheckCircle } from 'lucide-react';
+import { GoogleLoginButton } from '../components/GoogleLoginButton';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -176,11 +177,10 @@ export const LoginPage: React.FC = () => {
                   if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: '' }));
                 }}
                 placeholder="name@example.com"
-                className={`w-full bg-surface-container-low border-b-2 px-4 py-3 text-sm text-on-surface transition-colors outline-none rounded-t ${
-                  fieldErrors.email
+                className={`w-full bg-surface-container-low border-b-2 px-4 py-3 text-sm text-on-surface transition-colors outline-none rounded-t ${fieldErrors.email
                     ? 'border-error bg-error-container/10 focus:border-error'
                     : 'border-surface-container-highest focus:border-primary'
-                }`}
+                  }`}
                 required
               />
               {fieldErrors.email && (
@@ -224,11 +224,10 @@ export const LoginPage: React.FC = () => {
                   if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: '' }));
                 }}
                 placeholder="••••••••"
-                className={`w-full bg-surface-container-low border-b-2 px-4 py-3 text-sm text-on-surface transition-colors outline-none rounded-t ${
-                  fieldErrors.password
+                className={`w-full bg-surface-container-low border-b-2 px-4 py-3 text-sm text-on-surface transition-colors outline-none rounded-t ${fieldErrors.password
                     ? 'border-error bg-error-container/10 focus:border-error'
                     : 'border-surface-container-highest focus:border-primary'
-                }`}
+                  }`}
                 required
               />
               {fieldErrors.password && (
@@ -257,6 +256,17 @@ export const LoginPage: React.FC = () => {
                 )}
               </button>
             </div>
+
+            <div className="relative mt-6 pt-2">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-surface-container-highest"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-surface-container-lowest px-2 text-on-surface-variant uppercase tracking-wider font-semibold">Or continue with</span>
+              </div>
+            </div>
+
+            <GoogleLoginButton setError={setError} setIsSubmitting={setIsSubmitting} />
           </form>
 
           {/* Quick Demo Selector */}
