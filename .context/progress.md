@@ -35,5 +35,16 @@
   - `npm run build` succeeds cleanly for both `server` and `client`.
   - All 21 Vitest backend unit & acceptance tests pass against live Supabase PostgreSQL database.
   - All 21 Playwright tests pass across `Desktop Chrome`, `Mobile 360px`, and `Tablet 768px` viewports.
+## [2026-09-24 14:18:00 +06:00] Milestone: Artwork Validation & Perceptual Similarity Engine Implemented
+- **Completed**:
+  - Implemented 64-bit dHash perceptual hashing and bitwise Hamming distance math in [`server/src/utils/similarity.util.ts`](file:///E:/Nakshi/server/src/utils/similarity.util.ts) using Sharp libvips.
+  - Implemented Zod validation schemas in [`server/src/utils/artwork.validation.ts`](file:///E:/Nakshi/server/src/utils/artwork.validation.ts) with Bangladeshi heritage craft mediums and credit price constraints.
+  - Defined shared frontend/backend data contracts in [`client/src/types/artwork.ts`](file:///E:/Nakshi/client/src/types/artwork.ts).
+  - Ensured reliable database connection initialization in [`server/src/config/prisma.ts`](file:///E:/Nakshi/server/src/config/prisma.ts) with `dotenv`.
+  - Added unit test suite [`server/tests/unit/similarity.test.ts`](file:///E:/Nakshi/server/tests/unit/similarity.test.ts) testing hash generation, distance math, and >80% threshold evaluation.
+- **Verified**:
+  - All 26 server unit and acceptance tests passed (`vitest run`).
+  - Both client and server production builds succeeded without errors.
 - **Next Steps**:
-  - Milestone 2: Internal credit-based transaction system & wallet top-up.
+  - Implement Artwork Service, Worker Queue, and API routes (`POST /api/artworks`, `GET /api/artworks/my-artworks`, `GET /api/artworks/storefront/:artistId`).
+  - Build the artist management UI components and public storefront page.
