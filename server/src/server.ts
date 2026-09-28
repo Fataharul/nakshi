@@ -5,6 +5,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import dotenv from 'dotenv';
 
 import authRoutes from './routes/auth.routes';
+import sellerRoutes from './routes/seller.routes';
 import { errorHandler } from './middleware/error.middleware';
 
 dotenv.config();
@@ -30,6 +31,9 @@ app.get('/api/health', (req, res) => {
 
 // Authentication & RBAC Routes
 app.use('/api/auth', authRoutes);
+
+// Seller Sales Metrics & Analytics Routes
+app.use('/api/seller', sellerRoutes);
 
 // Centralized error handling
 app.use(errorHandler);

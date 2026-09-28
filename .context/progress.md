@@ -61,5 +61,23 @@
   - Server TypeScript compilation passed cleanly (`npm run build`).
   - Client production build succeeded cleanly (`npm run build`).
 - **Next Steps**:
-  - Implement Artwork Service, Worker Queue, and API routes (`POST /api/artworks`, `GET /api/artworks/my-artworks`, `GET /api/artworks/storefront/:artistId`).
-  - Build the artist management UI components and public storefront page.
+  - Implement async queue worker for Sharp dHash duplicate detection.
+  - Implement buyer purchase, credit transaction, and commission distribution logic.
+
+## [2026-09-29 03:25:00 +06:00] Milestone: Ticket T-034 (Seller Sales Performance Metrics & Analytics) Implemented & Verified
+- **Completed**:
+  - Backend Analytics API:
+    - Created `server/src/services/seller.service.ts` aggregating seller sales metrics (total revenue, total completed orders, average order value, active listings, pending artworks, sold artworks, and recent sales log).
+    - Created `server/src/controllers/seller.controller.ts` and `server/src/routes/seller.routes.ts` protecting `GET /api/seller/metrics` with `authenticateJWT` and `requireRoles(Role.ARTIST, Role.ADMIN)` middleware.
+    - Registered `/api/seller` router in `server/src/server.ts`.
+  - Frontend Dashboard Integration & Types:
+    - Created `client/src/types/seller.ts` defining data contracts for seller metrics and sales objects.
+    - Created `client/src/services/seller.service.ts` with `sellerApi.getMetrics()`.
+    - Created `client/src/components/dashboard/SellerMetricsView.tsx` rendering KPI cards and recent completed customer sales tables adhering to `DESIGN.md`.
+    - Embedded `SellerMetricsView` into `client/src/pages/DashboardPage.tsx` for authenticated `ARTIST` role users.
+  - Testing & Verification:
+    - Added unit test suite `server/tests/unit/seller.service.test.ts` testing metric calculations and error handling.
+    - Added integration acceptance test suite `server/tests/acceptance/seller.test.ts` verifying 401 Unauthorized, 403 Forbidden (for BUYER role), and 200 OK responses with accurate sales revenue calculations.
+- **Verified**:
+  - All 38 Vitest server unit and acceptance tests passed (`vitest run`).
+  - Both client and server TypeScript builds compiled with 0 errors (`npm run build`).
