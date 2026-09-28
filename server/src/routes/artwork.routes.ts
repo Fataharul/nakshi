@@ -1,0 +1,16 @@
+import { Router } from 'express';
+import { Role } from '@prisma/client';
+import { ArtworkController } from '../controllers/artwork.controller';
+import { authenticateJWT, requireRoles } from '../middleware/auth.middleware';
+
+const router = Router();
+
+// Protected Artist routes (require authentication + ARTIST role)
+router.post('/', authenticateJWT, requireRoles(Role.ARTIST), ArtworkController.create);
+router.get('/my-artworks', authenticateJWT, requireRoles(Role.ARTIST), ArtworkController.getMyArtworks);
+
+// Public / general artwork routes
+router.get('/storefront/:artistId', ArtworkController.getStorefront);
+router.get('/:id', ArtworkController.getById);
+
+export default router;

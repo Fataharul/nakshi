@@ -61,5 +61,26 @@
   - Server TypeScript compilation passed cleanly (`npm run build`).
   - Client production build succeeded cleanly (`npm run build`).
 - **Next Steps**:
-  - Implement Artwork Service, Worker Queue, and API routes (`POST /api/artworks`, `GET /api/artworks/my-artworks`, `GET /api/artworks/storefront/:artistId`).
-  - Build the artist management UI components and public storefront page.
+  - Implement async queue worker for Sharp dHash duplicate detection.
+  - Implement buyer purchase, credit transaction, and commission distribution logic.
+
+## [2026-09-29 02:40:00 +06:00] Milestone: Ticket T-026 (Artwork Creation & Storefront Functionality) Implemented & Verified
+- **Completed**:
+  - Backend artwork service & routes:
+    - Built `server/src/services/artwork.service.ts` supporting `createArtwork`, `getArtistArtworks`, `getArtworkById`, and `getArtistStorefront`.
+    - Created `server/src/controllers/artwork.controller.ts` with strict Zod validation and safe Express parameter handling.
+    - Protected `POST /api/artworks` route with `authenticateJWT` and `requireRoles(Role.ARTIST)` middleware in `server/src/routes/artwork.routes.ts`.
+    - Registered `/api/artworks` router in `server/src/server.ts`.
+  - Frontend artist storefront & creation form:
+    - Created `client/src/services/artwork.service.ts` supporting artwork publishing and storefront fetching.
+    - Built accessible `client/src/components/marketplace/CreateArtworkModal.tsx` modal component featuring heritage craft medium selection (`CRAFT_MEDIUMS`), credit pricing inputs, and field-level inline error validation.
+    - Updated `client/src/pages/DashboardPage.tsx` to render the artist's storefront summary, artwork inventory grid, and artwork publishing trigger button (`#add-artwork-btn`).
+  - Automated testing:
+    - Added unit test suite `server/tests/unit/artwork.service.test.ts` (5 tests passing).
+    - Added acceptance test suite `server/tests/acceptance/artwork.test.ts` (6 tests passing).
+    - Added E2E Playwright test suite `e2e/08_create_artwork.spec.ts` testing registration, artwork publishing, grid rendering, and form validation across viewports.
+- **Verified**:
+  - All 43 Vitest server unit and acceptance tests passed (`vitest run`).
+  - All 6 Playwright E2E tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px (`npx playwright test e2e/08_create_artwork.spec.ts`).
+  - Both client and server TypeScript builds compiled with 0 errors (`npm run build`).
+
