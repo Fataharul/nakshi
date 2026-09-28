@@ -32,6 +32,11 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
   const [description, setDescription] = useState('');
   const [medium, setMedium] = useState<string>('Nakshi Kantha');
   const [dimensions, setDimensions] = useState('');
+  const [height, setHeight] = useState('');
+  const [width, setWidth] = useState('');
+  const [depth, setDepth] = useState('');
+  const [weight, setWeight] = useState('');
+  const [weightUnit, setWeightUnit] = useState('kg');
   const [price, setPrice] = useState<string>('');
   const [imageUrl, setImageUrl] = useState('');
 
@@ -67,6 +72,26 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
       errors.price = 'Price must be greater than zero credits.';
     }
 
+    const numericWeight = weight.trim() ? parseFloat(weight) : undefined;
+    if (weight.trim() && (isNaN(numericWeight!) || numericWeight! <= 0)) {
+      errors.weight = 'Weight must be a positive number.';
+    }
+
+    const numericHeight = height.trim() ? parseFloat(height) : undefined;
+    if (height.trim() && (isNaN(numericHeight!) || numericHeight! <= 0)) {
+      errors.height = 'Height must be a positive number.';
+    }
+
+    const numericWidth = width.trim() ? parseFloat(width) : undefined;
+    if (width.trim() && (isNaN(numericWidth!) || numericWidth! <= 0)) {
+      errors.width = 'Width must be a positive number.';
+    }
+
+    const numericDepth = depth.trim() ? parseFloat(depth) : undefined;
+    if (depth.trim() && (isNaN(numericDepth!) || numericDepth! <= 0)) {
+      errors.depth = 'Depth must be a positive number.';
+    }
+
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       setError('Please correct the highlighted form errors.');
@@ -75,11 +100,21 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
 
     setIsSubmitting(true);
     try {
+      let finalDimensions = dimensions.trim();
+      if (!finalDimensions && numericHeight && numericWidth) {
+        finalDimensions = `${numericHeight} x ${numericWidth}${numericDepth ? ` x ${numericDepth}` : ''} cm`;
+      }
+
       const payload: CreateArtworkPayload = {
         title: title.trim(),
         description: description.trim(),
         medium: medium.trim(),
-        dimensions: dimensions.trim() || undefined,
+        dimensions: finalDimensions || undefined,
+        height: numericHeight,
+        width: numericWidth,
+        depth: numericDepth,
+        weight: numericWeight,
+        weightUnit: weightUnit.trim() || 'kg',
         price: numericPrice,
         imageUrl: imageUrl.trim() || undefined,
         availability: 'AVAILABLE',
@@ -94,6 +129,11 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
         setDescription('');
         setMedium('Nakshi Kantha');
         setDimensions('');
+        setHeight('');
+        setWidth('');
+        setDepth('');
+        setWeight('');
+        setWeightUnit('kg');
         setPrice('');
         setImageUrl('');
         setError(null);
@@ -226,18 +266,133 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
             </div>
           </div>
 
-          {/* Grid: Dimensions & Image URL */}
+          {/* Grid: Weight & Weight Unit */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2">
+              <label htmlFor="artwork-weight-input" className="block text-xs uppercase tracking-wider font-semibold text-on-surface-variant mb-1">
+                Weight <span className="text-[11px] font-normal lowercase">(optional)</span>
+              </label>
+              <input
+                id="artwork-weight-input"
+                type="number"
+                step="0.01"
+                min="0"
+                value={weight}
+                onChange={(e) => {
+                  setWeight(e.target.value);
+                  if (fieldErrors.weight) setFieldErrors((prev) => ({ ...prev, weight: '' }));
+                }}
+                placeholder="e.g. 2.50"
+                className="w-full bg-surface-container-low border border-outline/30 rounded px-3.5 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
+              />
+              {fieldErrors.weight && (
+                <p id="weight-field-error" className="text-error text-xs mt-1 font-medium">
+                  {fieldErrors.weight}
+                </p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="artwork-weight-unit-select" className="block text-xs uppercase tracking-wider font-semibold text-on-surface-variant mb-1">
+                Unit
+              </label>
+              <select
+                id="artwork-weight-unit-select"
+                value={weightUnit}
+                onChange={(e) => setWeightUnit(e.target.value)}
+                className="w-full bg-surface-container-low border border-outline/30 rounded px-3 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
+              >
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="lbs">lbs</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Grid: Height, Width, Depth (Numeric Dimensions) */}
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label htmlFor="artwork-height-input" className="block text-xs uppercase tracking-wider font-semibold text-on-surface-variant mb-1">
+                Height (cm)
+              </label>
+              <input
+                id="artwork-height-input"
+                type="number"
+                step="0.1"
+                min="0"
+                value={height}
+                onChange={(e) => {
+                  setHeight(e.target.value);
+                  if (fieldErrors.height) setFieldErrors((prev) => ({ ...prev, height: '' }));
+                }}
+                placeholder="e.g. 60"
+                className="w-full bg-surface-container-low border border-outline/30 rounded px-3.5 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
+              />
+              {fieldErrors.height && (
+                <p id="height-field-error" className="text-error text-xs mt-1 font-medium">
+                  {fieldErrors.height}
+                </p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="artwork-width-input" className="block text-xs uppercase tracking-wider font-semibold text-on-surface-variant mb-1">
+                Width (cm)
+              </label>
+              <input
+                id="artwork-width-input"
+                type="number"
+                step="0.1"
+                min="0"
+                value={width}
+                onChange={(e) => {
+                  setWidth(e.target.value);
+                  if (fieldErrors.width) setFieldErrors((prev) => ({ ...prev, width: '' }));
+                }}
+                placeholder="e.g. 40"
+                className="w-full bg-surface-container-low border border-outline/30 rounded px-3.5 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
+              />
+              {fieldErrors.width && (
+                <p id="width-field-error" className="text-error text-xs mt-1 font-medium">
+                  {fieldErrors.width}
+                </p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="artwork-depth-input" className="block text-xs uppercase tracking-wider font-semibold text-on-surface-variant mb-1">
+                Depth (cm)
+              </label>
+              <input
+                id="artwork-depth-input"
+                type="number"
+                step="0.1"
+                min="0"
+                value={depth}
+                onChange={(e) => {
+                  setDepth(e.target.value);
+                  if (fieldErrors.depth) setFieldErrors((prev) => ({ ...prev, depth: '' }));
+                }}
+                placeholder="e.g. 5"
+                className="w-full bg-surface-container-low border border-outline/30 rounded px-3.5 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
+              />
+              {fieldErrors.depth && (
+                <p id="depth-field-error" className="text-error text-xs mt-1 font-medium">
+                  {fieldErrors.depth}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Grid: Dimensions String & Image URL */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="artwork-dimensions-input" className="block text-xs uppercase tracking-wider font-semibold text-on-surface-variant mb-1">
-                Dimensions / Size <span className="text-[11px] font-normal lowercase">(optional)</span>
+                Formatted Size <span className="text-[11px] font-normal lowercase">(optional text)</span>
               </label>
               <input
                 id="artwork-dimensions-input"
                 type="text"
                 value={dimensions}
                 onChange={(e) => setDimensions(e.target.value)}
-                placeholder="e.g. 48 x 36 inches"
+                placeholder="e.g. 60 x 40 x 5 cm"
                 className="w-full bg-surface-container-low border border-outline/30 rounded px-3.5 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
               />
             </div>

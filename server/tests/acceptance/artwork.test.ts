@@ -100,7 +100,7 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
       expect(data.error).toBe('Validation failed');
     });
 
-    it('successfully creates a new artwork record when executed by ARTIST', async () => {
+    it('successfully creates a new artwork record with weight and dimensions when executed by ARTIST', async () => {
       const res = await fetch(`${baseUrl}/api/artworks`, {
         method: 'POST',
         headers: {
@@ -112,6 +112,11 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
           description: 'Authentic 200-count cotton & gold thread handloom Jamdani woven in Narayanganj.',
           medium: 'Handloom Jamdani',
           dimensions: '5.5 meters x 1.2 meters',
+          height: 550,
+          width: 120,
+          depth: 0.5,
+          weight: 1.25,
+          weightUnit: 'kg',
           price: 850.0,
           imageUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119',
           availability: 'AVAILABLE',
@@ -124,6 +129,12 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
       expect(data.artwork.id).toBeDefined();
       expect(data.artwork.title).toBe('Sonargaon Heritage Jamdani Saree');
       expect(data.artwork.price).toBe(850);
+      expect(data.artwork.weight).toBe(1.25);
+      expect(data.artwork.weightUnit).toBe('kg');
+      expect(data.artwork.height).toBe(550);
+      expect(data.artwork.width).toBe(120);
+      expect(data.artwork.depth).toBe(0.5);
+      expect(data.artwork.dimensions).toBe('5.5 meters x 1.2 meters');
       expect(data.artwork.availability).toBe('AVAILABLE');
       expect(data.artwork.moderationStatus).toBe('APPROVED');
       expect(data.artwork.artist).toBeDefined();

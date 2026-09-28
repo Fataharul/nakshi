@@ -181,9 +181,15 @@ export const DashboardPage: React.FC = () => {
                           <h3 className="font-serif text-base font-bold text-on-surface mb-1 line-clamp-1">
                             {artwork.title}
                           </h3>
-                          <p className="text-xs text-on-surface-variant line-clamp-2 mb-3">
+                          <p className="text-xs text-on-surface-variant line-clamp-2 mb-2">
                             {artwork.description}
                           </p>
+                          {(artwork.dimensions || artwork.weight) && (
+                            <div className="text-[11px] text-on-surface-variant/80 mb-2 flex flex-wrap gap-2">
+                              {artwork.dimensions && <span>Size: {artwork.dimensions}</span>}
+                              {artwork.weight && <span>Weight: {artwork.weight} {artwork.weightUnit || 'kg'}</span>}
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center justify-between border-t border-outline/10 pt-2.5 mt-auto">
                           <span className="text-[11px] text-on-surface-variant">Price</span>

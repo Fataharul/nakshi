@@ -69,4 +69,46 @@ describe('Artwork Validation Schema Unit Tests', () => {
 
     expect(parsed.price).toBe(350);
   });
+
+  it('validates and parses artwork weight and detailed physical dimensions', () => {
+    const parsed = createArtworkSchema.parse({
+      title: 'Terracotta Elephant Figurine',
+      description: 'Handcrafted terracotta folk artifact.',
+      medium: 'Terracotta Clay',
+      price: 450,
+      weight: '3.75',
+      weightUnit: 'kg',
+      height: '35.5',
+      width: '20.0',
+      depth: '15.0',
+      dimensions: '35.5 x 20 x 15 cm',
+    });
+
+    expect(parsed.weight).toBe(3.75);
+    expect(parsed.weightUnit).toBe('kg');
+    expect(parsed.height).toBe(35.5);
+    expect(parsed.width).toBe(20);
+    expect(parsed.depth).toBe(15);
+    expect(parsed.dimensions).toBe('35.5 x 20 x 15 cm');
+  });
+
+  it('rejects negative weight and invalid dimension values', () => {
+    const negativeWeight = createArtworkSchema.safeParse({
+      title: 'Valid Artwork Title',
+      description: 'Handwoven heritage silk Jamdani quilt featuring floral motifs.',
+      medium: 'Handloom Jamdani',
+      price: 100,
+      weight: -2.5,
+    });
+    expect(negativeWeight.success).toBe(false);
+
+    const negativeHeight = createArtworkSchema.safeParse({
+      title: 'Valid Artwork Title',
+      description: 'Handwoven heritage silk Jamdani quilt featuring floral motifs.',
+      medium: 'Handloom Jamdani',
+      price: 100,
+      height: -10,
+    });
+    expect(negativeHeight.success).toBe(false);
+  });
 });
