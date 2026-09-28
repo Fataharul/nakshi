@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import bcrypt from 'bcrypt';
 import { AuthService } from '../../src/services/auth.service';
-import { registerSchema, loginSchema } from '../../src/utils/validation';
+import { registerSchema, loginSchema, googleAuthSchema } from '../../src/utils/validation';
 
 describe('AuthService & Validation Unit Tests', () => {
   describe('Password Hashing (bcrypt)', () => {
@@ -115,6 +115,19 @@ describe('AuthService & Validation Unit Tests', () => {
         password: '',
       });
       expect(invalid.success).toBe(false);
+    });
+
+    it('validates googleAuthSchema correctly', () => {
+      const valid = googleAuthSchema.safeParse({
+        idToken: 'valid.google.id.token.signature',
+      });
+      expect(valid.success).toBe(true);
+
+      const missingToken = googleAuthSchema.safeParse({});
+      expect(missingToken.success).toBe(false);
+
+      const emptyToken = googleAuthSchema.safeParse({ idToken: '' });
+      expect(emptyToken.success).toBe(false);
     });
   });
 });

@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import http from 'http';
 import { AddressInfo } from 'net';
+import { OAuth2Client } from 'google-auth-library';
 import { app } from '../../src/server';
 import { prisma } from '../../src/config/prisma';
 
@@ -158,6 +159,112 @@ describe('Auth & RBAC Acceptance Tests', () => {
       expect(res.status).toBe(401);
       const data = (await res.json()) as any;
       expect(data.error).toBe('Invalid email or password');
+    });
+  });
+
+  describe('POST /api/auth/google', () => {
+    const mockGoogleSub = `google_oauth_sub_${Date.now()}`;
+    const mockGoogleEmail = `google_user_${Date.now()}@nakshi.test`;
+
+    beforeAll(() => {
+      vi.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockImplementation(async (options: any) => {
+        if (options.idToken === 'valid-google-id-token') {
+          return {
+            getPayload: () => ({
+              email: mockGoogleEmail,
+              name: 'Google Test Artisan',
+              sub: mockGoogleSub,
+              picture: 'https://lh3.googleusercontent.com/a/test-avatar',
+            }),
+          } as any;
+        }
+        throw new Error('Google token invalid');
+      });
+    });
+
+    afterAll(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('rejects missing or empty idToken with 400 Bad Request', async () => {
+      const res = await fetch(`${baseUrl}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      expect(res.status).toBe(400);
+      const data = (await res.json()) as any;
+      expect(data.error).toBe('Validation failed');
+    });
+
+    it('rejects invalid or forged idToken with 401 Unauthorized', async () => {
+      const res = await fetch(`${baseUrl}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: 'forged_fake_token' }),
+      });
+
+      expect(res.status).toBe(401);
+      const data = (await res.json()) as any;
+      expect(data.error).toBe('Google authentication failed');
+    });
+
+    it('successfully registers and authenticates new user via Google, initializing wallet at 0 balance', async () => {
+      const res = await fetch(`${baseUrl}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: 'valid-google-id-token' }),
+      });
+
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.token).toBeDefined();
+      expect(data.user).toBeDefined();
+      expect(data.user.email).toBe(mockGoogleEmail);
+      expect(data.user.name).toBe('Google Test Artisan');
+      expect(data.user.role).toBe('BUYER');
+      expect(data.user.avatarUrl).toBe('https://lh3.googleusercontent.com/a/test-avatar');
+      expect(data.user.walletBalance).toBe(0);
+
+      // Verify DB record
+      const dbUser = await prisma.user.findUnique({
+        where: { email: mockGoogleEmail },
+        include: { wallet: true },
+      });
+      expect(dbUser).toBeDefined();
+      expect(dbUser?.googleId).toBe(mockGoogleSub);
+      expect(dbUser?.passwordHash).toBeNull();
+      expect(dbUser?.isVerified).toBe(true);
+      expect(dbUser?.wallet?.balance).toBeDefined();
+    });
+
+    it('subsequent Google sign-in returns authenticated user and existing wallet', async () => {
+      const res = await fetch(`${baseUrl}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: 'valid-google-id-token' }),
+      });
+
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.token).toBeDefined();
+      expect(data.user.email).toBe(mockGoogleEmail);
+    });
+
+    it('rejects standard password login for Google OAuth-created account with clear guidance', async () => {
+      const res = await fetch(`${baseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: mockGoogleEmail,
+          password: 'AnyPassword123!',
+        }),
+      });
+
+      expect(res.status).toBe(401);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('Please sign in using Google');
     });
   });
 
