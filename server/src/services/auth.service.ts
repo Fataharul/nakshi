@@ -9,6 +9,7 @@ import {
   LoginInput,
   UpdateProfileInput,
   ForgotPasswordInput,
+  VerifyResetTokenInput,
   ResetPasswordInput,
 } from '../utils/validation';
 
@@ -328,6 +329,34 @@ export class AuthService {
     };
   }
 
+  public static async verifyResetToken(token: string): Promise<{ valid: boolean; email: string; message: string }> {
+    const record = this.resetTokens.get(token);
+
+    if (!record || record.expires < Date.now()) {
+      if (record) this.resetTokens.delete(token);
+      throw new AppError('Invalid or expired password reset token.', 400);
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: record.email },
+    });
+
+    if (!user) {
+      this.resetTokens.delete(token);
+      throw new AppError('User not found.', 404);
+    }
+
+    if (!user.passwordHash && user.googleId) {
+      throw new AppError('Cannot reset password for an account created via Google. Please sign in using Google.', 400);
+    }
+
+    return {
+      valid: true,
+      email: record.email,
+      message: 'Reset token verified successfully.',
+    };
+  }
+
   public static async resetPassword(input: ResetPasswordInput): Promise<{ message: string }> {
     const record = this.resetTokens.get(input.token);
 
@@ -343,6 +372,10 @@ export class AuthService {
     if (!user) {
       this.resetTokens.delete(input.token);
       throw new AppError('User not found.', 404);
+    }
+
+    if (!user.passwordHash && user.googleId) {
+      throw new AppError('Cannot reset password for an account created via Google. Please sign in using Google.', 400);
     }
 
     const passwordHash = await bcrypt.hash(input.newPassword, this.SALT_ROUNDS);

@@ -105,6 +105,46 @@ test.describe('Acceptance Criteria 3.2: Authentication & RBAC Flow', () => {
     await expect(page.locator('#setup-success-banner')).toContainText('Profile and account settings updated successfully');
   });
 
+  test('allows user to set new password after successful token verification (T-019)', async ({ page }) => {
+    await page.goto('/login');
+
+    // 1. Open forgot password modal
+    await page.locator('#forgot-password-link').click();
+    await expect(page.locator('#reset-modal-close-btn')).toBeVisible();
+
+    // 2. Request reset token
+    await page.locator('#forgot-email-input').fill(testBuyer.email);
+    await page.locator('#request-token-btn').click();
+
+    // 3. Verify step is reached
+    await expect(page.locator('#reset-token-input')).toBeVisible();
+    await expect(page.locator('#verify-token-btn')).toBeVisible();
+
+    // 4. Verify token
+    await page.locator('#verify-token-btn').click();
+
+    // 5. User is allowed to set a new password only after successful verification
+    await expect(page.locator('#new-password-input')).toBeVisible();
+    await expect(page.locator('#confirm-password-input')).toBeVisible();
+
+    const newPass = 'UpdatedSecretPass123!';
+    await page.locator('#new-password-input').fill(newPass);
+    await page.locator('#confirm-password-input').fill(newPass);
+    await page.locator('#reset-password-btn').click();
+
+    // 6. Verify success banner
+    await expect(page.locator('#forgot-success-banner')).toBeVisible();
+    await expect(page.locator('#forgot-success-banner')).toContainText('successfully reset');
+
+    // 7. Modal closes, now log in with the new password
+    await expect(page.locator('#reset-modal-close-btn')).not.toBeVisible({ timeout: 5000 });
+    await page.locator('#password').fill(newPass);
+    await page.locator('#login-submit-btn').click();
+
+    await expect(page).toHaveURL(/\/dashboard\/buyer/);
+    await expect(page.locator('#dashboard-user-name')).toHaveText(testBuyer.name);
+  });
+
   test('enforces RBAC route protection when accessing unauthenticated protected pages', async ({ page }) => {
     // Visit protected route without logging in
     await page.goto('/setup');
@@ -112,6 +152,7 @@ test.describe('Acceptance Criteria 3.2: Authentication & RBAC Flow', () => {
     // Must be redirected to login page with state redirect
     await expect(page).toHaveURL(/\/login/);
   });
+
 
   test('supports mobile 360px viewport without overflow or layout breakage', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 740 });

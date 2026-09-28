@@ -60,6 +60,23 @@
   - All 32 server unit and acceptance tests passed (`vitest run`).
   - Server TypeScript compilation passed cleanly (`npm run build`).
   - Client production build succeeded cleanly (`npm run build`).
+
+## [2026-09-29 01:45:00 +06:00] Milestone: Ticket T-019 — Password Reset Verification Flow Implemented
+- **Completed**:
+  - Added `verifyResetTokenSchema` and `VerifyResetTokenInput` validation in [`server/src/utils/validation.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/utils/validation.ts).
+  - Implemented `AuthService.verifyResetToken` and Google OAuth account guards in [`server/src/services/auth.service.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/services/auth.service.ts) adhering to Decision 7.
+  - Added `AuthController.verifyResetToken` in [`server/src/controllers/auth.controller.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/controllers/auth.controller.ts).
+  - Exposed `POST /api/auth/verify-reset-token` endpoint in [`server/src/routes/auth.routes.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/routes/auth.routes.ts).
+  - Added `verifyResetToken` client API integration and `VerifyResetTokenResponse` type in [`client/src/services/auth.service.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/client/src/services/auth.service.ts) & [`client/src/types/auth.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/client/src/types/auth.ts).
+  - Updated [`client/src/pages/LoginPage.tsx`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/client/src/pages/LoginPage.tsx) with a 3-step stepper modal (`REQUEST` -> `VERIFY` -> `SET_PASSWORD`) allowing users to set a new password only after successful token verification.
+  - Added unit test coverage for `verifyResetTokenSchema` in [`server/tests/unit/auth.service.test.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/tests/unit/auth.service.test.ts).
+  - Added acceptance integration test coverage for `POST /api/auth/verify-reset-token` in [`server/tests/acceptance/auth.test.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/tests/acceptance/auth.test.ts).
+  - Added end-to-end Playwright test in [`e2e/01_auth_rbac.spec.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/e2e/01_auth_rbac.spec.ts).
+- **Verified**:
+  - All 38 server unit and acceptance tests passed (`vitest run`).
+  - Both client and server production builds succeeded cleanly without errors (`npm run build`).
+  - All 24 Playwright E2E and multi-viewport tests passed across Desktop Chrome, Mobile 360px, and Tablet 768px (`npm test`).
 - **Next Steps**:
   - Implement Artwork Service, Worker Queue, and API routes (`POST /api/artworks`, `GET /api/artworks/my-artworks`, `GET /api/artworks/storefront/:artistId`).
   - Build the artist management UI components and public storefront page.
+

@@ -353,6 +353,44 @@ describe('Auth & RBAC Acceptance Tests', () => {
       resetToken = data.resetToken;
     });
 
+    it('POST /api/auth/verify-reset-token rejects missing token with 400 Bad Request', async () => {
+      const res = await fetch(`${baseUrl}/api/auth/verify-reset-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      expect(res.status).toBe(400);
+      const data = (await res.json()) as any;
+      expect(data.error).toBe('Validation failed');
+    });
+
+    it('POST /api/auth/verify-reset-token rejects invalid or expired token with 400', async () => {
+      const res = await fetch(`${baseUrl}/api/auth/verify-reset-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: 'nonexistent_token_12345' }),
+      });
+
+      expect(res.status).toBe(400);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('Invalid or expired');
+    });
+
+    it('POST /api/auth/verify-reset-token successfully verifies valid token and returns 200 OK with email', async () => {
+      const res = await fetch(`${baseUrl}/api/auth/verify-reset-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: resetToken }),
+      });
+
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.valid).toBe(true);
+      expect(data.email).toBe(testBuyer.email);
+      expect(data.message).toContain('verified successfully');
+    });
+
     it('POST /api/auth/reset-password resets the password with valid token', async () => {
       const newPassword = 'BrandNewPassword123!';
       const res = await fetch(`${baseUrl}/api/auth/reset-password`, {
@@ -394,5 +432,18 @@ describe('Auth & RBAC Acceptance Tests', () => {
       const data = (await res.json()) as any;
       expect(data.error).toContain('Invalid or expired');
     });
+
+    it('POST /api/auth/verify-reset-token rejects previously used token with 400', async () => {
+      const res = await fetch(`${baseUrl}/api/auth/verify-reset-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: resetToken }),
+      });
+
+      expect(res.status).toBe(400);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('Invalid or expired');
+    });
   });
 });
+

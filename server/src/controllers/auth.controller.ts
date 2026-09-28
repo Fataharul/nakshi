@@ -5,6 +5,7 @@ import {
   loginSchema,
   updateProfileSchema,
   forgotPasswordSchema,
+  verifyResetTokenSchema,
   resetPasswordSchema,
   googleAuthSchema,
 } from '../utils/validation';
@@ -65,6 +66,16 @@ export class AuthController {
     try {
       const validatedData = forgotPasswordSchema.parse(req.body);
       const result = await AuthService.forgotPassword(validatedData);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public static async verifyResetToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const validatedData = verifyResetTokenSchema.parse(req.body);
+      const result = await AuthService.verifyResetToken(validatedData.token);
       res.status(200).json(result);
     } catch (error) {
       next(error);
