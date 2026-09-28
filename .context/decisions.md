@@ -59,3 +59,15 @@
 - **Rationale**:
   - Eliminates unauthorized elevation of privilege via direct API manipulation.
   - Satisfies Requirements 2.2 and 3.2 without third-party email service expenses.
+
+## 7. Google OAuth 2.0 Integration & Account Harmonization
+- **Context**: Users require frictionless authentication while adhering to role-based access control and security guidelines.
+- **Decision**:
+  - Implement frontend authentication using `@react-oauth/google` with `GoogleLogin` component wrapped in `GoogleOAuthProvider`.
+  - Verify tokens on the backend using `google-auth-library` (`OAuth2Client.verifyIdToken`) against `GOOGLE_CLIENT_ID`.
+  - Schema extension: Make `User.passwordHash` optional (`String?`), add unique `googleId` (`String? @unique`), and `isVerified` (`Boolean @default(false)`).
+  - On first sign-in, atomically create the user record with default `BUYER` role and initialize an empty credit wallet at `0.0` balance.
+  - Prevent password logins or password changes on accounts created purely via Google OAuth, responding with specific actionable guidance.
+- **Consequences**:
+  - Simplifies user onboarding without compromising wallet integrity or security.
+  - Preserves RBAC and JWT token format uniformity across local and OAuth users.

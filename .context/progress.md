@@ -45,6 +45,21 @@
 - **Verified**:
   - All 26 server unit and acceptance tests passed (`vitest run`).
   - Both client and server production builds succeeded without errors.
+
+## [2026-09-28 20:06:00 +06:00] Milestone: Google OAuth 2.0 Flow Harmonized, Tested & Merged
+- **Completed**:
+  - Rebased `feature/backend-sprint2` onto `main`, resolving TypeScript build cache conflicts.
+  - Removed accidental debug artifact `server/errors.txt`.
+  - Implemented client Google Sign-In with `@react-oauth/google`, updating `LoginPage.tsx` and `AuthContext.tsx`.
+  - Implemented backend Google ID token verification via `google-auth-library` in `AuthService.googleAuth` and `AuthController.google`.
+  - Extended Prisma schema with `googleId`, `isVerified`, and nullable `passwordHash`.
+  - Added unit test suite in `server/tests/unit/auth.service.test.ts` validating `googleAuthSchema`.
+  - Added integration acceptance test suite in `server/tests/acceptance/auth.test.ts` covering token validation, new OAuth user registration with wallet initialization, existing user sign-in, and password login prevention.
+  - Successfully merged `feature/backend-sprint2` into `main`.
+- **Verified**:
+  - All 32 server unit and acceptance tests passed (`vitest run`).
+  - Server TypeScript compilation passed cleanly (`npm run build`).
+  - Client production build succeeded cleanly (`npm run build`).
 - **Next Steps**:
   - Implement Artwork Service, Worker Queue, and API routes (`POST /api/artworks`, `GET /api/artworks/my-artworks`, `GET /api/artworks/storefront/:artistId`).
   - Build the artist management UI components and public storefront page.
