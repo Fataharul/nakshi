@@ -14,7 +14,7 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
 
   const artistUser = {
     name: `Artisan Master ${uniqueId}`,
-    email: `artist_${uniqueId}@nakshi.test`,
+    email: `artist_artwork_${uniqueId}_${Math.random().toString(36).substring(2, 7)}@nakshi.test`,
     password: 'Password123!',
     role: 'ARTIST',
     bio: 'Master weaver of Sonargaon heritage Jamdani sarees.',
@@ -22,7 +22,7 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
 
   const buyerUser = {
     name: `Collector Buyer ${uniqueId}`,
-    email: `buyer_${uniqueId}@nakshi.test`,
+    email: `buyer_artwork_${uniqueId}_${Math.random().toString(36).substring(2, 7)}@nakshi.test`,
     password: 'Password123!',
     role: 'BUYER',
   };
