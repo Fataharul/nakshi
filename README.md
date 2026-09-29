@@ -92,6 +92,8 @@ SIMILARITY_THRESHOLD=80
 UPLOAD_DIR=./uploads
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
+RESEND_API_KEY=your_resend_api_key
+EMAIL_FROM="Nakshi Gallery <onboarding@resend.dev>"
 ```
 
 ### Client (`client/.env`)

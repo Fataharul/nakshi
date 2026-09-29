@@ -85,4 +85,18 @@
   - Aligns with the "Digital Gallery" aesthetic in `DESIGN.md` without fragmenting the artist experience into disparate pages.
   - Preserves a high-contrast hierarchy (metrics overview first, inventory management second).
 
+## 10. Transactional Email Delivery via Resend
+- **Timestamp**: 2026-09-29 20:18:00 +06:00
+- **Context**: Users resetting their credentials require reliable, deliverable transactional emails containing secure verification tokens and one-click reset URLs, while preventing external spam and user enumeration.
+- **Decision**:
+  - Adopt Resend (`resend` SDK) as the transactional email provider configured via `RESEND_API_KEY` and `EMAIL_FROM`.
+  - Encapsulate email generation and delivery within `EmailService` (`server/src/services/email.service.ts`).
+  - Style the HTML password reset template using Nakshi's "Digital Gallery" palette ([DESIGN.md](file:///e:/Nakshi/.context/DESIGN.md)): Muslin canvas (`#fbf9f4`), Charcoal typography (`#1b1c19`), Terracotta accents (`#86452a`), Playfair Display/Georgia headlines, and high-emphasis action buttons.
+  - Support both one-click URL reset (`${CLIENT_URL}/login?resetToken=...`) with automatic modal population and manual 64-character token entry in the 3-step modal.
+  - In automated test environments (`NODE_ENV === 'test'`), mock or simulate delivery to avoid external rate limits, network latency, or non-deterministic test failures.
+- **Consequences**:
+  - Eliminates SMTP configuration overhead and provides immediate deliverability with analytics.
+  - Preserves user enumeration protection: `POST /api/auth/forgot-password` always returns a generic success message regardless of whether the account exists.
+
+
 

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../services/auth.service';
 import { ArrowRight, ArrowLeft, AlertCircle, Sparkles, KeyRound, X, CheckCircle } from 'lucide-react';
@@ -9,6 +9,7 @@ export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,6 +27,17 @@ export const LoginPage: React.FC = () => {
   const [isTokenVerified, setIsTokenVerified] = useState(false);
   const [forgotStatus, setForgotStatus] = useState<{ success?: string; error?: string }>({});
   const [isForgotLoading, setIsForgotLoading] = useState(false);
+
+  // Auto-open reset modal when resetToken is provided in URL
+  useEffect(() => {
+    const tokenFromUrl = searchParams.get('resetToken');
+    if (tokenFromUrl) {
+      setResetToken(tokenFromUrl);
+      setShowForgotModal(true);
+      setForgotStep('VERIFY');
+      setForgotStatus({ success: 'Reset token loaded from email link. Click "Verify Token" to proceed.' });
+    }
+  }, [searchParams]);
 
   // Destination after login
   const from = (location.state as any)?.from?.pathname;
@@ -428,8 +440,8 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <p className="text-xs text-on-surface-variant mb-4">
-              {forgotStep === 'REQUEST' && 'Enter your account email to receive a password reset token.'}
-              {forgotStep === 'VERIFY' && 'Enter your reset token to verify your identity before setting a new password.'}
+              {forgotStep === 'REQUEST' && 'Enter your account email to receive a password reset link and token via email.'}
+              {forgotStep === 'VERIFY' && 'Enter the reset token sent to your email (or loaded from your reset link) to verify your identity.'}
               {forgotStep === 'SET_PASSWORD' && 'Token verified! Enter your new password below.'}
             </p>
 
@@ -469,7 +481,7 @@ export const LoginPage: React.FC = () => {
                   disabled={isForgotLoading}
                   className="w-full py-2.5 bg-primary text-on-primary font-semibold text-xs uppercase tracking-wider rounded-full hover:bg-surface-tint transition-all"
                 >
-                  {isForgotLoading ? 'Generating Token...' : 'Generate Reset Token'}
+                  {isForgotLoading ? 'Sending Reset Email...' : 'Send Password Reset Email'}
                 </button>
                 <div className="text-center pt-1">
                   <button
