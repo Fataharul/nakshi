@@ -110,9 +110,22 @@
     3. **Storefront & Inventory Management Section**: Displays published artworks grid (`#artworks-grid`) with craft medium tags, dimension/weight metadata, credit prices, availability badges, and interactive availability filters (`ALL`, `AVAILABLE`, `SOLD`), with an empty state CTA when no artworks are published.
     4. **Studio Profile & Guidelines Sidebar**: Summarizes studio profile attributes, craft specialty, verification status, and storefront guidelines.
   - Preserve all existing DOM selectors (`#dashboard-user-name`, `#dashboard-role-badge`, `#dashboard-wallet-balance`, `#add-artwork-btn`, `#artworks-grid`, `#no-artworks-banner`) to ensure 100% backward compatibility with Playwright E2E and component test suites.
+## 12. Artwork Search & Marketplace Discovery Interface Architecture
+- **Timestamp**: 2026-09-29 22:36:00 +06:00
+- **Context**: Requirement 1.1 mandates allowing buyers to discover, search, and filter available artworks across Bangladeshi heritage craft categories. A dedicated, responsive discovery interface was required adhering to `DESIGN.md` and `DESIGN_DIRECTION.md`.
+- **Decision**:
+  - Implement a dedicated `ArtworkSearchInterface` component in `client/src/components/marketplace/ArtworkSearchInterface.tsx` and host it within `client/src/pages/MarketplacePage.tsx` mounted at `/marketplace` and `/search`.
+  - Provide instant client-side interactive search & filtering across:
+    1. Search keywords matching title, artisan name, craft medium, geographic region, description, and motifs (`#artwork-search-input`).
+    2. Horizontally scrollable craft medium pill filters (`#medium-filter-all`, `#medium-filter-nakshi-kantha`, `#medium-filter-handloom-jamdani`, etc.) derived from standard `CRAFT_MEDIUMS`.
+    3. Refinement controls for price boundaries (`Under 500`, `500 - 1000`, `Above 1000 Credits`), availability toggle, and multiple sort orders (`Latest Additions`, `Price: Low to High`, `Price: High to Low`, `Artwork Name: A to Z`).
+    4. Matted 3-column editorial gallery grid (`#search-artworks-grid`) conforming to `DESIGN_DIRECTION.md` with subtle scale hover transitions, image containers, craft medium tags, Playfair Display titles, dimensions/weight metadata, and valuation in credits.
+    5. Clean empty state with query feedback and one-click filter reset (`#no-search-results-banner`).
+  - Wire up global navigation in `Navbar.tsx` (`Marketplace` link) and `HomePage.tsx` ("Explore Marketplace" button).
 - **Rationale**:
-  - Provides a professional "Digital Studio & Gallery" demeanor consistent with `DESIGN.md` and `DESIGN_DIRECTION.md`.
-  - Maintains strict separation between the artist-specific studio environment and generic buyer/organizer views.
+  - Delivers an art-first minimalist gallery experience putting handcrafted heritage textiles and ceramics at the visual center.
+  - Ensures seamless usability across desktop, tablet, and mobile 360px viewports.
+
 
 
 
