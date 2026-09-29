@@ -124,6 +124,24 @@ npm run dev
 
 ---
 
+## API Endpoints
+- **Authentication & RBAC (`/api/auth`)**:
+  - `POST /api/auth/register` — Role-based user registration (`BUYER`, `ARTIST`, `ORGANIZER`).
+  - `POST /api/auth/login` — Email & password login.
+  - `POST /api/auth/google` — Google OAuth 2.0 verification and role-aware onboarding.
+  - `POST /api/auth/forgot-password` — Request secure password reset token.
+  - `POST /api/auth/verify-reset-token` — Validate reset token before setting new credentials.
+  - `POST /api/auth/reset-password` — Reset account password with token.
+- **Artwork & Storefront (`/api/artworks`)**:
+  - `POST /api/artworks` — Publish new artwork listing with craft mediums, dimensions, and weight (`ARTIST` role).
+  - `GET /api/artworks/my-artworks` — Retrieve all artworks published by the authenticated artist.
+  - `GET /api/artworks/:id` — Get single artwork details and metadata.
+  - `GET /api/artworks/storefront/:artistId` — Public storefront profile and published inventory.
+- **Seller Analytics (`/api/seller`)**:
+  - `GET /api/seller/metrics` — Aggregate sales volume, gross revenue, AOV, and recent customer orders (`ARTIST` / `ADMIN` role).
+
+---
+
 ## Testing
 
 ```bash
@@ -136,3 +154,4 @@ npm run test:server
 # Run Playwright E2E and responsive checks
 npm run test:e2e
 ```
+

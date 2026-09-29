@@ -1,7 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import bcrypt from 'bcrypt';
 import { AuthService } from '../../src/services/auth.service';
-import { registerSchema, loginSchema, googleAuthSchema } from '../../src/utils/validation';
+import {
+  registerSchema,
+  loginSchema,
+  googleAuthSchema,
+  verifyResetTokenSchema,
+  resetPasswordSchema,
+} from '../../src/utils/validation';
 
 describe('AuthService & Validation Unit Tests', () => {
   describe('Password Hashing (bcrypt)', () => {
@@ -140,6 +146,40 @@ describe('AuthService & Validation Unit Tests', () => {
 
       const emptyToken = googleAuthSchema.safeParse({ idToken: '' });
       expect(emptyToken.success).toBe(false);
+    });
+
+    it('validates verifyResetTokenSchema correctly', () => {
+      const valid = verifyResetTokenSchema.safeParse({
+        token: 'a'.repeat(64),
+      });
+      expect(valid.success).toBe(true);
+
+      const empty = verifyResetTokenSchema.safeParse({
+        token: '',
+      });
+      expect(empty.success).toBe(false);
+
+      const missing = verifyResetTokenSchema.safeParse({});
+      expect(missing.success).toBe(false);
+    });
+
+    it('validates resetPasswordSchema correctly', () => {
+      const valid = resetPasswordSchema.safeParse({
+        token: 'valid-reset-token-hex',
+        newPassword: 'BrandNewPassword123!',
+      });
+      expect(valid.success).toBe(true);
+
+      const invalidPassword = resetPasswordSchema.safeParse({
+        token: 'valid-reset-token-hex',
+        newPassword: 'short',
+      });
+      expect(invalidPassword.success).toBe(false);
+
+      const missingToken = resetPasswordSchema.safeParse({
+        newPassword: 'BrandNewPassword123!',
+      });
+      expect(missingToken.success).toBe(false);
     });
   });
 });

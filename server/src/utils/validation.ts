@@ -58,6 +58,10 @@ export const forgotPasswordSchema = z.object({
     .trim(),
 });
 
+export const verifyResetTokenSchema = z.object({
+  token: z.string().min(1, 'Reset token is required'),
+});
+
 export const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Reset token is required'),
   newPassword: z
@@ -71,6 +75,7 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type VerifyResetTokenInput = z.infer<typeof verifyResetTokenSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 
 export const googleAuthSchema = z.object({

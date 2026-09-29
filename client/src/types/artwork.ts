@@ -15,6 +15,11 @@ export interface Artwork {
   description: string;
   medium: string;
   dimensions?: string | null;
+  height?: number | null;
+  width?: number | null;
+  depth?: number | null;
+  weight?: number | null;
+  weightUnit?: string | null;
   price: number;
   imageUrl: string;
   imageHash?: string | null;
@@ -31,6 +36,11 @@ export interface CreateArtworkPayload {
   description: string;
   medium: string;
   dimensions?: string;
+  height?: number;
+  width?: number;
+  depth?: number;
+  weight?: number;
+  weightUnit?: string;
   price: number;
   imageUrl?: string;
   availability?: ArtworkAvailability;
@@ -41,6 +51,11 @@ export interface UpdateArtworkPayload {
   description?: string;
   medium?: string;
   dimensions?: string;
+  height?: number;
+  width?: number;
+  depth?: number;
+  weight?: number;
+  weightUnit?: string;
   price?: number;
   imageUrl?: string;
   availability?: ArtworkAvailability;

@@ -60,6 +60,22 @@
   - All 32 server unit and acceptance tests passed (`vitest run`).
   - Server TypeScript compilation passed cleanly (`npm run build`).
   - Client production build succeeded cleanly (`npm run build`).
+## [2026-09-29 01:45:00 +06:00] Milestone: Ticket T-019 — Password Reset Verification Flow Implemented
+- **Completed**:
+  - Added `verifyResetTokenSchema` and `VerifyResetTokenInput` validation in [`server/src/utils/validation.ts`](file:///E:/Nakshi/server/src/utils/validation.ts).
+  - Implemented `AuthService.verifyResetToken` and Google OAuth account guards in [`server/src/services/auth.service.ts`](file:///E:/Nakshi/server/src/services/auth.service.ts) adhering to Decision 7.
+  - Added `AuthController.verifyResetToken` in [`server/src/controllers/auth.controller.ts`](file:///E:/Nakshi/server/src/controllers/auth.controller.ts).
+  - Exposed `POST /api/auth/verify-reset-token` endpoint in [`server/src/routes/auth.routes.ts`](file:///E:/Nakshi/server/src/routes/auth.routes.ts).
+  - Added `verifyResetToken` client API integration and `VerifyResetTokenResponse` type in [`client/src/services/auth.service.ts`](file:///E:/Nakshi/client/src/services/auth.service.ts) & [`client/src/types/auth.ts`](file:///E:/Nakshi/client/src/types/auth.ts).
+  - Updated [`client/src/pages/LoginPage.tsx`](file:///E:/Nakshi/client/src/pages/LoginPage.tsx) with a 3-step stepper modal (`REQUEST` -> `VERIFY` -> `SET_PASSWORD`) allowing users to set a new password only after successful token verification.
+  - Added unit test coverage for `verifyResetTokenSchema` in [`server/tests/unit/auth.service.test.ts`](file:///E:/Nakshi/server/tests/unit/auth.service.test.ts).
+  - Added acceptance integration test coverage for `POST /api/auth/verify-reset-token` in [`server/tests/acceptance/auth.test.ts`](file:///E:/Nakshi/server/tests/acceptance/auth.test.ts).
+  - Added end-to-end Playwright test in [`e2e/01_auth_rbac.spec.ts`](file:///E:/Nakshi/e2e/01_auth_rbac.spec.ts).
+- **Verified**:
+  - All 38 server unit and acceptance tests passed (`vitest run`).
+  - Both client and server production builds succeeded cleanly without errors (`npm run build`).
+  - All 24 Playwright E2E and multi-viewport tests passed across Desktop Chrome, Mobile 360px, and Tablet 768px (`npm test`).
+
 ## [2026-09-29 09:53:00 +06:00] Milestone: Google OAuth Credentials Configured & Role-Aware Signup Activated
 - **Completed**:
   - Configured verified Google Cloud Web Application credentials (`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`) in [`server/.env`](file:///E:/Nakshi/server/.env) and created [`client/.env`](file:///E:/Nakshi/client/.env) with `VITE_GOOGLE_CLIENT_ID`.
@@ -72,6 +88,79 @@
   - All 34 server unit and acceptance tests passed (`vitest run`).
   - Both server (`tsc`) and client (`tsc -b && vite build`) production builds succeeded cleanly with zero errors.
 - **Next Steps**:
-  - Implement Artwork Service, Worker Queue, and API routes (`POST /api/artworks`, `GET /api/artworks/my-artworks`, `GET /api/artworks/storefront/:artistId`).
-  - Build the artist management UI components and public storefront page.
+<<<<<<< HEAD
+## [2026-09-29 02:40:00 +06:00] Milestone: Ticket T-026 (Artwork Creation & Storefront Functionality) Implemented & Verified
+- **Completed**:
+  - Backend artwork service & routes:
+    - Built `server/src/services/artwork.service.ts` supporting `createArtwork`, `getArtistArtworks`, `getArtworkById`, and `getArtistStorefront`.
+    - Created `server/src/controllers/artwork.controller.ts` with strict Zod validation and safe Express parameter handling.
+    - Protected `POST /api/artworks` route with `authenticateJWT` and `requireRoles(Role.ARTIST)` middleware in `server/src/routes/artwork.routes.ts`.
+    - Registered `/api/artworks` router in `server/src/server.ts`.
+  - Frontend artist storefront & creation form:
+    - Created `client/src/services/artwork.service.ts` supporting artwork publishing and storefront fetching.
+    - Built accessible `client/src/components/marketplace/CreateArtworkModal.tsx` modal component featuring heritage craft medium selection (`CRAFT_MEDIUMS`), credit pricing inputs, and field-level inline error validation.
+    - Updated `client/src/pages/DashboardPage.tsx` to render the artist's storefront summary, artwork inventory grid, and artwork publishing trigger button (`#add-artwork-btn`).
+  - Automated testing:
+    - Added unit test suite `server/tests/unit/artwork.service.test.ts` (5 tests passing).
+    - Added acceptance test suite `server/tests/acceptance/artwork.test.ts` (6 tests passing).
+    - Added E2E Playwright test suite `e2e/08_create_artwork.spec.ts` testing registration, artwork publishing, grid rendering, and form validation across viewports.
+- **Verified**:
+  - All 43 Vitest server unit and acceptance tests passed (`vitest run`).
+  - All 6 Playwright E2E tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px (`npx playwright test e2e/08_create_artwork.spec.ts`).
+  - Both client and server TypeScript builds compiled with 0 errors (`npm run build`).
+
+## [2026-09-29 03:12:00 +06:00] Milestone: Ticket T-030 (Artwork Weight & Dimensions Schema & API) Implemented & Verified
+- **Completed**:
+  - Prisma Database Schema:
+    - Updated `Artwork` model in `server/prisma/schema.prisma` with `weight` (`Float?`), `weightUnit` (`String? @default("kg")`), `height` (`Float?`), `width` (`Float?`), `depth` (`Float?`), and `dimensions` (`String?`).
+    - Synchronized live PostgreSQL schema with `npx prisma db push` and generated Prisma Client with `npx prisma generate`.
+  - Backend Validation & Service Integration:
+    - Updated Zod validation schemas (`createArtworkSchema` & `updateArtworkSchema`) in `server/src/utils/artwork.validation.ts` with custom positive number transform helpers for optional physical dimension and weight fields.
+    - Updated `server/src/services/artwork.service.ts` to format, persist, and return weight and dimension attributes across creation, retrieval, and storefront queries.
+  - Frontend UI & Types:
+    - Updated `client/src/types/artwork.ts` with `weight`, `weightUnit`, `height`, `width`, `depth`, and `dimensions` fields on `Artwork`, `CreateArtworkPayload`, and `UpdateArtworkPayload`.
+    - Added weight (`#artwork-weight-input`), weight unit (`#artwork-weight-unit-select`), height (`#artwork-height-input`), width (`#artwork-width-input`), and depth (`#artwork-depth-input`) input controls to `client/src/components/marketplace/CreateArtworkModal.tsx`.
+    - Updated `client/src/pages/DashboardPage.tsx` artwork cards to render physical size and weight metrics.
+  - Automated Tests:
+    - Added unit test coverage in `server/tests/unit/artwork.service.test.ts` for weight/dimension parsing and validation.
+    - Updated acceptance tests in `server/tests/acceptance/artwork.test.ts` to verify database persistence and API returns for weight/dimensions.
+- **Verified**:
+  - All 45 Vitest server unit and acceptance tests passed (`vitest run`).
+  - All 6 Playwright E2E tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px (`npx playwright test e2e/08_create_artwork.spec.ts`).
+  - Both client and server TypeScript builds compiled with 0 errors (`npm run build`).
+
+
+## [2026-09-29 03:25:00 +06:00] Milestone: Ticket T-034 (Seller Sales Performance Metrics & Analytics) Implemented & Verified
+- **Completed**:
+  - Backend Analytics API:
+    - Created `server/src/services/seller.service.ts` aggregating seller sales metrics (total revenue, total completed orders, average order value, active listings, pending artworks, sold artworks, and recent sales log).
+    - Created `server/src/controllers/seller.controller.ts` and `server/src/routes/seller.routes.ts` protecting `GET /api/seller/metrics` with `authenticateJWT` and `requireRoles(Role.ARTIST, Role.ADMIN)` middleware.
+    - Registered `/api/seller` router in `server/src/server.ts`.
+  - Frontend Dashboard Integration & Types:
+    - Created `client/src/types/seller.ts` defining data contracts for seller metrics and sales objects.
+    - Created `client/src/services/seller.service.ts` with `sellerApi.getMetrics()`.
+    - Created `client/src/components/dashboard/SellerMetricsView.tsx` rendering KPI cards and recent completed customer sales tables adhering to `DESIGN.md`.
+    - Embedded `SellerMetricsView` into `client/src/pages/DashboardPage.tsx` for authenticated `ARTIST` role users.
+  - Testing & Verification:
+    - Added unit test suite `server/tests/unit/seller.service.test.ts` testing metric calculations and error handling.
+    - Added integration acceptance test suite `server/tests/acceptance/seller.test.ts` verifying 401 Unauthorized, 403 Forbidden (for BUYER role), and 200 OK responses with accurate sales revenue calculations.
+- **Verified**:
+  - All 38 Vitest server unit and acceptance tests passed (`vitest run`).
+  - Both client and server TypeScript builds compiled with 0 errors (`npm run build`).
+
+## [2026-09-29 19:55:00 +06:00] Milestone: Sprint Feature Branches (T-019, T-030, T-034) Successfully Integrated & Harmonized
+- **Completed**:
+  - Successfully merged Ticket T-019 (Password reset verification endpoint & 3-step auth modal).
+  - Successfully merged Ticket T-030 (incorporating T-026: Artwork creation modal, validation, Prisma schema extension with weight/dimensions, and artist storefront management).
+  - Successfully merged Ticket T-034 (Seller sales performance metrics API and KPI dashboard component).
+  - Resolved merge conflicts in `server/src/server.ts` to cleanly mount both `/api/artworks` and `/api/seller` routes.
+  - Resolved merge conflicts in `client/src/pages/DashboardPage.tsx` adhering to Decision 9 and `DESIGN.md` (combining seller KPI cards with storefront inventory management).
+  - Updated acceptance test suites `server/tests/acceptance/artwork.test.ts` and `server/tests/acceptance/seller.test.ts` with self-contained dynamic port lifecycle hooks (`serverInstance = app.listen(0)` and `afterAll` cleanup).
+- **Verified**:
+  - All 7 Vitest test suites (59 unit and acceptance tests) passed cleanly (`npm test`).
+  - Server TypeScript compilation passed cleanly (`npm run build`).
+  - Client production build succeeded cleanly (`npm run build`).
+- **Next Steps**:
+  - Implement async queue worker for Sharp dHash duplicate detection.
+  - Implement buyer purchase, credit transaction, and commission distribution logic.
 
