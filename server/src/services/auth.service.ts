@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import { Role, User } from '@prisma/client';
 import { prisma } from '../config/prisma';
+import { EmailService } from './email.service';
 import {
   RegisterInput,
   LoginInput,
@@ -324,12 +325,21 @@ export class AuthService {
 
     if (user) {
       this.resetTokens.set(token, { email: user.email, expires });
+
+      // If user has local password authentication, dispatch reset email via Resend
+      if (user.passwordHash || !user.googleId) {
+        if (process.env.NODE_ENV !== 'test' || process.env.TEST_DISPATCH_EMAIL === 'true') {
+          EmailService.sendPasswordResetEmail(user.email, token).catch((err) => {
+            console.error('[AuthService] Error dispatching reset email via Resend:', err);
+          });
+        }
+      }
     }
 
     // Always return success message to prevent user enumeration
     return {
-      message: 'If an account with that email exists, password reset instructions have been generated.',
-      ...(process.env.NODE_ENV !== 'production' || !process.env.SMTP_HOST ? { resetToken: token } : {}),
+      message: 'If an account with that email exists, password reset instructions have been dispatched to your email.',
+      ...(process.env.NODE_ENV !== 'production' ? { resetToken: token } : {}),
     };
   }
 

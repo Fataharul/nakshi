@@ -160,7 +160,21 @@
   - All 7 Vitest test suites (59 unit and acceptance tests) passed cleanly (`npm test`).
   - Server TypeScript compilation passed cleanly (`npm run build`).
   - Client production build succeeded cleanly (`npm run build`).
+## [2026-09-29 20:20:00 +06:00] Milestone: Password Reset Email Delivery via Resend Implemented & Verified
+- **Completed**:
+  - Integrated `resend` package and created `EmailService` (`server/src/services/email.service.ts`) with responsive, gallery-themed HTML email template matching `DESIGN.md` (Terracotta primary, Muslin canvas, Playfair Display headers).
+  - Configured `AuthService.forgotPassword` to dispatch transactional reset emails via Resend when account exists, while preserving enumeration security and test performance.
+  - Enhanced `LoginPage.tsx` with `useSearchParams` to auto-detect `?resetToken=...` query parameter from email reset links, opening the modal directly with the token pre-filled.
+  - Updated user-facing messaging across modal steps (`REQUEST`, `VERIFY`, `SET_PASSWORD`) to reflect email dispatch.
+  - Added unit test suite `server/tests/unit/email.service.test.ts` verifying HTML generation and error resilience.
+  - Verified live Resend delivery with API key returning message ID `01a0ed87-4d34-7779-9103-915c89db06da`.
+  - Documented Decision 10 in `decisions.md` and updated `.env.example` & `README.md`.
+- **Verified**:
+  - All 8 Vitest test suites (62 unit and acceptance tests) passed cleanly (`npm test`).
+  - Server TypeScript compilation passed with 0 errors (`npm run build`).
+  - Client production build succeeded with 0 errors (`npm run build`).
 - **Next Steps**:
   - Implement async queue worker for Sharp dHash duplicate detection.
   - Implement buyer purchase, credit transaction, and commission distribution logic.
+
 
