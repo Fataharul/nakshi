@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, LoginPayload, RegisterPayload, UpdateProfilePayload } from '../types/auth';
+import { User, LoginPayload, RegisterPayload, UpdateProfilePayload, Role } from '../types/auth';
 import { authApi, getStoredToken, clearStoredToken } from '../services/auth.service';
 
 interface AuthContextType {
@@ -8,7 +8,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<User>;
-  googleLogin: (idToken: string) => Promise<User>;
+  googleLogin: (idToken: string, role?: Role) => Promise<User>;
   register: (payload: RegisterPayload) => Promise<User>;
   logout: () => void;
   updateProfile: (payload: UpdateProfilePayload) => Promise<User>;
@@ -61,10 +61,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const googleLogin = async (idToken: string): Promise<User> => {
+  const googleLogin = async (idToken: string, role?: Role): Promise<User> => {
     setIsLoading(true);
     try {
-      const response = await authApi.googleAuth(idToken);
+      const response = await authApi.googleAuth(idToken, role);
       setUser(response.user);
       setToken(response.token);
       return response.user;

@@ -60,6 +60,18 @@
   - All 32 server unit and acceptance tests passed (`vitest run`).
   - Server TypeScript compilation passed cleanly (`npm run build`).
   - Client production build succeeded cleanly (`npm run build`).
+## [2026-09-29 09:53:00 +06:00] Milestone: Google OAuth Credentials Configured & Role-Aware Signup Activated
+- **Completed**:
+  - Configured verified Google Cloud Web Application credentials (`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`) in [`server/.env`](file:///E:/Nakshi/server/.env) and created [`client/.env`](file:///E:/Nakshi/client/.env) with `VITE_GOOGLE_CLIENT_ID`.
+  - Extended backend validation schema (`googleAuthSchema`) and [`AuthService.googleAuth`](file:///E:/Nakshi/server/src/services/auth.service.ts) to support optional role selection (`BUYER`, `ARTIST`, `ORGANIZER`) during registration, guarding against privilege escalation.
+  - Enhanced [`GoogleLoginButton.tsx`](file:///E:/Nakshi/client/src/components/GoogleLoginButton.tsx) with dynamic button copy (`text="signup_with"` vs `"continue_with"`) and selected role forwarding.
+  - Integrated Google OAuth Sign-Up option into [`RegisterPage.tsx`](file:///E:/Nakshi/client/src/pages/RegisterPage.tsx) with cultural heritage gallery styling and divider.
+  - Expanded unit test suite in [`server/tests/unit/auth.service.test.ts`](file:///E:/Nakshi/server/tests/unit/auth.service.test.ts) and acceptance integration test suite in [`server/tests/acceptance/auth.test.ts`](file:///E:/Nakshi/server/tests/acceptance/auth.test.ts).
+  - Documented environment variables in [`README.md`](file:///E:/Nakshi/README.md) and updated Decision 7 in [`decisions.md`](file:///E:/Nakshi/.context/decisions.md).
+- **Verified**:
+  - All 34 server unit and acceptance tests passed (`vitest run`).
+  - Both server (`tsc`) and client (`tsc -b && vite build`) production builds succeeded cleanly with zero errors.
 - **Next Steps**:
   - Implement Artwork Service, Worker Queue, and API routes (`POST /api/artworks`, `GET /api/artworks/my-artworks`, `GET /api/artworks/storefront/:artistId`).
   - Build the artist management UI components and public storefront page.
+

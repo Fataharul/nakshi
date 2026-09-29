@@ -66,8 +66,10 @@
   - Implement frontend authentication using `@react-oauth/google` with `GoogleLogin` component wrapped in `GoogleOAuthProvider`.
   - Verify tokens on the backend using `google-auth-library` (`OAuth2Client.verifyIdToken`) against `GOOGLE_CLIENT_ID`.
   - Schema extension: Make `User.passwordHash` optional (`String?`), add unique `googleId` (`String? @unique`), and `isVerified` (`Boolean @default(false)`).
-  - On first sign-in, atomically create the user record with default `BUYER` role and initialize an empty credit wallet at `0.0` balance.
+  - Support role-aware Google registration: When signing up from `RegisterPage`, validate chosen role (`BUYER`, `ARTIST`, `ORGANIZER`) preventing privilege escalation, and atomically initialize the user record and 0.00 credit wallet in `prisma.$transaction`.
+  - On Google sign-in (or when no role is specified), default new user provisioning to `BUYER`, while preserving existing user accounts and roles.
   - Prevent password logins or password changes on accounts created purely via Google OAuth, responding with specific actionable guidance.
 - **Consequences**:
   - Simplifies user onboarding without compromising wallet integrity or security.
   - Preserves RBAC and JWT token format uniformity across local and OAuth users.
+

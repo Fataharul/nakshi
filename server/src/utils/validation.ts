@@ -75,6 +75,8 @@ export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 
 export const googleAuthSchema = z.object({
   idToken: z.string().min(1, 'ID Token is required'),
+  role: z.enum(['BUYER', 'ARTIST', 'ORGANIZER']).optional(),
 });
 
 export type GoogleAuthInput = z.infer<typeof googleAuthSchema>;
+

@@ -123,6 +123,18 @@ describe('AuthService & Validation Unit Tests', () => {
       });
       expect(valid.success).toBe(true);
 
+      const validWithRole = googleAuthSchema.safeParse({
+        idToken: 'valid.google.id.token.signature',
+        role: 'ARTIST',
+      });
+      expect(validWithRole.success).toBe(true);
+
+      const invalidRole = googleAuthSchema.safeParse({
+        idToken: 'valid.google.id.token.signature',
+        role: 'ADMIN',
+      });
+      expect(invalidRole.success).toBe(false);
+
       const missingToken = googleAuthSchema.safeParse({});
       expect(missingToken.success).toBe(false);
 

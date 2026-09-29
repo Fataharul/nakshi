@@ -123,11 +123,12 @@ export class AuthService {
     };
   }
 
-  public static async googleAuth(idToken: string): Promise<AuthResult> {
+  public static async googleAuth(idToken: string, role?: Role): Promise<AuthResult> {
     try {
+      const clientId = process.env.GOOGLE_CLIENT_ID || this.GOOGLE_CLIENT_ID;
       const ticket = await this.googleClient.verifyIdToken({
         idToken,
-        audience: this.GOOGLE_CLIENT_ID,
+        audience: clientId,
       });
 
       const payload = ticket.getPayload();
@@ -159,6 +160,9 @@ export class AuthService {
 
         walletBalance = user.wallet ? Number(user.wallet.balance) : 0;
       } else {
+        const allowedRoles: Role[] = ['BUYER', 'ARTIST', 'ORGANIZER'];
+        const assignedRole = role && allowedRoles.includes(role) ? role : 'BUYER';
+
         const result = await prisma.$transaction(async (tx) => {
           const newUser = await tx.user.create({
             data: {
@@ -167,7 +171,7 @@ export class AuthService {
               googleId,
               avatarUrl,
               isVerified: true,
-              role: 'BUYER',
+              role: assignedRole,
             },
           });
 

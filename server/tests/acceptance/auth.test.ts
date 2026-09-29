@@ -178,6 +178,16 @@ describe('Auth & RBAC Acceptance Tests', () => {
             }),
           } as any;
         }
+        if (options.idToken === 'valid-google-id-token-artist') {
+          return {
+            getPayload: () => ({
+              email: `artist_${mockGoogleEmail}`,
+              name: 'Google Artist New',
+              sub: `sub_artist_${mockGoogleSub}`,
+              picture: 'https://lh3.googleusercontent.com/a/artist-avatar',
+            }),
+          } as any;
+        }
         throw new Error('Google token invalid');
       });
     });
@@ -265,6 +275,37 @@ describe('Auth & RBAC Acceptance Tests', () => {
       expect(res.status).toBe(401);
       const data = (await res.json()) as any;
       expect(data.error).toContain('Please sign in using Google');
+    });
+
+    it('successfully registers new user with specific role (e.g. ARTIST) via Google OAuth', async () => {
+      const res = await fetch(`${baseUrl}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idToken: 'valid-google-id-token-artist',
+          role: 'ARTIST',
+        }),
+      });
+
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.user.role).toBe('ARTIST');
+      expect(data.user.email).toBe(`artist_${mockGoogleEmail}`);
+    });
+
+    it('rejects forbidden role (ADMIN) during Google registration with 400 Bad Request', async () => {
+      const res = await fetch(`${baseUrl}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idToken: 'valid-google-id-token',
+          role: 'ADMIN',
+        }),
+      });
+
+      expect(res.status).toBe(400);
+      const data = (await res.json()) as any;
+      expect(data.error).toBe('Validation failed');
     });
   });
 

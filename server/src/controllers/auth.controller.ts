@@ -33,7 +33,7 @@ export class AuthController {
   public static async google(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const validatedData = googleAuthSchema.parse(req.body);
-      const result = await AuthService.googleAuth(validatedData.idToken);
+      const result = await AuthService.googleAuth(validatedData.idToken, validatedData.role as any);
       res.status(200).json(result);
     } catch (error) {
       next(error);

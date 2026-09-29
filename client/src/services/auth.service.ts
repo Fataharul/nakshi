@@ -4,9 +4,11 @@ import {
   RegisterPayload,
   UpdateProfilePayload,
   User,
+  Role,
 } from '../types/auth';
 
 const TOKEN_KEY = 'nakshi_token';
+
 
 export const getStoredToken = (): string | null => {
   return localStorage.getItem(TOKEN_KEY);
@@ -67,10 +69,10 @@ export const authApi = {
     return data;
   },
 
-  async googleAuth(idToken: string): Promise<AuthResponse> {
+  async googleAuth(idToken: string, role?: Role): Promise<AuthResponse> {
     const data = await request<AuthResponse>('/api/auth/google', {
       method: 'POST',
-      body: JSON.stringify({ idToken }),
+      body: JSON.stringify({ idToken, role }),
     });
     setStoredToken(data.token);
     return data;

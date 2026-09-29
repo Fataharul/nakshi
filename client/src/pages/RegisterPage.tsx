@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Role } from '../types/auth';
 import { ArrowRight, AlertCircle, ShoppingBag, Palette, Compass, CheckCircle2 } from 'lucide-react';
+import { GoogleLoginButton } from '../components/GoogleLoginButton';
+
 
 export const RegisterPage: React.FC = () => {
   const { register } = useAuth();
@@ -312,6 +314,17 @@ export const RegisterPage: React.FC = () => {
                 )}
               </button>
             </div>
+
+            <div className="relative mt-6 pt-2">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-surface-container-highest"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-surface-container-lowest px-2 text-on-surface-variant uppercase tracking-wider font-semibold">Or join with</span>
+              </div>
+            </div>
+
+            <GoogleLoginButton setError={setError} setIsSubmitting={setIsSubmitting} role={role} text="signup_with" />
           </form>
 
           {/* Sign In Link */}

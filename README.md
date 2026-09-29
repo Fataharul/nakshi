@@ -79,6 +79,7 @@ Nakshi/
 
 ## Environment Variables
 
+### Server (`server/.env`)
 Copy `server/.env.example` to `server/.env`:
 
 ```bash
@@ -89,7 +90,18 @@ DATABASE_URL="postgresql://user:password@localhost:5432/nakshi?schema=public"
 JWT_SECRET=your_jwt_secret_key
 SIMILARITY_THRESHOLD=80
 UPLOAD_DIR=./uploads
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 ```
+
+### Client (`client/.env`)
+Copy `client/.env.example` to `client/.env`:
+
+```bash
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
+VITE_API_BASE_URL=http://localhost:5000
+```
+
 
 ---
 
