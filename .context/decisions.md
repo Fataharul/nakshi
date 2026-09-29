@@ -60,7 +60,8 @@
   - Eliminates unauthorized elevation of privilege via direct API manipulation.
   - Satisfies Requirements 2.2 and 3.2 without third-party email service expenses.
 
-## 7. Google OAuth 2.0 Integration & Account Harmonization
+## 8. Google OAuth 2.0 Integration & Account Harmonization
+- **Timestamp**: 2026-09-29 09:53:00 +06:00
 - **Context**: Users require frictionless authentication while adhering to role-based access control and security guidelines.
 - **Decision**:
   - Implement frontend authentication using `@react-oauth/google` with `GoogleLogin` component wrapped in `GoogleOAuthProvider`.
@@ -72,4 +73,16 @@
 - **Consequences**:
   - Simplifies user onboarding without compromising wallet integrity or security.
   - Preserves RBAC and JWT token format uniformity across local and OAuth users.
+
+## 9. Harmonized Artist Dashboard with Dual Metrics and Storefront Management
+- **Timestamp**: 2026-09-29 19:53:00 +06:00
+- **Context**: Merging concurrent artist feature branches (`T-026`/`T-030` for artwork publishing and storefront inventory, and `T-034` for sales performance metrics) required a unified dashboard layout adhering to `DESIGN.md`.
+- **Decision**:
+  - Place `SellerMetricsView` at the top of the artist dashboard view directly below the identity and credit wallet banner to give artists immediate visibility into total revenue, order count, and AOV.
+  - Embed the Storefront Management section (`Published Artworks`, `+ Add New Artwork` modal trigger, and dynamic grid) in the primary 2-column layout alongside user settings and session information.
+  - Ensure all artwork card displays feature both craft medium classification and physical dimensions/weight indicators.
+- **Rationale**:
+  - Aligns with the "Digital Gallery" aesthetic in `DESIGN.md` without fragmenting the artist experience into disparate pages.
+  - Preserves a high-contrast hierarchy (metrics overview first, inventory management second).
+
 

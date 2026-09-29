@@ -148,6 +148,19 @@
   - All 38 Vitest server unit and acceptance tests passed (`vitest run`).
   - Both client and server TypeScript builds compiled with 0 errors (`npm run build`).
 
+## [2026-09-29 19:55:00 +06:00] Milestone: Sprint Feature Branches (T-019, T-030, T-034) Successfully Integrated & Harmonized
+- **Completed**:
+  - Successfully merged Ticket T-019 (Password reset verification endpoint & 3-step auth modal).
+  - Successfully merged Ticket T-030 (incorporating T-026: Artwork creation modal, validation, Prisma schema extension with weight/dimensions, and artist storefront management).
+  - Successfully merged Ticket T-034 (Seller sales performance metrics API and KPI dashboard component).
+  - Resolved merge conflicts in `server/src/server.ts` to cleanly mount both `/api/artworks` and `/api/seller` routes.
+  - Resolved merge conflicts in `client/src/pages/DashboardPage.tsx` adhering to Decision 9 and `DESIGN.md` (combining seller KPI cards with storefront inventory management).
+  - Updated acceptance test suites `server/tests/acceptance/artwork.test.ts` and `server/tests/acceptance/seller.test.ts` with self-contained dynamic port lifecycle hooks (`serverInstance = app.listen(0)` and `afterAll` cleanup).
+- **Verified**:
+  - All 7 Vitest test suites (59 unit and acceptance tests) passed cleanly (`npm test`).
+  - Server TypeScript compilation passed cleanly (`npm run build`).
+  - Client production build succeeded cleanly (`npm run build`).
 - **Next Steps**:
   - Implement async queue worker for Sharp dHash duplicate detection.
   - Implement buyer purchase, credit transaction, and commission distribution logic.
+
