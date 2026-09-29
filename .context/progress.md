@@ -174,7 +174,23 @@
   - All 8 Vitest test suites (69 unit and acceptance tests) passed cleanly (`npm test`).
   - Server TypeScript compilation passed with 0 errors (`npm run build`).
   - Client Vite production bundle built cleanly with 0 errors (`npm run build`).
+## [2026-09-29 22:30:00 +06:00] Milestone: Unified Seller Dashboard Layout Implemented & Verified
+- **Completed**:
+  - Created `client/src/components/dashboard/SellerDashboardLayout.tsx` providing a unified studio dashboard layout for artists adhering to `DESIGN.md` and `DESIGN_DIRECTION.md`.
+  - Implemented Artist Studio Header with artist identity, role badge, verified artisan mark, biography summary, wallet credit balance card (`#dashboard-wallet-balance`), and primary action "+ Add New Artwork" (`#add-artwork-btn`).
+  - Implemented 4-card editorial KPI metrics layout (Total Revenue, Total Orders, Average Order Value, Active Inventory) designed with gallery aesthetic and typography.
+  - Implemented Storefront & Inventory Management section with interactive availability filter chips (`ALL`, `AVAILABLE`, `SOLD`), published artwork cards (`#artworks-grid`) with craft medium tags, dimension/weight metadata, and empty-state guidance (`#no-artworks-banner`).
+  - Implemented Studio Profile summary and storefront guidelines sidebar cards.
+  - Updated `client/src/pages/DashboardPage.tsx` to cleanly route `ARTIST` users to `SellerDashboardLayout` while maintaining general role views for other roles.
+  - Preserved all test selectors ensuring zero regression across automated suites.
+- **Verified**:
+  - All 8 Vitest server unit and acceptance test suites (69 tests) passed cleanly (`npm test`).
+  - Server TypeScript compilation passed with 0 errors (`npm run build`).
+  - Client Vite production build succeeded cleanly with 0 errors (`npm run build`).
+  - All 6 Playwright artwork creation & storefront E2E tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px (`e2e/08_create_artwork.spec.ts`).
+  - All 24 Playwright auth & RBAC E2E tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px (`e2e/01_auth_rbac.spec.ts`).
 - **Next Steps**:
+  - Implement dynamic calculation and real-time backend synchronization for seller sales metrics and summary statistics.
   - Implement async queue worker for Sharp dHash duplicate detection.
   - Implement buyer purchase, credit transaction, and commission distribution logic.
 
