@@ -88,6 +88,43 @@
   - All 34 server unit and acceptance tests passed (`vitest run`).
   - Both server (`tsc`) and client (`tsc -b && vite build`) production builds succeeded cleanly with zero errors.
 - **Next Steps**:
-  - Implement Artwork Service, Worker Queue, and API routes (`POST /api/artworks`, `GET /api/artworks/my-artworks`, `GET /api/artworks/storefront/:artistId`).
-  - Build the artist management UI components and public storefront page.
+## [2026-09-29 02:40:00 +06:00] Milestone: Ticket T-026 (Artwork Creation & Storefront Functionality) Implemented & Verified
+- **Completed**:
+  - Backend artwork service & routes:
+    - Built `server/src/services/artwork.service.ts` supporting `createArtwork`, `getArtistArtworks`, `getArtworkById`, and `getArtistStorefront`.
+    - Created `server/src/controllers/artwork.controller.ts` with strict Zod validation and safe Express parameter handling.
+    - Protected `POST /api/artworks` route with `authenticateJWT` and `requireRoles(Role.ARTIST)` middleware in `server/src/routes/artwork.routes.ts`.
+    - Registered `/api/artworks` router in `server/src/server.ts`.
+  - Frontend artist storefront & creation form:
+    - Created `client/src/services/artwork.service.ts` supporting artwork publishing and storefront fetching.
+    - Built accessible `client/src/components/marketplace/CreateArtworkModal.tsx` modal component featuring heritage craft medium selection (`CRAFT_MEDIUMS`), credit pricing inputs, and field-level inline error validation.
+    - Updated `client/src/pages/DashboardPage.tsx` to render the artist's storefront summary, artwork inventory grid, and artwork publishing trigger button (`#add-artwork-btn`).
+  - Automated testing:
+    - Added unit test suite `server/tests/unit/artwork.service.test.ts` (5 tests passing).
+    - Added acceptance test suite `server/tests/acceptance/artwork.test.ts` (6 tests passing).
+    - Added E2E Playwright test suite `e2e/08_create_artwork.spec.ts` testing registration, artwork publishing, grid rendering, and form validation across viewports.
+- **Verified**:
+  - All 43 Vitest server unit and acceptance tests passed (`vitest run`).
+  - All 6 Playwright E2E tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px (`npx playwright test e2e/08_create_artwork.spec.ts`).
+  - Both client and server TypeScript builds compiled with 0 errors (`npm run build`).
+
+## [2026-09-29 03:12:00 +06:00] Milestone: Ticket T-030 (Artwork Weight & Dimensions Schema & API) Implemented & Verified
+- **Completed**:
+  - Prisma Database Schema:
+    - Updated `Artwork` model in `server/prisma/schema.prisma` with `weight` (`Float?`), `weightUnit` (`String? @default("kg")`), `height` (`Float?`), `width` (`Float?`), `depth` (`Float?`), and `dimensions` (`String?`).
+    - Synchronized live PostgreSQL schema with `npx prisma db push` and generated Prisma Client with `npx prisma generate`.
+  - Backend Validation & Service Integration:
+    - Updated Zod validation schemas (`createArtworkSchema` & `updateArtworkSchema`) in `server/src/utils/artwork.validation.ts` with custom positive number transform helpers for optional physical dimension and weight fields.
+    - Updated `server/src/services/artwork.service.ts` to format, persist, and return weight and dimension attributes across creation, retrieval, and storefront queries.
+  - Frontend UI & Types:
+    - Updated `client/src/types/artwork.ts` with `weight`, `weightUnit`, `height`, `width`, `depth`, and `dimensions` fields on `Artwork`, `CreateArtworkPayload`, and `UpdateArtworkPayload`.
+    - Added weight (`#artwork-weight-input`), weight unit (`#artwork-weight-unit-select`), height (`#artwork-height-input`), width (`#artwork-width-input`), and depth (`#artwork-depth-input`) input controls to `client/src/components/marketplace/CreateArtworkModal.tsx`.
+    - Updated `client/src/pages/DashboardPage.tsx` artwork cards to render physical size and weight metrics.
+  - Automated Tests:
+    - Added unit test coverage in `server/tests/unit/artwork.service.test.ts` for weight/dimension parsing and validation.
+    - Updated acceptance tests in `server/tests/acceptance/artwork.test.ts` to verify database persistence and API returns for weight/dimensions.
+- **Verified**:
+  - All 45 Vitest server unit and acceptance tests passed (`vitest run`).
+  - All 6 Playwright E2E tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px (`npx playwright test e2e/08_create_artwork.spec.ts`).
+  - Both client and server TypeScript builds compiled with 0 errors (`npm run build`).
 

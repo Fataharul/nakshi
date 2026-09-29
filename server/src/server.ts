@@ -5,6 +5,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import dotenv from 'dotenv';
 
 import authRoutes from './routes/auth.routes';
+import artworkRoutes from './routes/artwork.routes';
 import { errorHandler } from './middleware/error.middleware';
 
 dotenv.config();
@@ -31,8 +32,12 @@ app.get('/api/health', (req, res) => {
 // Authentication & RBAC Routes
 app.use('/api/auth', authRoutes);
 
+// Artwork Routes
+app.use('/api/artworks', artworkRoutes);
+
 // Centralized error handling
 app.use(errorHandler);
+
 
 const PORT = process.env.PORT || 5000;
 

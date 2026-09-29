@@ -14,6 +14,15 @@ export const CRAFT_MEDIUMS = [
   'Other Traditional Craft',
 ] as const;
 
+const optionalPositiveNumber = z
+  .union([
+    z.coerce.number().positive('Must be greater than zero'),
+    z.literal(''),
+    z.null(),
+    z.undefined(),
+  ])
+  .transform((val) => (val === '' || val === undefined || val === null || Number.isNaN(val) ? null : Number(val)));
+
 export const createArtworkSchema = z.object({
   title: z
     .string()
@@ -33,6 +42,16 @@ export const createArtworkSchema = z.object({
   dimensions: z
     .string()
     .max(100, 'Dimensions cannot exceed 100 characters')
+    .trim()
+    .optional()
+    .nullable(),
+  height: optionalPositiveNumber,
+  width: optionalPositiveNumber,
+  depth: optionalPositiveNumber,
+  weight: optionalPositiveNumber,
+  weightUnit: z
+    .string()
+    .max(20, 'Weight unit cannot exceed 20 characters')
     .trim()
     .optional()
     .nullable(),
@@ -73,6 +92,16 @@ export const updateArtworkSchema = z.object({
   dimensions: z
     .string()
     .max(100, 'Dimensions cannot exceed 100 characters')
+    .trim()
+    .optional()
+    .nullable(),
+  height: optionalPositiveNumber,
+  width: optionalPositiveNumber,
+  depth: optionalPositiveNumber,
+  weight: optionalPositiveNumber,
+  weightUnit: z
+    .string()
+    .max(20, 'Weight unit cannot exceed 20 characters')
     .trim()
     .optional()
     .nullable(),
