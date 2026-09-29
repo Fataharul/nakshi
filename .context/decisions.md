@@ -99,5 +99,21 @@
   - S3-compatible protocol avoids bundling vendor-specific SDKs while remaining 100% interoperable with Supabase Storage buckets.
   - Client-side direct file picker dramatically improves the artisan UX while server-side upload routing enforces authentication, RBAC, and payload validation.
 
+## 11. Unified Seller Dashboard Layout Architecture
+- **Timestamp**: 2026-09-29 22:25:00 +06:00
+- **Context**: The seller/artist dashboard previously fragmented artist identity, metrics, and storefront inventory into generic user cards mixed with consumer session information. A unified, dedicated seller studio layout was required while deferring complex dynamic metrics logic to later phases.
+- **Decision**:
+  - Implement a dedicated `SellerDashboardLayout` component in `client/src/components/dashboard/SellerDashboardLayout.tsx` and route artist role views cleanly from `DashboardPage.tsx`.
+  - Structure the layout into clear, cohesive architectural sections:
+    1. **Artist Studio Header & Identity Bar**: Displays artist avatar/initials, name (`#dashboard-user-name`), role badge (`#dashboard-role-badge`), verified artisan mark, biography summary, credit wallet card (`#dashboard-wallet-balance`), and primary action "+ Add New Artwork" (`#add-artwork-btn`).
+    2. **Sales & Performance Metrics Section**: Clean 4-card editorial KPI layout (Total Revenue, Total Orders, Average Order Value, Active Inventory) adhering to `DESIGN.md` Muslin card design with 1px borders and Playfair Display figures, structured for later data population.
+    3. **Storefront & Inventory Management Section**: Displays published artworks grid (`#artworks-grid`) with craft medium tags, dimension/weight metadata, credit prices, availability badges, and interactive availability filters (`ALL`, `AVAILABLE`, `SOLD`), with an empty state CTA when no artworks are published.
+    4. **Studio Profile & Guidelines Sidebar**: Summarizes studio profile attributes, craft specialty, verification status, and storefront guidelines.
+  - Preserve all existing DOM selectors (`#dashboard-user-name`, `#dashboard-role-badge`, `#dashboard-wallet-balance`, `#add-artwork-btn`, `#artworks-grid`, `#no-artworks-banner`) to ensure 100% backward compatibility with Playwright E2E and component test suites.
+- **Rationale**:
+  - Provides a professional "Digital Studio & Gallery" demeanor consistent with `DESIGN.md` and `DESIGN_DIRECTION.md`.
+  - Maintains strict separation between the artist-specific studio environment and generic buyer/organizer views.
+
+
 
 
