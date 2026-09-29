@@ -44,7 +44,8 @@ export const Navbar: React.FC = () => {
               Gallery
             </Link>
             <Link
-              to="/"
+              to="/marketplace"
+              id="navbar-marketplace-link"
               className="text-xs uppercase tracking-wider font-semibold text-on-surface-variant hover:text-on-surface transition-colors"
             >
               Marketplace
@@ -232,7 +233,8 @@ export const Navbar: React.FC = () => {
               Gallery Home
             </Link>
             <Link
-              to="/"
+              to="/marketplace"
+              id="mobile-navbar-marketplace-link"
               onClick={() => setMobileMenuOpen(false)}
               className="block py-2 text-sm font-medium text-on-surface hover:text-primary"
             >

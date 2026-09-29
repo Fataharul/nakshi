@@ -7,6 +7,7 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { AccountSetupPage } from './pages/AccountSetupPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { MarketplacePage } from './pages/MarketplacePage';
 
 const HomePage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -24,21 +25,21 @@ const HomePage: React.FC = () => {
       </p>
 
       <div className="flex flex-wrap items-center justify-center gap-4">
+        <Link
+          to="/marketplace"
+          id="home-explore-marketplace-btn"
+          className="px-8 py-3.5 bg-primary text-on-primary font-semibold text-xs uppercase tracking-wider rounded-full hover:bg-surface-tint transition-all shadow-sm"
+        >
+          Explore Marketplace
+        </Link>
         {isAuthenticated && user ? (
           <>
             <Link
               to={`/dashboard/${user.role.toLowerCase()}`}
               id="home-dashboard-btn"
-              className="px-8 py-3.5 bg-primary text-on-primary font-semibold text-xs uppercase tracking-wider rounded-full hover:bg-surface-tint transition-all shadow-sm"
-            >
-              Go to {user.role} Dashboard
-            </Link>
-            <Link
-              to="/setup"
-              id="home-setup-btn"
               className="px-8 py-3.5 border border-outline/40 text-on-surface font-semibold text-xs uppercase tracking-wider rounded-full hover:bg-surface-container transition-all"
             >
-              Account Settings
+              Go to {user.role} Dashboard
             </Link>
           </>
         ) : (
@@ -46,7 +47,7 @@ const HomePage: React.FC = () => {
             <Link
               to="/register"
               id="home-explore-btn"
-              className="px-8 py-3.5 bg-primary text-on-primary font-semibold text-xs uppercase tracking-wider rounded-full hover:bg-surface-tint transition-all shadow-sm"
+              className="px-8 py-3.5 border border-outline/40 text-on-surface font-semibold text-xs uppercase tracking-wider rounded-full hover:bg-surface-container transition-all"
             >
               Join the Gallery
             </Link>
@@ -74,6 +75,8 @@ export const App: React.FC = () => {
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<HomePage />} />
+              <Route path="/marketplace" element={<MarketplacePage />} />
+              <Route path="/search" element={<MarketplacePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
 
