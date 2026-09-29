@@ -355,6 +355,103 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026 & T-038)', () =>
     });
   });
 
+  describe('GET /api/artworks (Medium & Style Filtering - T-042)', () => {
+    let kanthaArtworkId: string;
+    let terracottaArtworkId: string;
+
+    beforeAll(async () => {
+      // Create Artwork 1: Nakshi Kantha with Traditional Folk style
+      const kanthaRes = await fetch(`${baseUrl}/api/artworks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${artistToken}`,
+        },
+        body: JSON.stringify({
+          title: `Filter Test Kantha ${uniqueId}`,
+          description: 'Traditional folk handcrafted quilt from Jessore.',
+          medium: 'Nakshi Kantha',
+          style: 'Traditional Folk',
+          price: 600,
+        }),
+      });
+      const kanthaData = (await kanthaRes.json()) as any;
+      kanthaArtworkId = kanthaData.artwork.id;
+
+      // Create Artwork 2: Terracotta Clay with Sculptural & Relic style
+      const terracottaRes = await fetch(`${baseUrl}/api/artworks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${artistToken}`,
+        },
+        body: JSON.stringify({
+          title: `Filter Test Terracotta ${uniqueId}`,
+          description: 'Sculptural terracotta ancient horse relic figurine.',
+          medium: 'Terracotta Clay',
+          style: 'Sculptural & Relic',
+          price: 400,
+        }),
+      });
+      const terracottaData = (await terracottaRes.json()) as any;
+      terracottaArtworkId = terracottaData.artwork.id;
+    });
+
+    it('returns all artworks when no filter parameters are supplied', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks`);
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(Array.isArray(data.artworks)).toBe(true);
+      expect(data.pagination).toBeDefined();
+      expect(data.artworks.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('filters artworks strictly by medium', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks?medium=Nakshi%20Kantha`);
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.artworks.length).toBeGreaterThanOrEqual(1);
+      data.artworks.forEach((art: any) => {
+        expect(art.medium.toLowerCase()).toBe('nakshi kantha');
+      });
+      const found = data.artworks.find((art: any) => art.id === kanthaArtworkId);
+      expect(found).toBeDefined();
+    });
+
+    it('filters artworks strictly by style', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks?style=Sculptural%20%26%20Relic`);
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.artworks.length).toBeGreaterThanOrEqual(1);
+      data.artworks.forEach((art: any) => {
+        expect(art.style?.toLowerCase()).toBe('sculptural & relic');
+      });
+      const found = data.artworks.find((art: any) => art.id === terracottaArtworkId);
+      expect(found).toBeDefined();
+    });
+
+    it('filters artworks by combining both medium and style criteria', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks?medium=Terracotta%20Clay&style=Sculptural%20%26%20Relic`);
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.artworks.length).toBeGreaterThanOrEqual(1);
+      data.artworks.forEach((art: any) => {
+        expect(art.medium.toLowerCase()).toBe('terracotta clay');
+        expect(art.style?.toLowerCase()).toBe('sculptural & relic');
+      });
+
+      const found = data.artworks.find((art: any) => art.id === terracottaArtworkId);
+      expect(found).toBeDefined();
+    });
+
+    it('returns empty array when no artworks match combined medium and style filter', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks?medium=Handloom%20Jamdani&style=Sculptural%20%26%20Relic`);
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.artworks.length).toBe(0);
+    });
+  });
+
   afterAll(async () => {
     if (serverInstance) {
       await new Promise<void>((resolve) => {

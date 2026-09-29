@@ -130,5 +130,21 @@ describe('Artwork Validation Schema Unit Tests', () => {
       });
       expect(result.success).toBe(false);
     });
+
+    it('validates style in create and update schemas', () => {
+      const created = createArtworkSchema.parse({
+        title: 'Floral Jamdani Tapestry',
+        description: 'Traditional tapestry featuring gold zari floral motifs.',
+        medium: 'Handloom Jamdani',
+        style: 'Floral Motifs',
+        price: 750,
+      });
+      expect(created.style).toBe('Floral Motifs');
+
+      const updated = updateArtworkSchema.parse({
+        style: 'Royal Heritage',
+      });
+      expect(updated.style).toBe('Royal Heritage');
+    });
   });
 });

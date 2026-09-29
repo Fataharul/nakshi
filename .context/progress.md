@@ -225,4 +225,20 @@
   - All 8 Vitest server unit and acceptance test suites (75 tests) passed cleanly (`npm --prefix server run test`).
   - Client Vite production build and TypeScript check passed with 0 errors (`npm --prefix client run build`).
 
+## [2026-09-30 00:24:00 +06:00] Milestone: Ticket T-042 — Filtering by Artwork Medium & Style Implemented
+- **Completed**:
+  - Added optional `style` field and `medium`/`style` database indexes to `Artwork` model in [`server/prisma/schema.prisma`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/prisma/schema.prisma) and synchronized schema via `npx prisma db push`.
+  - Updated validation schemas in [`server/src/utils/artwork.validation.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/utils/artwork.validation.ts) with `CRAFT_STYLES` constants and optional `style` support in `createArtworkSchema`, `updateArtworkSchema`, and `artworkQuerySchema`.
+  - Updated [`server/src/services/artwork.service.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/services/artwork.service.ts) `getArtworks` query method with case-insensitive `medium` and `style` filtering combined with text search, price limits, and pagination.
+  - Added `getAll` controller handler in [`server/src/controllers/artwork.controller.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/controllers/artwork.controller.ts) and exposed `GET /api/artworks` in [`server/src/routes/artwork.routes.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/routes/artwork.routes.ts).
+  - Updated client types in [`client/src/types/artwork.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/client/src/types/artwork.ts) and added `getArtworks(params)` API query method in [`client/src/services/artwork.service.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/client/src/services/artwork.service.ts).
+  - Enhanced [`client/src/components/marketplace/ArtworkSearchInterface.tsx`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/client/src/components/marketplace/ArtworkSearchInterface.tsx) with interactive Craft Style dropdown filter controls (`#artwork-style-filter`), medium pill filters, live API query integration, and style metadata badges on artwork cards.
+  - Updated [`client/src/components/marketplace/CreateArtworkModal.tsx`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/client/src/components/marketplace/CreateArtworkModal.tsx) to allow artists to select Craft Style when listing or editing artworks.
+  - Added unit tests in [`server/tests/unit/artwork.service.test.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/tests/unit/artwork.service.test.ts) for `artworkQuerySchema` style parsing.
+  - Added acceptance integration test suite in [`server/tests/acceptance/artwork.test.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/tests/acceptance/artwork.test.ts) verifying filtering by medium, filtering by style, combined medium & style filtering, and unfiltered query behavior.
+- **Verified**:
+  - All 8 Vitest server unit and acceptance test suites (81 tests) passed cleanly (`npm --prefix server run test`).
+  - Client Vite production build and TypeScript check passed with 0 errors (`npm --prefix client run build`).
+
+
 
