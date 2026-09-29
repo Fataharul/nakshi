@@ -37,3 +37,10 @@ export interface UpdateProfilePayload {
   currentPassword?: string;
   newPassword?: string;
 }
+
+export interface VerifyResetTokenResponse {
+  valid: boolean;
+  email: string;
+  message: string;
+}
+

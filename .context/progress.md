@@ -60,6 +60,22 @@
   - All 32 server unit and acceptance tests passed (`vitest run`).
   - Server TypeScript compilation passed cleanly (`npm run build`).
   - Client production build succeeded cleanly (`npm run build`).
+## [2026-09-29 01:45:00 +06:00] Milestone: Ticket T-019 — Password Reset Verification Flow Implemented
+- **Completed**:
+  - Added `verifyResetTokenSchema` and `VerifyResetTokenInput` validation in [`server/src/utils/validation.ts`](file:///E:/Nakshi/server/src/utils/validation.ts).
+  - Implemented `AuthService.verifyResetToken` and Google OAuth account guards in [`server/src/services/auth.service.ts`](file:///E:/Nakshi/server/src/services/auth.service.ts) adhering to Decision 7.
+  - Added `AuthController.verifyResetToken` in [`server/src/controllers/auth.controller.ts`](file:///E:/Nakshi/server/src/controllers/auth.controller.ts).
+  - Exposed `POST /api/auth/verify-reset-token` endpoint in [`server/src/routes/auth.routes.ts`](file:///E:/Nakshi/server/src/routes/auth.routes.ts).
+  - Added `verifyResetToken` client API integration and `VerifyResetTokenResponse` type in [`client/src/services/auth.service.ts`](file:///E:/Nakshi/client/src/services/auth.service.ts) & [`client/src/types/auth.ts`](file:///E:/Nakshi/client/src/types/auth.ts).
+  - Updated [`client/src/pages/LoginPage.tsx`](file:///E:/Nakshi/client/src/pages/LoginPage.tsx) with a 3-step stepper modal (`REQUEST` -> `VERIFY` -> `SET_PASSWORD`) allowing users to set a new password only after successful token verification.
+  - Added unit test coverage for `verifyResetTokenSchema` in [`server/tests/unit/auth.service.test.ts`](file:///E:/Nakshi/server/tests/unit/auth.service.test.ts).
+  - Added acceptance integration test coverage for `POST /api/auth/verify-reset-token` in [`server/tests/acceptance/auth.test.ts`](file:///E:/Nakshi/server/tests/acceptance/auth.test.ts).
+  - Added end-to-end Playwright test in [`e2e/01_auth_rbac.spec.ts`](file:///E:/Nakshi/e2e/01_auth_rbac.spec.ts).
+- **Verified**:
+  - All 38 server unit and acceptance tests passed (`vitest run`).
+  - Both client and server production builds succeeded cleanly without errors (`npm run build`).
+  - All 24 Playwright E2E and multi-viewport tests passed across Desktop Chrome, Mobile 360px, and Tablet 768px (`npm test`).
+
 ## [2026-09-29 09:53:00 +06:00] Milestone: Google OAuth Credentials Configured & Role-Aware Signup Activated
 - **Completed**:
   - Configured verified Google Cloud Web Application credentials (`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`) in [`server/.env`](file:///E:/Nakshi/server/.env) and created [`client/.env`](file:///E:/Nakshi/client/.env) with `VITE_GOOGLE_CLIENT_ID`.

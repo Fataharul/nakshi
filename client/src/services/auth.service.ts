@@ -3,6 +3,7 @@ import {
   LoginPayload,
   RegisterPayload,
   UpdateProfilePayload,
+  VerifyResetTokenResponse,
   User,
   Role,
 } from '../types/auth';
@@ -97,6 +98,13 @@ export const authApi = {
     return request<{ message: string; resetToken?: string }>('/api/auth/forgot-password', {
       method: 'POST',
       body: JSON.stringify({ email }),
+    });
+  },
+
+  async verifyResetToken(token: string): Promise<VerifyResetTokenResponse> {
+    return request<VerifyResetTokenResponse>('/api/auth/verify-reset-token', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
     });
   },
 
