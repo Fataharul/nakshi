@@ -1,9 +1,12 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import http from 'http';
+import { AddressInfo } from 'net';
+import { app } from '../../src/server';
 import { prisma } from '../../src/config/prisma';
 
-const baseUrl = process.env.TEST_API_URL || 'http://localhost:5000';
-
 describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
+  let serverInstance: http.Server;
+  let baseUrl: string;
   const uniqueId = Date.now();
   let artistToken: string;
   let buyerToken: string;
@@ -25,6 +28,15 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
   };
 
   beforeAll(async () => {
+    // Start test server on dynamic open port
+    await new Promise<void>((resolve) => {
+      serverInstance = app.listen(0, () => {
+        const address = serverInstance.address() as AddressInfo;
+        baseUrl = `http://localhost:${address.port}`;
+        resolve();
+      });
+    });
+
     // 1. Register Artist user
     const artistReg = await fetch(`${baseUrl}/api/auth/register`, {
       method: 'POST',
@@ -179,5 +191,13 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
       expect(data.stats).toBeDefined();
       expect(data.stats.totalArtworks).toBeGreaterThanOrEqual(1);
     });
+  });
+
+  afterAll(async () => {
+    if (serverInstance) {
+      await new Promise<void>((resolve) => {
+        serverInstance.close(() => resolve());
+      });
+    }
   });
 });
