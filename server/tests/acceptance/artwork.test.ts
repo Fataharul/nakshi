@@ -193,6 +193,74 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
     });
   });
 
+  describe('POST /api/artworks/upload (Image Upload)', () => {
+    it('rejects unauthenticated upload request with 401 Unauthorized', async () => {
+      const form = new FormData();
+      const fakeBlob = new Blob(['image content'], { type: 'image/png' });
+      form.append('image', fakeBlob, 'test.png');
+
+      const res = await fetch(`${baseUrl}/api/artworks/upload`, {
+        method: 'POST',
+        body: form,
+      });
+
+      expect(res.status).toBe(401);
+    });
+
+    it('rejects BUYER role attempting image upload with 403 Forbidden', async () => {
+      const form = new FormData();
+      const fakeBlob = new Blob(['image content'], { type: 'image/png' });
+      form.append('image', fakeBlob, 'test.png');
+
+      const res = await fetch(`${baseUrl}/api/artworks/upload`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${buyerToken}`,
+        },
+        body: form,
+      });
+
+      expect(res.status).toBe(403);
+    });
+
+    it('rejects upload request with no file attached with 400 Bad Request', async () => {
+      const form = new FormData();
+
+      const res = await fetch(`${baseUrl}/api/artworks/upload`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${artistToken}`,
+        },
+        body: form,
+      });
+
+      expect(res.status).toBe(400);
+      const data = (await res.json()) as any;
+      expect(data.error).toBe('No image file provided for upload');
+    });
+
+    it('successfully uploads an image for authenticated ARTIST', async () => {
+      const form = new FormData();
+      const fakeBlob = new Blob(['valid-image-content-bytes'], { type: 'image/png' });
+      form.append('image', fakeBlob, 'handicraft.png');
+
+      const res = await fetch(`${baseUrl}/api/artworks/upload`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${artistToken}`,
+        },
+        body: form,
+      });
+
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.imageUrl).toBeDefined();
+      expect(data.key).toBeDefined();
+      expect(data.key).toContain('artworks/');
+      expect(data.key).toMatch(/\.png$/);
+    });
+  });
+
   afterAll(async () => {
     if (serverInstance) {
       await new Promise<void>((resolve) => {
@@ -201,3 +269,4 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
     }
   });
 });
+

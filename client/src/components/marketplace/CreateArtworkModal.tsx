@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Palette, AlertCircle, CheckCircle, Plus, Image as ImageIcon } from 'lucide-react';
+import { X, Palette, AlertCircle, CheckCircle, Plus, Image as ImageIcon, UploadCloud, RefreshCw } from 'lucide-react';
 import { artworkApi } from '../../services/artwork.service';
 import { Artwork, CreateArtworkPayload } from '../../types/artwork';
 
@@ -40,10 +40,37 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
   const [price, setPrice] = useState<string>('');
   const [imageUrl, setImageUrl] = useState('');
 
+  // Direct image file upload state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [uploadStatusText, setUploadStatusText] = useState<string>('');
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const handleFileChange = (file: File | null) => {
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setFieldErrors((prev) => ({ ...prev, image: 'Please select a valid PNG, JPG, or WEBP image.' }));
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setFieldErrors((prev) => ({ ...prev, image: 'Artwork image size must be under 5MB.' }));
+      return;
+    }
+
+    setFieldErrors((prev) => ({ ...prev, image: '' }));
+    setSelectedFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+  };
 
   if (!isOpen) return null;
 
@@ -105,6 +132,17 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
         finalDimensions = `${numericHeight} x ${numericWidth}${numericDepth ? ` x ${numericDepth}` : ''} cm`;
       }
 
+      let finalImageUrl = imageUrl.trim();
+
+      // If artist selected a local file, upload it directly to Supabase S3 Storage
+      if (selectedFile) {
+        setUploadStatusText('Uploading image to Supabase Storage...');
+        const uploadResult = await artworkApi.uploadImage(selectedFile);
+        finalImageUrl = uploadResult.imageUrl;
+      }
+
+      setUploadStatusText('Saving artwork listing...');
+
       const payload: CreateArtworkPayload = {
         title: title.trim(),
         description: description.trim(),
@@ -116,7 +154,7 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
         weight: numericWeight,
         weightUnit: weightUnit.trim() || 'kg',
         price: numericPrice,
-        imageUrl: imageUrl.trim() || undefined,
+        imageUrl: finalImageUrl || undefined,
         availability: 'AVAILABLE',
       };
 
@@ -136,6 +174,13 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
         setWeightUnit('kg');
         setPrice('');
         setImageUrl('');
+        setSelectedFile(null);
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl);
+        }
+        setPreviewUrl(null);
+        setShowUrlInput(false);
+        setUploadStatusText('');
         setError(null);
         setSuccess(null);
         onClose();
@@ -147,6 +192,7 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
       }
     } finally {
       setIsSubmitting(false);
+      setUploadStatusText('');
     }
   };
 
@@ -381,38 +427,150 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
             </div>
           </div>
 
-          {/* Grid: Dimensions String & Image URL */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="artwork-dimensions-input" className="block text-xs uppercase tracking-wider font-semibold text-on-surface-variant mb-1">
-                Formatted Size <span className="text-[11px] font-normal lowercase">(optional text)</span>
-              </label>
-              <input
-                id="artwork-dimensions-input"
-                type="text"
-                value={dimensions}
-                onChange={(e) => setDimensions(e.target.value)}
-                placeholder="e.g. 60 x 40 x 5 cm"
-                className="w-full bg-surface-container-low border border-outline/30 rounded px-3.5 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
-              />
+          {/* Formatted Size */}
+          <div>
+            <label htmlFor="artwork-dimensions-input" className="block text-xs uppercase tracking-wider font-semibold text-on-surface-variant mb-1">
+              Formatted Size <span className="text-[11px] font-normal lowercase">(optional text)</span>
+            </label>
+            <input
+              id="artwork-dimensions-input"
+              type="text"
+              value={dimensions}
+              onChange={(e) => setDimensions(e.target.value)}
+              placeholder="e.g. 60 x 40 x 5 cm"
+              className="w-full bg-surface-container-low border border-outline/30 rounded px-3.5 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
+            />
+          </div>
+
+          {/* Direct Artwork Image Upload (Supabase Storage) */}
+          <div>
+            <label className="block text-xs uppercase tracking-wider font-semibold text-on-surface-variant mb-1.5 flex items-center justify-between">
+              <span>Artwork Image</span>
+              <span className="text-[11px] font-normal lowercase text-on-surface-variant/80">PNG, JPG, WEBP (Max 5MB)</span>
+            </label>
+
+            {!previewUrl ? (
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    handleFileChange(e.dataTransfer.files[0]);
+                  }
+                }}
+                className={`relative border-2 border-dashed rounded-lg p-5 text-center cursor-pointer transition-all ${
+                  isDragging
+                    ? 'border-primary bg-primary/5'
+                    : 'border-outline/30 bg-surface-container-low hover:border-primary/60 hover:bg-surface-container'
+                }`}
+              >
+                <input
+                  id="artwork-file-input"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      handleFileChange(e.target.files[0]);
+                    }
+                  }}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                    <UploadCloud className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="font-serif font-bold text-xs sm:text-sm text-on-surface block">
+                      Choose an image or drag & drop here
+                    </span>
+                    <span className="text-[11px] text-on-surface-variant">
+                      Directly uploads to Supabase Storage
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-surface-container-low border border-outline/20 rounded-lg p-3 flex items-center gap-3">
+                <div className="w-16 h-16 rounded-md bg-surface-container-high overflow-hidden shrink-0 border border-outline/20 relative">
+                  <img src={previewUrl} alt="Artwork Preview" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-serif text-xs font-bold text-on-surface truncate">
+                    {selectedFile?.name || 'Selected Artwork Image'}
+                  </p>
+                  <p className="text-[10px] text-on-surface-variant mt-0.5">
+                    {selectedFile ? `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB` : ''} • Ready for Supabase Storage
+                  </p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <label
+                      htmlFor="artwork-replace-file-input"
+                      className="px-2 py-0.5 text-[10px] font-semibold text-primary bg-primary/10 rounded hover:bg-primary/20 transition-colors cursor-pointer"
+                    >
+                      Replace
+                    </label>
+                    <input
+                      id="artwork-replace-file-input"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          handleFileChange(e.target.files[0]);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (previewUrl) URL.revokeObjectURL(previewUrl);
+                        setSelectedFile(null);
+                        setPreviewUrl(null);
+                      }}
+                      className="px-2 py-0.5 text-[10px] font-semibold text-error bg-error/10 rounded hover:bg-error/20 transition-colors cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {fieldErrors.image && (
+              <p id="image-field-error" className="text-error text-xs mt-1.5 flex items-center gap-1 font-medium">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{fieldErrors.image}</span>
+              </p>
+            )}
+
+            {/* Optional URL Toggle */}
+            <div className="mt-1.5 text-right">
+              <button
+                type="button"
+                onClick={() => setShowUrlInput(!showUrlInput)}
+                className="text-[11px] text-primary hover:underline font-medium cursor-pointer"
+              >
+                {showUrlInput ? 'Hide External URL Field' : 'Or enter an external image URL instead'}
+              </button>
             </div>
 
-            <div>
-              <label htmlFor="artwork-image-url-input" className="block text-xs uppercase tracking-wider font-semibold text-on-surface-variant mb-1">
-                Image URL <span className="text-[11px] font-normal lowercase">(optional)</span>
-              </label>
-              <div className="relative">
+            {showUrlInput && (
+              <div className="mt-1.5 relative">
                 <input
                   id="artwork-image-url-input"
                   type="url"
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="w-full bg-surface-container-low border border-outline/30 rounded px-3.5 py-2.5 text-sm outline-none focus:border-primary text-on-surface pr-8"
+                  placeholder="https://images.unsplash.com/..."
+                  className="w-full bg-surface-container-low border border-outline/30 rounded px-3.5 py-2 text-xs outline-none focus:border-primary text-on-surface pr-8"
                 />
-                <ImageIcon className="w-4 h-4 text-on-surface-variant absolute right-2.5 top-3 pointer-events-none opacity-60" />
+                <ImageIcon className="w-4 h-4 text-on-surface-variant absolute right-2.5 top-2.5 pointer-events-none opacity-60" />
               </div>
-            </div>
+            )}
           </div>
 
           {/* Description */}
@@ -449,7 +607,10 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
               className="w-full py-3.5 bg-primary text-on-primary font-semibold text-xs uppercase tracking-wider rounded-full hover:bg-surface-tint transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-70 cursor-pointer"
             >
               {isSubmitting ? (
-                <span>Publishing Artwork...</span>
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin shrink-0" />
+                  <span>{uploadStatusText || 'Publishing Artwork...'}</span>
+                </>
               ) : (
                 <>
                   <Plus className="w-4 h-4" />

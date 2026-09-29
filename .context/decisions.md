@@ -85,4 +85,19 @@
   - Aligns with the "Digital Gallery" aesthetic in `DESIGN.md` without fragmenting the artist experience into disparate pages.
   - Preserves a high-contrast hierarchy (metrics overview first, inventory management second).
 
+## 10. Direct Artwork Image Upload via Supabase S3-Compatible Storage
+- **Timestamp**: 2026-09-29 21:30:00 +06:00
+- **Context**: Artists previously had to host images externally and paste URL links when publishing handcrafted artworks. Direct image upload was requested using Supabase Storage S3-compatible credentials.
+- **Decision**:
+  - Use AWS SDK for JavaScript v3 (`@aws-sdk/client-s3`) on the backend to interact directly with Supabase Storage via its S3 API endpoint (`https://<project-ref>.storage.supabase.co/storage/v1/s3`) with credentials configured via environment variables (`SUPABASE_S3_ACCESS_KEY_ID`, `SUPABASE_S3_SECRET_ACCESS_KEY`, `SUPABASE_S3_BUCKET`, `SUPABASE_S3_REGION`, `SUPABASE_S3_ENDPOINT`).
+  - Implement `StorageService` with strict validation: whitelist image MIME types (`image/jpeg`, `image/png`, `image/webp`) and maximum file size of 5MB.
+  - Provide an automated test environment fallback (saving to local `./uploads/artworks` when `process.env.NODE_ENV === 'test'`) so CI and offline Vitest suites execute deterministically without cloud S3 dependencies.
+  - Implement file upload middleware using `multer` with memory storage to stream directly to S3.
+  - Secure upload endpoint (`POST /api/artworks/upload`) with `authenticateJWT` and `requireRoles(Role.ARTIST)`.
+  - Update `CreateArtworkModal.tsx` on the frontend with drag-and-drop file picker, live thumbnail preview, file replacement/removal triggers, upload progress spinner, and optional manual URL input toggle.
+- **Rationale**:
+  - S3-compatible protocol avoids bundling vendor-specific SDKs while remaining 100% interoperable with Supabase Storage buckets.
+  - Client-side direct file picker dramatically improves the artisan UX while server-side upload routing enforces authentication, RBAC, and payload validation.
+
+
 

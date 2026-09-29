@@ -84,11 +84,9 @@
   - Integrated Google OAuth Sign-Up option into [`RegisterPage.tsx`](file:///E:/Nakshi/client/src/pages/RegisterPage.tsx) with cultural heritage gallery styling and divider.
   - Expanded unit test suite in [`server/tests/unit/auth.service.test.ts`](file:///E:/Nakshi/server/tests/unit/auth.service.test.ts) and acceptance integration test suite in [`server/tests/acceptance/auth.test.ts`](file:///E:/Nakshi/server/tests/acceptance/auth.test.ts).
   - Documented environment variables in [`README.md`](file:///E:/Nakshi/README.md) and updated Decision 7 in [`decisions.md`](file:///E:/Nakshi/.context/decisions.md).
-- **Verified**:
-  - All 34 server unit and acceptance tests passed (`vitest run`).
-  - Both server (`tsc`) and client (`tsc -b && vite build`) production builds succeeded cleanly with zero errors.
 - **Next Steps**:
-<<<<<<< HEAD
+  - Proceed with marketplace and artwork features.
+
 ## [2026-09-29 02:40:00 +06:00] Milestone: Ticket T-026 (Artwork Creation & Storefront Functionality) Implemented & Verified
 - **Completed**:
   - Backend artwork service & routes:
@@ -160,6 +158,22 @@
   - All 7 Vitest test suites (59 unit and acceptance tests) passed cleanly (`npm test`).
   - Server TypeScript compilation passed cleanly (`npm run build`).
   - Client production build succeeded cleanly (`npm run build`).
+## [2026-09-29 21:35:00 +06:00] Milestone: Direct Artwork Image Upload via Supabase S3 Storage Implemented & Verified
+- **Completed**:
+  - Integrated Supabase Storage via AWS S3-compatible SDK (`@aws-sdk/client-s3`) on backend.
+  - Implemented `server/src/services/storage.service.ts` handling image validation (MIME types, 5MB size limit), unique key generation, and upload streaming with test environment fallback.
+  - Implemented `server/src/middleware/upload.middleware.ts` with `multer` memory storage.
+  - Added `uploadImage` to `server/src/controllers/artwork.controller.ts` and mounted `POST /api/artworks/upload` protected by `authenticateJWT` and `requireRoles(Role.ARTIST)`.
+  - Added `artworkApi.uploadImage` in `client/src/services/artwork.service.ts`.
+  - Upgraded `client/src/components/marketplace/CreateArtworkModal.tsx` with drag-and-drop file picker, live thumbnail preview, file replace/remove triggers, upload progress spinner, and manual image URL toggle.
+  - Added unit test suite `server/tests/unit/storage.service.test.ts` (6 tests).
+  - Added acceptance integration test suite in `server/tests/acceptance/artwork.test.ts` for `POST /api/artworks/upload` (4 tests).
+  - Configured environment variables in `server/.env` and updated `server/.env.example` & `README.md`.
+- **Verified**:
+  - Live Supabase S3 bucket connectivity verified (HTTP 200 upload and public CDN fetch).
+  - All 8 Vitest test suites (69 unit and acceptance tests) passed cleanly (`npm test`).
+  - Server TypeScript compilation passed with 0 errors (`npm run build`).
+  - Client Vite production bundle built cleanly with 0 errors (`npm run build`).
 - **Next Steps**:
   - Implement async queue worker for Sharp dHash duplicate detection.
   - Implement buyer purchase, credit transaction, and commission distribution logic.

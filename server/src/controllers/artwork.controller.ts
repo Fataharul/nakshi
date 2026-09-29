@@ -1,8 +1,23 @@
 import { Request, Response, NextFunction } from 'express';
 import { ArtworkService } from '../services/artwork.service';
+import { StorageService } from '../services/storage.service';
 import { createArtworkSchema, artworkQuerySchema } from '../utils/artwork.validation';
 
 export class ArtworkController {
+  public static async uploadImage(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const artistId = req.user!.id;
+      if (!req.file) {
+        res.status(400).json({ error: 'No image file provided for upload' });
+        return;
+      }
+      const result = await StorageService.uploadArtworkImage(req.file, artistId);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   public static async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const validatedData = createArtworkSchema.parse(req.body);
@@ -43,5 +58,5 @@ export class ArtworkController {
       next(error);
     }
   }
-
 }
+
