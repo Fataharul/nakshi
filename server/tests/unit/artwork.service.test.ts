@@ -111,4 +111,24 @@ describe('Artwork Validation Schema Unit Tests', () => {
     });
     expect(negativeHeight.success).toBe(false);
   });
+
+  describe('updateArtworkSchema Unit Tests', () => {
+    it('accepts valid partial update payload', () => {
+      const parsed = updateArtworkSchema.parse({
+        title: 'Updated Sonargaon Saree Title',
+        price: 990.0,
+        availability: 'SOLD',
+      });
+      expect(parsed.title).toBe('Updated Sonargaon Saree Title');
+      expect(parsed.price).toBe(990);
+      expect(parsed.availability).toBe('SOLD');
+    });
+
+    it('rejects invalid price in update payload', () => {
+      const result = updateArtworkSchema.safeParse({
+        price: -50,
+      });
+      expect(result.success).toBe(false);
+    });
+  });
 });

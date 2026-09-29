@@ -2,6 +2,7 @@ import { getStoredToken } from './auth.service';
 import {
   Artwork,
   CreateArtworkPayload,
+  UpdateArtworkPayload,
   StorefrontResponse,
 } from '../types/artwork';
 
@@ -55,6 +56,14 @@ export const artworkApi = {
   async createArtwork(payload: CreateArtworkPayload): Promise<Artwork> {
     const data = await request<{ artwork: Artwork }>('/api/artworks', {
       method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    return data.artwork;
+  },
+
+  async updateArtwork(id: string, payload: UpdateArtworkPayload): Promise<Artwork> {
+    const data = await request<{ artwork: Artwork }>(`/api/artworks/${id}`, {
+      method: 'PUT',
       body: JSON.stringify(payload),
     });
     return data.artwork;

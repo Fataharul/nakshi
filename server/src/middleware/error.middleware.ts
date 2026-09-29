@@ -25,8 +25,8 @@ export const errorHandler = (
   }
 
   // Handle known application errors
-  if (err instanceof AppError) {
-    res.status(err.statusCode).json({
+  if (err instanceof AppError || ('statusCode' in err && typeof (err as any).statusCode === 'number')) {
+    res.status((err as any).statusCode).json({
       error: err.message,
     });
     return;

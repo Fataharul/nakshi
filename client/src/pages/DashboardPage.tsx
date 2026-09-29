@@ -12,6 +12,7 @@ export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [isLoadingArtworks, setIsLoadingArtworks] = useState(false);
 
@@ -49,6 +50,20 @@ export const DashboardPage: React.FC = () => {
     setArtworks((prev) => [newArtwork, ...prev]);
   };
 
+  const handleArtworkUpdated = (updatedArtwork: Artwork) => {
+    setArtworks((prev) => prev.map((item) => (item.id === updatedArtwork.id ? updatedArtwork : item)));
+  };
+
+  const handleOpenAddModal = () => {
+    setEditingArtwork(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (artwork: Artwork) => {
+    setEditingArtwork(artwork);
+    setIsModalOpen(true);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
       {user.role === 'ARTIST' ? (
@@ -56,7 +71,8 @@ export const DashboardPage: React.FC = () => {
           user={user}
           artworks={artworks}
           isLoadingArtworks={isLoadingArtworks}
-          onOpenAddModal={() => setIsModalOpen(true)}
+          onOpenAddModal={handleOpenAddModal}
+          onOpenEditModal={handleOpenEditModal}
         />
       ) : (
         <>
@@ -161,11 +177,16 @@ export const DashboardPage: React.FC = () => {
         </>
       )}
 
-      {/* Create Artwork Modal */}
+      {/* Create / Edit Artwork Modal */}
       <CreateArtworkModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingArtwork(null);
+        }}
         onArtworkCreated={handleArtworkCreated}
+        onArtworkUpdated={handleArtworkUpdated}
+        artworkToEdit={editingArtwork}
       />
     </div>
   );

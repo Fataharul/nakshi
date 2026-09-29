@@ -5,6 +5,7 @@ import {
   Wallet,
   Settings,
   Plus,
+  Edit,
   Package,
   TrendingUp,
   ShoppingBag,
@@ -22,6 +23,7 @@ interface SellerDashboardLayoutProps {
   artworks: Artwork[];
   isLoadingArtworks: boolean;
   onOpenAddModal: () => void;
+  onOpenEditModal?: (artwork: Artwork) => void;
 }
 
 export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
@@ -29,6 +31,7 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
   artworks,
   isLoadingArtworks,
   onOpenAddModal,
+  onOpenEditModal,
 }) => {
   const [selectedFilter, setSelectedFilter] = useState<string>('ALL');
 
@@ -321,12 +324,24 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
                       </div>
 
                       <div className="flex items-center justify-between border-t border-outline/10 pt-3 mt-auto">
-                        <span className="text-[11px] text-on-surface-variant uppercase tracking-wider font-medium">
-                          Listing Price
-                        </span>
-                        <span className="font-serif font-bold text-sm text-primary">
-                          {artwork.price.toFixed(2)} Credits
-                        </span>
+                        <div>
+                          <span className="text-[10px] text-on-surface-variant uppercase tracking-wider block font-medium">
+                            Listing Price
+                          </span>
+                          <span className="font-serif font-bold text-sm text-primary">
+                            {artwork.price.toFixed(2)} Credits
+                          </span>
+                        </div>
+                        {user.role === 'ARTIST' && user.id === artwork.artistId && onOpenEditModal && (
+                          <button
+                            id={`edit-artwork-btn-${artwork.id}`}
+                            onClick={() => onOpenEditModal(artwork)}
+                            className="px-3 py-1.5 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-medium rounded border border-outline/20 flex items-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            <Edit className="w-3.5 h-3.5 text-primary" />
+                            <span>Edit Listing</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
