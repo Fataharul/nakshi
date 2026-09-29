@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Wallet, Settings, ShoppingBag, Palette, Compass, ShieldCheck, Plus, Package } from 'lucide-react';
 import { CreateArtworkModal } from '../components/marketplace/CreateArtworkModal';
+import { SellerMetricsView } from '../components/dashboard/SellerMetricsView';
 import { artworkApi } from '../services/artwork.service';
 import { Artwork } from '../types/artwork';
 
@@ -92,6 +93,13 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Seller Sales Performance Metrics (ARTIST Role) */}
+      {user.role === 'ARTIST' && (
+        <div className="mb-8">
+          <SellerMetricsView />
+        </div>
+      )}
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
