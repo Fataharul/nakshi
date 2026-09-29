@@ -79,4 +79,34 @@ export const artworkApi = {
       method: 'GET',
     });
   },
+
+  async uploadImage(file: File): Promise<{ imageUrl: string; key: string }> {
+    const token = getStoredToken();
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/artworks/upload`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    let data: any;
+    try {
+      data = await response.json();
+    } catch {
+      data = {};
+    }
+
+    if (!response.ok) {
+      throw new ApiError(data.error || 'Failed to upload artwork image', response.status, data.details);
+    }
+
+    return data;
+  },
 };

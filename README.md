@@ -92,6 +92,11 @@ SIMILARITY_THRESHOLD=80
 UPLOAD_DIR=./uploads
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
+SUPABASE_S3_ENDPOINT=https://<project-ref>.storage.supabase.co/storage/v1/s3
+SUPABASE_S3_ACCESS_KEY_ID=your_supabase_s3_access_key_id
+SUPABASE_S3_SECRET_ACCESS_KEY=your_supabase_s3_secret_access_key
+SUPABASE_S3_BUCKET=nakshi-artworks
+SUPABASE_S3_REGION=ap-south-1
 ```
 
 ### Client (`client/.env`)
@@ -133,6 +138,7 @@ npm run dev
   - `POST /api/auth/verify-reset-token` — Validate reset token before setting new credentials.
   - `POST /api/auth/reset-password` — Reset account password with token.
 - **Artwork & Storefront (`/api/artworks`)**:
+  - `POST /api/artworks/upload` — Direct multipart image upload to Supabase Storage via S3 (`ARTIST` role).
   - `POST /api/artworks` — Publish new artwork listing with craft mediums, dimensions, and weight (`ARTIST` role).
   - `GET /api/artworks/my-artworks` — Retrieve all artworks published by the authenticated artist.
   - `GET /api/artworks/:id` — Get single artwork details and metadata.
