@@ -188,4 +188,52 @@ export class ArtworkService {
       stats,
     };
   }
+
+  /**
+   * Updates an existing artwork record. Restricted strictly to the artwork owner (artistId).
+   */
+  public static async updateArtwork(id: string, artistId: string, input: UpdateArtworkInput) {
+    const existing = await prisma.artwork.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new AppError('Artwork record not found', 404);
+    }
+
+    if (existing.artistId !== artistId) {
+      throw new AppError('Forbidden: You are not authorized to edit an artwork owned by another artist', 403);
+    }
+
+    const updated = await prisma.artwork.update({
+      where: { id },
+      data: {
+        ...(input.title !== undefined && { title: input.title }),
+        ...(input.description !== undefined && { description: input.description }),
+        ...(input.medium !== undefined && { medium: input.medium }),
+        ...(input.dimensions !== undefined && { dimensions: input.dimensions }),
+        ...(input.height !== undefined && { height: input.height }),
+        ...(input.width !== undefined && { width: input.width }),
+        ...(input.depth !== undefined && { depth: input.depth }),
+        ...(input.weight !== undefined && { weight: input.weight }),
+        ...(input.weightUnit !== undefined && { weightUnit: input.weightUnit }),
+        ...(input.price !== undefined && { price: input.price }),
+        ...(input.imageUrl !== undefined && input.imageUrl.trim().length > 0 && { imageUrl: input.imageUrl.trim() }),
+        ...(input.availability !== undefined && { availability: input.availability }),
+      },
+      include: {
+        artist: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+            bio: true,
+          },
+        },
+      },
+    });
+
+    return this.formatArtwork(updated);
+  }
 }

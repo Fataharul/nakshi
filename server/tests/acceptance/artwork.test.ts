@@ -4,11 +4,12 @@ import { AddressInfo } from 'net';
 import { app } from '../../src/server';
 import { prisma } from '../../src/config/prisma';
 
-describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
+describe('Artwork Creation & Storefront Acceptance Tests (T-026 & T-038)', () => {
   let serverInstance: http.Server;
   let baseUrl: string;
   const uniqueId = Date.now();
   let artistToken: string;
+  let secondArtistToken: string;
   let buyerToken: string;
   let createdArtworkId: string;
 
@@ -18,6 +19,14 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
     password: 'Password123!',
     role: 'ARTIST',
     bio: 'Master weaver of Sonargaon heritage Jamdani sarees.',
+  };
+
+  const secondArtistUser = {
+    name: `Second Artisan ${uniqueId}`,
+    email: `artist2_artwork_${uniqueId}_${Math.random().toString(36).substring(2, 7)}@nakshi.test`,
+    password: 'Password123!',
+    role: 'ARTIST',
+    bio: 'Potter from Panchagarh.',
   };
 
   const buyerUser = {
@@ -46,7 +55,16 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
     const artistData = (await artistReg.json()) as any;
     artistToken = artistData.token;
 
-    // 2. Register Buyer user
+    // 2. Register Second Artist user
+    const secondArtistReg = await fetch(`${baseUrl}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(secondArtistUser),
+    });
+    const secondArtistData = (await secondArtistReg.json()) as any;
+    secondArtistToken = secondArtistData.token;
+
+    // 3. Register Buyer user
     const buyerReg = await fetch(`${baseUrl}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -156,6 +174,82 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
     });
   });
 
+  describe('PUT /api/artworks/:id (Edit Artwork - T-038 Access Restrictions)', () => {
+    it('rejects unauthenticated edit request with 401 Unauthorized', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/${createdArtworkId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'Unauthenticated Update Attempt',
+          price: 999,
+        }),
+      });
+
+      expect(res.status).toBe(401);
+    });
+
+    it('rejects non-artist user (BUYER role) edit request with 403 Forbidden', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/${createdArtworkId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${buyerToken}`,
+        },
+        body: JSON.stringify({
+          title: 'Buyer Update Attempt',
+          price: 999,
+        }),
+      });
+
+      expect(res.status).toBe(403);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('Forbidden');
+    });
+
+    it('rejects an artist attempting to edit another artist\'s artwork listing with 403 Forbidden', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/${createdArtworkId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${secondArtistToken}`,
+        },
+        body: JSON.stringify({
+          title: 'Unauthorized Cross-Artist Edit Attempt',
+          price: 1500,
+        }),
+      });
+
+      expect(res.status).toBe(403);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('You are not authorized to edit an artwork owned by another artist');
+    });
+
+    it('allows authentic storefront owner to successfully update their artwork listing with 200 OK', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/${createdArtworkId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${artistToken}`,
+        },
+        body: JSON.stringify({
+          title: 'Updated Sonargaon Royal Jamdani Saree',
+          price: 950.0,
+          description: 'Updated description detailing imperial gold thread needlework.',
+          availability: 'RESERVED',
+        }),
+      });
+
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.artwork).toBeDefined();
+      expect(data.artwork.id).toBe(createdArtworkId);
+      expect(data.artwork.title).toBe('Updated Sonargaon Royal Jamdani Saree');
+      expect(data.artwork.price).toBe(950);
+      expect(data.artwork.description).toBe('Updated description detailing imperial gold thread needlework.');
+      expect(data.artwork.availability).toBe('RESERVED');
+    });
+  });
+
   describe('GET /api/artworks/my-artworks', () => {
     it('returns published artworks for authenticated ARTIST', async () => {
       const res = await fetch(`${baseUrl}/api/artworks/my-artworks`, {
@@ -169,7 +263,7 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
 
       const found = data.artworks.find((a: any) => a.id === createdArtworkId);
       expect(found).toBeDefined();
-      expect(found.title).toBe('Sonargaon Heritage Jamdani Saree');
+      expect(found.title).toBe('Updated Sonargaon Royal Jamdani Saree');
     });
   });
 

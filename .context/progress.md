@@ -210,3 +210,19 @@
   - Implement async queue worker for Sharp dHash duplicate detection.
   - Implement buyer purchase, credit transaction, and commission distribution logic.
 
+## [2026-09-29 23:42:00 +06:00] Milestone: Ticket T-038 — Restrict Artwork Creation & Editing to Storefront Owner Implemented
+- **Completed**:
+  - Updated server artwork service [`server/src/services/artwork.service.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/services/artwork.service.ts) with `updateArtwork` method verifying that `existing.artistId === req.user.id`, returning 403 Forbidden for unauthorized edit attempts.
+  - Updated server artwork controller [`server/src/controllers/artwork.controller.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/controllers/artwork.controller.ts) with `update` method validating request bodies using `updateArtworkSchema`.
+  - Updated server artwork routes [`server/src/routes/artwork.routes.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/routes/artwork.routes.ts) adding `PUT /:id` and `PATCH /:id` routes guarded by `authenticateJWT` and `requireRoles(Role.ARTIST)`.
+  - Refactored server error middleware [`server/src/middleware/error.middleware.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/middleware/error.middleware.ts) to correctly handle `statusCode` on application error instances.
+  - Updated client artwork service [`client/src/services/artwork.service.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/client/src/services/artwork.service.ts) with `updateArtwork` method.
+  - Updated `CreateArtworkModal.tsx` to handle both artwork creation and editing, inspecting `useAuth()` to check role (`ARTIST`) and storefront ownership (`user.id === artworkToEdit.artistId`), displaying 403/401 user-friendly error banners and disabling submit triggers when unauthorized.
+  - Updated `SellerDashboardLayout.tsx` and `DashboardPage.tsx` to display edit artwork triggers (`#edit-artwork-btn-${artwork.id}`) strictly for authenticated storefront owners.
+  - Added unit test coverage in [`server/tests/unit/artwork.service.test.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/tests/unit/artwork.service.test.ts) for `updateArtworkSchema`.
+  - Added acceptance integration test suite in [`server/tests/acceptance/artwork.test.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/tests/acceptance/artwork.test.ts) testing 401 Unauthorized for unauthenticated requests, 403 Forbidden for non-artists (BUYER role) attempting edit, 403 Forbidden for cross-artist edit attempts, and 200 OK for authentic storefront owner updates.
+- **Verified**:
+  - All 8 Vitest server unit and acceptance test suites (75 tests) passed cleanly (`npm --prefix server run test`).
+  - Client Vite production build and TypeScript check passed with 0 errors (`npm --prefix client run build`).
+
+
