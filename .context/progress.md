@@ -244,20 +244,13 @@
 
 
 
-## [2026-09-30 21:55:00 +06:00] Milestone: Ticket T-044 - Add Current Shop Order Listings to Dashboard
+## [2026-09-30 22:40:00 +06:00] Milestone: Ticket T-043 - Linked Google Accounts Authentication Implemented
 - **Completed**:
-  - Integrated <SellerMetricsView /> directly into client/src/components/dashboard/SellerDashboardLayout.tsx.
-  - Replaced hard-coded placeholder metric cards with dynamic KPI cards fetched from the backend API.
-- **Verified**:
-  - All 81 Vitest unit and acceptance tests passed.
-  - Clean TypeScript compilation for both frontend and backend.
-
-## [2026-09-30 22:25:00 +06:00] Milestone: Ticket T-046 - Advanced Artwork Search Filtering by Creator and Custom Price Range
-- **Completed**:
-  - Extended artworkQuerySchema and artwork.service.ts to support creatorName keyword filtering.
-  - Upgraded ArtworkSearchInterface.tsx with creator search input and custom numeric min/max price range inputs.
-  - Added descriptive test IDs for min and max price inputs.
-  - Added backend unit and acceptance tests for creatorName filtering.
+  - Added POST /api/auth/link-google endpoint in backend to securely link Google accounts to existing authenticated users.
+  - Updated AuthService.googleAuth to support lookup by googleId or email, enabling seamless Google Sign-In for accounts linked to different Google email addresses.
+  - Updated SanitizedUser and User interface to include hasGoogleLinked flag.
+  - Upgraded frontend AccountSetupPage.tsx with Linked Accounts section rendering Google Login button.
+  - Added backend acceptance tests for linking Google accounts.
 - **Verified**:
   - Clean TypeScript compilation for both frontend and backend.
-  - Vitest server unit and acceptance test suites passed.
+  - All Vitest acceptance and unit tests passed.

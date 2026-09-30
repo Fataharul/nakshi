@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Wallet, Shield, CheckCircle, AlertCircle, Save } from 'lucide-react';
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 
 export const AccountSetupPage: React.FC = () => {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, linkGoogleAccount } = useAuth();
 
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
@@ -220,6 +221,52 @@ export const AccountSetupPage: React.FC = () => {
                       placeholder="At least 8 chars"
                       className="w-full bg-surface-container-low border-b-2 border-surface-container-highest focus:border-primary focus:ring-0 px-3 py-2 text-sm text-on-surface outline-none rounded-t"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Linked Accounts section */}
+              <div className="pt-4 border-t border-surface-container">
+                <h4 className="text-xs uppercase tracking-wider font-semibold text-on-surface mb-3 flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-primary" /> Linked Accounts
+                </h4>
+                <div className="bg-surface-container-low rounded-lg p-4 border border-outline/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-on-surface">Google Account</p>
+                    <p className="text-xs text-on-surface-variant mt-0.5">
+                      {user.hasGoogleLinked 
+                        ? 'Your Google account is linked and can be used to sign in.' 
+                        : 'Link your Google account for a faster sign-in experience.'}
+                    </p>
+                  </div>
+                  <div>
+                    {user.hasGoogleLinked ? (
+                      <span className="px-3 py-1 bg-status-valid/10 text-status-valid text-xs font-semibold rounded-full flex items-center gap-1">
+                        <CheckCircle className="w-3.5 h-3.5" /> Linked
+                      </span>
+                    ) : (
+                      <GoogleLogin
+                        onSuccess={async (credentialResponse: CredentialResponse) => {
+                          try {
+                            setIsSaving(true);
+                            setErrorMessage(null);
+                            setSuccessMessage(null);
+                            if (!credentialResponse.credential) throw new Error('No credential received');
+                            await linkGoogleAccount(credentialResponse.credential);
+                            setSuccessMessage('Google account linked successfully!');
+                          } catch (err: any) {
+                            setErrorMessage(err.message || 'Failed to link Google account.');
+                          } finally {
+                            setIsSaving(false);
+                          }
+                        }}
+                        onError={() => setErrorMessage('Google linking was unsuccessful.')}
+                        useOneTap={false}
+                        shape="pill"
+                        size="medium"
+                        text="continue_with"
+                      />
+                    )}
                   </div>
                 </div>
               </div>

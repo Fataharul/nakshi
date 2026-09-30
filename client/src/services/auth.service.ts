@@ -79,6 +79,14 @@ export const authApi = {
     return data;
   },
 
+  async linkGoogleAccount(idToken: string): Promise<User> {
+    const data = await request<{ user: User }>('/api/auth/link-google', {
+      method: 'POST',
+      body: JSON.stringify({ idToken }),
+    });
+    return data.user;
+  },
+
   async getMe(): Promise<User> {
     const data = await request<{ user: User }>('/api/auth/me', {
       method: 'GET',

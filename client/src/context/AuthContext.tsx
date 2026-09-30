@@ -9,6 +9,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<User>;
   googleLogin: (idToken: string, role?: Role) => Promise<User>;
+  linkGoogleAccount: (idToken: string) => Promise<User>;
   register: (payload: RegisterPayload) => Promise<User>;
   logout: () => void;
   updateProfile: (payload: UpdateProfilePayload) => Promise<User>;
@@ -73,6 +74,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const linkGoogleAccount = async (idToken: string): Promise<User> => {
+    setIsLoading(true);
+    try {
+      const updatedUser = await authApi.linkGoogleAccount(idToken);
+      setUser(updatedUser);
+      return updatedUser;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const register = async (payload: RegisterPayload): Promise<User> => {
     setIsLoading(true);
     try {
@@ -106,6 +118,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isLoading,
         login,
         googleLogin,
+        linkGoogleAccount,
         register,
         logout,
         updateProfile,
