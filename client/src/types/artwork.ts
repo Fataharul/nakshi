@@ -68,6 +68,7 @@ export interface ArtworkFilterParams {
   medium?: string;
   style?: string;
   search?: string;
+  creatorName?: string;
   availability?: ArtworkAvailability | 'ALL';
   minPrice?: number;
   maxPrice?: number;

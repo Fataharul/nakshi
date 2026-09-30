@@ -252,12 +252,12 @@
   - All 81 Vitest unit and acceptance tests passed.
   - Clean TypeScript compilation for both frontend and backend.
 
-## [2026-09-30 22:05:00 +06:00] Milestone: Ticket T-045 - Storefront Artwork Deletion & Ownership Verification
+## [2026-09-30 22:25:00 +06:00] Milestone: Ticket T-046 - Advanced Artwork Search Filtering by Creator and Custom Price Range
 - **Completed**:
-  - Implemented secure DELETE /api/artworks/:id route in backend.
-  - Added strict ownership authorization checks to ensure an artist can only delete their own artworks.
-  - Added validation ensuring artworks with existing orders or sold status cannot be deleted.
-  - Added deleteArtwork wrapper in frontend artworkApi.
-  - Added Delete Listing button to storefront UI in SellerDashboardLayout.tsx next to the Edit button.
+  - Extended artworkQuerySchema and artwork.service.ts to support creatorName keyword filtering.
+  - Upgraded ArtworkSearchInterface.tsx with creator search input and custom numeric min/max price range inputs.
+  - Added descriptive test IDs for min and max price inputs.
+  - Added backend unit and acceptance tests for creatorName filtering.
 - **Verified**:
-  - TypeScript compilation for both frontend and backend.
+  - Clean TypeScript compilation for both frontend and backend.
+  - Vitest server unit and acceptance test suites passed.
