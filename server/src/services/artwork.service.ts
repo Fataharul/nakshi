@@ -320,4 +320,27 @@ export class ArtworkService {
 
     return this.formatArtwork(updated);
   }
+
+  /**
+   * Deletes an artwork record. Restricted strictly to the artwork owner (artistId).
+   */
+  public static async deleteArtwork(id: string, artistId: string) {
+    const existing = await prisma.artwork.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new AppError('Artwork record not found', 404);
+    }
+
+    if (existing.artistId !== artistId) {
+      throw new AppError('Forbidden: You are not authorized to delete an artwork owned by another artist', 403);
+    }
+
+    await prisma.artwork.delete({
+      where: { id },
+    });
+
+    return true;
+  }
 }

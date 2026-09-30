@@ -11,6 +11,7 @@ router.post('/upload', authenticateJWT, requireRoles(Role.ARTIST), uploadSingleI
 router.post('/', authenticateJWT, requireRoles(Role.ARTIST), ArtworkController.create);
 router.put('/:id', authenticateJWT, requireRoles(Role.ARTIST), ArtworkController.update);
 router.patch('/:id', authenticateJWT, requireRoles(Role.ARTIST), ArtworkController.update);
+router.delete('/:id', authenticateJWT, requireRoles(Role.ARTIST), ArtworkController.delete);
 router.get('/my-artworks', authenticateJWT, requireRoles(Role.ARTIST), ArtworkController.getMyArtworks);
 
 // Public / general artwork routes

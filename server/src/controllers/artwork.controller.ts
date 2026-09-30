@@ -41,6 +41,17 @@ export class ArtworkController {
     }
   }
 
+  public static async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = req.params.id as string;
+      const artistId = req.user!.id;
+      await ArtworkService.deleteArtwork(id, artistId);
+      res.status(200).json({ message: 'Artwork deleted successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   public static async getMyArtworks(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const artistId = req.user!.id;
