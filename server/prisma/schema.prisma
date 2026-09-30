@@ -105,6 +105,7 @@ model Artwork {
   title            String
   description      String
   medium           String
+  style            String?
   dimensions       String?
   height           Float?
   width            Float?
@@ -130,6 +131,8 @@ model Artwork {
   @@index([artistId])
   @@index([availability])
   @@index([moderationStatus])
+  @@index([medium])
+  @@index([style])
   @@index([imageHash])
   @@index([price])
 }

@@ -14,6 +14,7 @@ router.patch('/:id', authenticateJWT, requireRoles(Role.ARTIST), ArtworkControll
 router.get('/my-artworks', authenticateJWT, requireRoles(Role.ARTIST), ArtworkController.getMyArtworks);
 
 // Public / general artwork routes
+router.get('/', ArtworkController.getAll);
 router.get('/storefront/:artistId', ArtworkController.getStorefront);
 router.get('/:id', ArtworkController.getById);
 

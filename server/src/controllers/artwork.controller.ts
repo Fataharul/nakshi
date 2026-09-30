@@ -61,6 +61,16 @@ export class ArtworkController {
     }
   }
 
+  public static async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const validatedQuery = artworkQuerySchema.parse(req.query);
+      const result = await ArtworkService.getArtworks(validatedQuery);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   public static async getStorefront(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const artistId = req.params.artistId as string;

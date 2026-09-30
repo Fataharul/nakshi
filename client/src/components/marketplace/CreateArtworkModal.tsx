@@ -18,6 +18,16 @@ export const CRAFT_MEDIUMS = [
   'Other Traditional Craft',
 ] as const;
 
+export const CRAFT_STYLES = [
+  'Traditional Folk',
+  'Royal Heritage',
+  'Geometric Jaal',
+  'Floral Motifs',
+  'Contemporary Heritage',
+  'Sculptural & Relic',
+  'Abstract & Modern',
+] as const;
+
 interface CreateArtworkModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -37,6 +47,7 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [medium, setMedium] = useState<string>('Nakshi Kantha');
+  const [style, setStyle] = useState<string>('Traditional Folk');
   const [dimensions, setDimensions] = useState('');
   const [height, setHeight] = useState('');
   const [width, setWidth] = useState('');
@@ -70,6 +81,7 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
       setTitle(artworkToEdit.title || '');
       setDescription(artworkToEdit.description || '');
       setMedium(artworkToEdit.medium || 'Nakshi Kantha');
+      setStyle(artworkToEdit.style || 'Traditional Folk');
       setDimensions(artworkToEdit.dimensions || '');
       setHeight(artworkToEdit.height ? String(artworkToEdit.height) : '');
       setWidth(artworkToEdit.width ? String(artworkToEdit.width) : '');
@@ -84,6 +96,7 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
       setTitle('');
       setDescription('');
       setMedium('Nakshi Kantha');
+      setStyle('Traditional Folk');
       setDimensions('');
       setHeight('');
       setWidth('');
@@ -201,6 +214,7 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
           title: title.trim(),
           description: description.trim(),
           medium: medium.trim(),
+          style: style.trim() || undefined,
           dimensions: finalDimensions || undefined,
           height: numericHeight,
           width: numericWidth,
@@ -223,6 +237,7 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
           title: title.trim(),
           description: description.trim(),
           medium: medium.trim(),
+          style: style.trim() || undefined,
           dimensions: finalDimensions || undefined,
           height: numericHeight,
           width: numericWidth,
@@ -352,8 +367,8 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
             )}
           </div>
 
-          {/* Grid: Medium & Price */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Grid: Medium, Style & Price */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label htmlFor="artwork-medium-select" className="block text-xs uppercase tracking-wider font-semibold text-on-surface-variant mb-1">
                 Craft Medium *
@@ -365,7 +380,7 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
                   setMedium(e.target.value);
                   if (fieldErrors.medium) setFieldErrors((prev) => ({ ...prev, medium: '' }));
                 }}
-                className="w-full bg-surface-container-low border border-outline/30 rounded px-3.5 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
+                className="w-full bg-surface-container-low border border-outline/30 rounded px-3 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
                 required
               >
                 {CRAFT_MEDIUMS.map((item) => (
@@ -383,8 +398,26 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
             </div>
 
             <div>
+              <label htmlFor="artwork-style-select" className="block text-xs uppercase tracking-wider font-semibold text-on-surface-variant mb-1">
+                Craft Style
+              </label>
+              <select
+                id="artwork-style-select"
+                value={style}
+                onChange={(e) => setStyle(e.target.value)}
+                className="w-full bg-surface-container-low border border-outline/30 rounded px-3 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
+              >
+                {CRAFT_STYLES.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
               <label htmlFor="artwork-price-input" className="block text-xs uppercase tracking-wider font-semibold text-on-surface-variant mb-1">
-                Listing Price (Credits) *
+                Price (Credits) *
               </label>
               <input
                 id="artwork-price-input"
@@ -397,7 +430,7 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
                   if (fieldErrors.price) setFieldErrors((prev) => ({ ...prev, price: '' }));
                 }}
                 placeholder="e.g. 450.00"
-                className="w-full bg-surface-container-low border border-outline/30 rounded px-3.5 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
+                className="w-full bg-surface-container-low border border-outline/30 rounded px-3 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
                 required
               />
               {fieldErrors.price && (

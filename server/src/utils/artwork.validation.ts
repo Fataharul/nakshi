@@ -14,6 +14,16 @@ export const CRAFT_MEDIUMS = [
   'Other Traditional Craft',
 ] as const;
 
+export const CRAFT_STYLES = [
+  'Traditional Folk',
+  'Royal Heritage',
+  'Geometric Jaal',
+  'Floral Motifs',
+  'Contemporary Heritage',
+  'Sculptural & Relic',
+  'Abstract & Modern',
+] as const;
+
 const optionalPositiveNumber = z
   .union([
     z.coerce.number().positive('Must be greater than zero'),
@@ -39,6 +49,12 @@ export const createArtworkSchema = z.object({
     .min(2, 'Craft medium is required')
     .max(100, 'Craft medium cannot exceed 100 characters')
     .trim(),
+  style: z
+    .string()
+    .max(100, 'Craft style cannot exceed 100 characters')
+    .trim()
+    .optional()
+    .nullable(),
   dimensions: z
     .string()
     .max(100, 'Dimensions cannot exceed 100 characters')
@@ -89,6 +105,12 @@ export const updateArtworkSchema = z.object({
     .max(100, 'Craft medium cannot exceed 100 characters')
     .trim()
     .optional(),
+  style: z
+    .string()
+    .max(100, 'Craft style cannot exceed 100 characters')
+    .trim()
+    .optional()
+    .nullable(),
   dimensions: z
     .string()
     .max(100, 'Dimensions cannot exceed 100 characters')
@@ -123,6 +145,7 @@ export const updateArtworkSchema = z.object({
 
 export const artworkQuerySchema = z.object({
   medium: z.string().optional(),
+  style: z.string().optional(),
   availability: z.enum(['ALL', 'AVAILABLE', 'RESERVED', 'SOLD']).default('AVAILABLE'),
   search: z.string().optional(),
   minPrice: z.coerce.number().min(0).optional(),

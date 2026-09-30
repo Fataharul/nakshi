@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma';
-import { CreateArtworkInput, UpdateArtworkInput } from '../utils/artwork.validation';
+import { CreateArtworkInput, UpdateArtworkInput, ArtworkQueryInput } from '../utils/artwork.validation';
 import { Role } from '@prisma/client';
 
 export class AppError extends Error {
@@ -24,6 +24,7 @@ export class ArtworkService {
       title: artwork.title,
       description: artwork.description,
       medium: artwork.medium,
+      style: artwork.style ?? null,
       dimensions: artwork.dimensions ?? null,
       height: artwork.height ?? null,
       width: artwork.width ?? null,
@@ -75,6 +76,7 @@ export class ArtworkService {
         title: input.title,
         description: input.description,
         medium: input.medium,
+        style: input.style || null,
         dimensions: input.dimensions || null,
         height: input.height ?? null,
         width: input.width ?? null,
@@ -100,6 +102,87 @@ export class ArtworkService {
     });
 
     return this.formatArtwork(artwork);
+  }
+
+  /**
+   * Retrieves all artworks filtered by optional query params: medium, style, search, minPrice, maxPrice, availability, pagination.
+   */
+  public static async getArtworks(query: ArtworkQueryInput) {
+    const where: any = {};
+
+    if (query.availability && query.availability !== 'ALL') {
+      where.availability = query.availability;
+    }
+
+    if (query.medium && query.medium.trim() && query.medium !== 'ALL') {
+      where.medium = {
+        equals: query.medium.trim(),
+        mode: 'insensitive',
+      };
+    }
+
+    if (query.style && query.style.trim() && query.style !== 'ALL') {
+      where.style = {
+        equals: query.style.trim(),
+        mode: 'insensitive',
+      };
+    }
+
+    if (query.minPrice !== undefined || query.maxPrice !== undefined) {
+      where.price = {};
+      if (query.minPrice !== undefined) {
+        where.price.gte = query.minPrice;
+      }
+      if (query.maxPrice !== undefined) {
+        where.price.lte = query.maxPrice;
+      }
+    }
+
+    if (query.search && query.search.trim()) {
+      const searchTerm = query.search.trim();
+      where.OR = [
+        { title: { contains: searchTerm, mode: 'insensitive' } },
+        { description: { contains: searchTerm, mode: 'insensitive' } },
+        { medium: { contains: searchTerm, mode: 'insensitive' } },
+        { style: { contains: searchTerm, mode: 'insensitive' } },
+        { artist: { name: { contains: searchTerm, mode: 'insensitive' } } },
+      ];
+    }
+
+    const page = query.page || 1;
+    const limit = query.limit || 20;
+    const skip = (page - 1) * limit;
+
+    const [total, artworks] = await Promise.all([
+      prisma.artwork.count({ where }),
+      prisma.artwork.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          artist: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatarUrl: true,
+              bio: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      artworks: artworks.map((item) => this.formatArtwork(item)),
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   /**
@@ -211,6 +294,7 @@ export class ArtworkService {
         ...(input.title !== undefined && { title: input.title }),
         ...(input.description !== undefined && { description: input.description }),
         ...(input.medium !== undefined && { medium: input.medium }),
+        ...(input.style !== undefined && { style: input.style || null }),
         ...(input.dimensions !== undefined && { dimensions: input.dimensions }),
         ...(input.height !== undefined && { height: input.height }),
         ...(input.width !== undefined && { width: input.width }),

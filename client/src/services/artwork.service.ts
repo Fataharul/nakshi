@@ -3,6 +3,7 @@ import {
   Artwork,
   CreateArtworkPayload,
   UpdateArtworkPayload,
+  ArtworkFilterParams,
   StorefrontResponse,
 } from '../types/artwork';
 
@@ -53,6 +54,24 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 }
 
 export const artworkApi = {
+  async getArtworks(params: ArtworkFilterParams = {}): Promise<{ artworks: Artwork[]; pagination: any }> {
+    const query = new URLSearchParams();
+    if (params.medium && params.medium !== 'ALL') query.append('medium', params.medium);
+    if (params.style && params.style !== 'ALL') query.append('style', params.style);
+    if (params.search) query.append('search', params.search);
+    if (params.availability) query.append('availability', params.availability);
+    if (params.minPrice !== undefined) query.append('minPrice', String(params.minPrice));
+    if (params.maxPrice !== undefined) query.append('maxPrice', String(params.maxPrice));
+    if (params.page !== undefined) query.append('page', String(params.page));
+    if (params.limit !== undefined) query.append('limit', String(params.limit));
+
+    const queryString = query.toString();
+    const endpoint = `/api/artworks${queryString ? `?${queryString}` : ''}`;
+    return request<{ artworks: Artwork[]; pagination: any }>(endpoint, {
+      method: 'GET',
+    });
+  },
+
   async createArtwork(payload: CreateArtworkPayload): Promise<Artwork> {
     const data = await request<{ artwork: Artwork }>('/api/artworks', {
       method: 'POST',
