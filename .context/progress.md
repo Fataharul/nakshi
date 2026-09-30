@@ -242,3 +242,13 @@
 
 
 
+
+
+## [2026-09-30 21:55:00 +06:00] Milestone: Ticket T-044 — Add current shop order listings to the dashboard Implemented
+- **Completed**:
+  - Identified that the `SellerMetricsView.tsx` component containing the recent customer sales log and live API integration was orphaned during the UI unification milestone (T-035).
+  - Integrated `<SellerMetricsView />` directly into `client/src/components/dashboard/SellerDashboardLayout.tsx`.
+  - Replaced hard-coded placeholder metric cards with dynamic KPI cards fetched from the backend API, enabling artists to view their exact `Total Orders`, `Total Revenue`, `Average Order Value`, and `Active Inventory` dynamically.
+  - Removed unused lucide-react icons and variables to resolve TypeScript compiler warnings.
+- **Verified**:
+  - Clean TypeScript compilation for the frontend (`npm run build:client`).

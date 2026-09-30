@@ -7,16 +7,13 @@ import {
   Plus,
   Edit,
   Package,
-  TrendingUp,
-  ShoppingBag,
-  DollarSign,
-  PackageCheck,
   CheckCircle2,
   Sparkles,
   Layers,
 } from 'lucide-react';
 import { User } from '../../types/auth';
 import { Artwork } from '../../types/artwork';
+import { SellerMetricsView } from './SellerMetricsView';
 
 interface SellerDashboardLayoutProps {
   user: User;
@@ -40,9 +37,6 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
     if (selectedFilter === 'ALL') return true;
     return artwork.availability === selectedFilter;
   });
-
-  const availableCount = artworks.filter((a) => a.availability === 'AVAILABLE').length;
-  const soldCount = artworks.filter((a) => a.availability === 'SOLD').length;
 
   return (
     <div id="seller-dashboard-container" className="space-y-8">
@@ -118,99 +112,7 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
       </div>
 
       {/* 2. Sales & Performance Metrics Layout */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="font-serif text-xl font-bold text-on-surface flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              <span>Studio Performance & Sales Overview</span>
-            </h2>
-            <p className="text-xs text-on-surface-variant mt-0.5">
-              Key indicators for your digital storefront and craft revenue.
-            </p>
-          </div>
-          <span className="text-[11px] uppercase tracking-wider font-medium text-on-surface-variant bg-surface-container px-3 py-1 rounded-full border border-outline/20">
-            Real-time Metrics
-          </span>
-        </div>
-
-        {/* 4 KPI Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Metric 1: Total Revenue */}
-          <div className="bg-surface-container-lowest p-5 rounded-xl border border-outline/20 ambient-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs uppercase tracking-wider font-semibold text-on-surface-variant">
-                Total Revenue
-              </span>
-              <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                <TrendingUp className="w-4 h-4" />
-              </div>
-            </div>
-            <div id="metric-total-revenue" className="font-serif font-bold text-2xl text-on-surface">
-              0.00 <span className="text-xs font-sans font-normal text-on-surface-variant">Credits</span>
-            </div>
-            <p className="text-[11px] text-on-surface-variant/80 mt-1">
-              Gross credits earned from completed sales
-            </p>
-          </div>
-
-          {/* Metric 2: Total Orders */}
-          <div className="bg-surface-container-lowest p-5 rounded-xl border border-outline/20 ambient-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs uppercase tracking-wider font-semibold text-on-surface-variant">
-                Total Orders
-              </span>
-              <div className="p-2 rounded-lg bg-secondary/10 text-secondary">
-                <ShoppingBag className="w-4 h-4 text-primary" />
-              </div>
-            </div>
-            <div id="metric-total-orders" className="font-serif font-bold text-2xl text-on-surface">
-              0
-            </div>
-            <p className="text-[11px] text-on-surface-variant/80 mt-1">
-              Successful customer orders completed
-            </p>
-          </div>
-
-          {/* Metric 3: Average Order Value */}
-          <div className="bg-surface-container-lowest p-5 rounded-xl border border-outline/20 ambient-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs uppercase tracking-wider font-semibold text-on-surface-variant">
-                Avg. Order Value
-              </span>
-              <div className="p-2 rounded-lg bg-tertiary/10 text-tertiary">
-                <DollarSign className="w-4 h-4 text-primary" />
-              </div>
-            </div>
-            <div id="metric-avg-order-value" className="font-serif font-bold text-2xl text-on-surface">
-              0.00 <span className="text-xs font-sans font-normal text-on-surface-variant">Credits</span>
-            </div>
-            <p className="text-[11px] text-on-surface-variant/80 mt-1">
-              Average revenue per artwork purchase
-            </p>
-          </div>
-
-          {/* Metric 4: Active Inventory */}
-          <div className="bg-surface-container-lowest p-5 rounded-xl border border-outline/20 ambient-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs uppercase tracking-wider font-semibold text-on-surface-variant">
-                Active Inventory
-              </span>
-              <div className="p-2 rounded-lg bg-surface-container text-on-surface-variant">
-                <PackageCheck className="w-4 h-4" />
-              </div>
-            </div>
-            <div id="metric-active-listings" className="font-serif font-bold text-2xl text-on-surface">
-              {artworks.length} <span className="text-xs font-sans font-normal text-on-surface-variant">Listings</span>
-            </div>
-            <div className="flex items-center gap-2 text-[11px] text-on-surface-variant/80 mt-1">
-              <span>{availableCount} Available</span>
-              <span>•</span>
-              <span>{soldCount} Sold</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <SellerMetricsView />
 
       {/* 3. Main Studio Grid: Storefront & Studio Information Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
