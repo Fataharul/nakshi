@@ -130,3 +130,14 @@
 
 
 
+
+
+## 13. Authenticated Google Account Linking
+- **Timestamp**: 2026-09-30 21:35:00 +06:00
+- **Context**: Users originally logging in with an email/password needed the ability to manually link a Google account for subsequent seamless logins, without creating parallel duplicate accounts.
+- **Decision**: 
+  - Expose a specialized `POST /api/auth/link-google` endpoint requiring active JWT (`authenticateJWT`).
+  - Introduce a UI component in `AccountSetupPage.tsx` that leverages `@react-oauth/google` merely to produce an `idToken`, avoiding the standard sign-in flow.
+  - Explicitly fail the link operation (HTTP 409 Conflict) if the provided Google ID is already tied to a distinct user record.
+- **Rationale**: 
+  - Prevents credential hopping between accounts while granting users the flexibility to transition to single-sign-on (SSO) securely.

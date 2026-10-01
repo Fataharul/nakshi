@@ -9,6 +9,7 @@ export interface User {
   avatarUrl?: string | null;
   walletBalance: number;
   createdAt: string;
+  hasGoogleLinked?: boolean;
 }
 
 export interface AuthResponse {

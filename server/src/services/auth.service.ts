@@ -22,6 +22,7 @@ export interface SanitizedUser {
   avatarUrl: string | null;
   walletBalance: number;
   createdAt: Date;
+  hasGoogleLinked?: boolean;
 }
 
 export interface AuthResult {
@@ -59,6 +60,7 @@ export class AuthService {
       avatarUrl: user.avatarUrl,
       walletBalance: Number(walletBalance),
       createdAt: user.createdAt,
+      hasGoogleLinked: !!user.googleId,
     };
   }
 
@@ -139,8 +141,13 @@ export class AuthService {
 
       const { email, name, sub: googleId, picture: avatarUrl } = payload;
 
-      let user = await prisma.user.findUnique({
-        where: { email },
+      let user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { googleId },
+            { email },
+          ],
+        },
         include: { wallet: true },
       });
 
@@ -204,6 +211,42 @@ export class AuthService {
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError('Google authentication failed', 401);
+    }
+  }
+
+  public static async linkGoogle(userId: string, idToken: string): Promise<SanitizedUser> {
+    try {
+      const clientId = process.env.GOOGLE_CLIENT_ID || this.GOOGLE_CLIENT_ID;
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken,
+        audience: clientId,
+      });
+
+      const payload = ticket.getPayload();
+      if (!payload || !payload.sub) {
+        throw new AppError('Invalid Google token payload', 400);
+      }
+
+      const googleId = payload.sub;
+
+      const existingGoogleUser = await prisma.user.findUnique({
+        where: { googleId },
+      });
+
+      if (existingGoogleUser && existingGoogleUser.id !== userId) {
+        throw new AppError('This Google account is already linked to another user.', 409);
+      }
+
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { googleId },
+        include: { wallet: true },
+      });
+
+      return this.sanitizeUser(updatedUser, Number(updatedUser.wallet?.balance ?? 0));
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError('Google linking failed', 401);
     }
   }
 
