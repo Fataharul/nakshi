@@ -478,6 +478,7 @@ export const ArtworkSearchInterface: React.FC = () => {
             <div className="flex items-center gap-1">
               <input
                 type="number"
+                id="artwork-min-price-filter"
                 placeholder="Min"
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
@@ -487,6 +488,7 @@ export const ArtworkSearchInterface: React.FC = () => {
               <span className="text-on-surface-variant">-</span>
               <input
                 type="number"
+                id="artwork-max-price-filter"
                 placeholder="Max"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
