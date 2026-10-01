@@ -327,6 +327,10 @@ export class ArtworkService {
   public static async deleteArtwork(id: string, artistId: string) {
     const existing = await prisma.artwork.findUnique({
       where: { id },
+      include: {
+        orders: { select: { id: true } },
+        auctionItems: { select: { id: true, status: true } },
+      },
     });
 
     if (!existing) {
@@ -337,6 +341,14 @@ export class ArtworkService {
       throw new AppError('Forbidden: You are not authorized to delete an artwork owned by another artist', 403);
     }
 
+    if (existing.availability === 'SOLD' || existing.orders.length > 0) {
+      throw new AppError('Bad Request: Cannot delete an artwork that has already been purchased or has order records', 400);
+    }
+
+    if (existing.auctionItems.some((a) => a.status === 'ACTIVE' || a.status === 'UPCOMING')) {
+      throw new AppError('Bad Request: Cannot delete an artwork that is currently scheduled or active in an auction', 400);
+    }
+
     await prisma.artwork.delete({
       where: { id },
     });
@@ -344,3 +356,4 @@ export class ArtworkService {
     return true;
   }
 }
+

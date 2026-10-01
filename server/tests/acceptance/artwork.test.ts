@@ -452,6 +452,99 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026 & T-038)', () =>
     });
   });
 
+  describe('DELETE /api/artworks/:id (Storefront Deletion - T-045)', () => {
+    let artworkToDeleteId: string;
+
+    beforeAll(async () => {
+      // Create an artwork specifically for delete testing
+      const res = await fetch(`${baseUrl}/api/artworks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${artistToken}`,
+        },
+        body: JSON.stringify({
+          title: 'Artwork To Delete Test',
+          description: 'Temporary listing created to verify delete endpoint authorization.',
+          medium: 'Clay Pottery',
+          price: 250.0,
+          imageUrl: 'https://example.com/test-delete.jpg',
+        }),
+      });
+      const data = (await res.json()) as any;
+      artworkToDeleteId = data.artwork.id;
+    });
+
+    it('rejects unauthenticated delete request with 401 Unauthorized', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/${artworkToDeleteId}`, {
+        method: 'DELETE',
+      });
+      expect(res.status).toBe(401);
+    });
+
+    it('rejects non-artist user (BUYER role) with 403 Forbidden', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/${artworkToDeleteId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${buyerToken}` },
+      });
+      expect(res.status).toBe(403);
+    });
+
+    it('rejects an artist attempting to delete another artist\'s artwork with 403 Forbidden', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/${artworkToDeleteId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${secondArtistToken}` },
+      });
+      expect(res.status).toBe(403);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('You are not authorized to delete an artwork owned by another artist');
+    });
+
+    it('rejects deleting an artwork that is marked SOLD with 400 Bad Request', async () => {
+      // Update availability to SOLD in DB
+      await prisma.artwork.update({
+        where: { id: artworkToDeleteId },
+        data: { availability: 'SOLD' },
+      });
+
+      const res = await fetch(`${baseUrl}/api/artworks/${artworkToDeleteId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${artistToken}` },
+      });
+      expect(res.status).toBe(400);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('Cannot delete an artwork that has already been purchased');
+
+      // Restore to AVAILABLE
+      await prisma.artwork.update({
+        where: { id: artworkToDeleteId },
+        data: { availability: 'AVAILABLE' },
+      });
+    });
+
+    it('allows authentic storefront owner to successfully delete their artwork listing with 200 OK', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/${artworkToDeleteId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${artistToken}` },
+      });
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.message).toBe('Artwork deleted successfully');
+
+      // Verify it no longer exists
+      const verifyRes = await fetch(`${baseUrl}/api/artworks/${artworkToDeleteId}`);
+      expect(verifyRes.status).toBe(404);
+    });
+
+    it('returns 404 when attempting to delete a non-existent artwork', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/00000000-0000-0000-0000-000000000000`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${artistToken}` },
+      });
+      expect(res.status).toBe(404);
+    });
+  });
+
   afterAll(async () => {
     if (serverInstance) {
       await new Promise<void>((resolve) => {
@@ -460,4 +553,5 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026 & T-038)', () =>
     }
   });
 });
+
 
