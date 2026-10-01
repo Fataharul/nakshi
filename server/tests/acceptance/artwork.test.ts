@@ -450,6 +450,24 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026 & T-038)', () =>
       const data = (await res.json()) as any;
       expect(data.artworks.length).toBe(0);
     });
+
+    it('filters artworks by creatorName (T-046)', async () => {
+      const searchKeyword = artistUser.name.split(' ')[0];
+      const res = await fetch(`${baseUrl}/api/artworks?creatorName=${searchKeyword}`);
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.artworks.length).toBeGreaterThanOrEqual(1);
+      data.artworks.forEach((art: any) => {
+        expect(art.artist.name.toLowerCase()).toContain(searchKeyword.toLowerCase());
+      });
+    });
+
+    it('returns empty array when creatorName does not match any artist', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks?creatorName=NonExistentCreatorXYZ999`);
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.artworks.length).toBe(0);
+    });
   });
 
   describe('DELETE /api/artworks/:id (Storefront Deletion - T-045)', () => {

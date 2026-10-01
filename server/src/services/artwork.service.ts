@@ -138,6 +138,15 @@ export class ArtworkService {
       }
     }
 
+    if (query.creatorName && query.creatorName.trim()) {
+      where.artist = {
+        name: {
+          contains: query.creatorName.trim(),
+          mode: 'insensitive',
+        },
+      };
+    }
+
     if (query.search && query.search.trim()) {
       const searchTerm = query.search.trim();
       where.OR = [

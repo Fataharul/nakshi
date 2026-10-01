@@ -173,13 +173,14 @@ const CURATED_HERITAGE_ARTWORKS: SearchableArtwork[] = [
 ];
 
 type SortOption = 'LATEST' | 'PRICE_ASC' | 'PRICE_DESC' | 'TITLE_ASC';
-type PriceFilterOption = 'ALL' | 'UNDER_500' | '500_TO_1000' | 'OVER_1000';
 
 export const ArtworkSearchInterface: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMedium, setSelectedMedium] = useState('ALL');
   const [selectedStyle, setSelectedStyle] = useState('ALL');
-  const [priceFilter, setPriceFilter] = useState<PriceFilterOption>('ALL');
+  const [creatorName, setCreatorName] = useState('');
+  const [minPrice, setMinPrice] = useState<string>('');
+  const [maxPrice, setMaxPrice] = useState<string>('');
   const [availabilityFilter, setAvailabilityFilter] = useState<'ALL' | 'AVAILABLE'>('ALL');
   const [sortBy, setSortBy] = useState<SortOption>('LATEST');
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
@@ -195,6 +196,9 @@ export const ArtworkSearchInterface: React.FC = () => {
         medium: selectedMedium !== 'ALL' ? selectedMedium : undefined,
         style: selectedStyle !== 'ALL' ? selectedStyle : undefined,
         search: searchTerm.trim() || undefined,
+        creatorName: creatorName.trim() || undefined,
+        minPrice: minPrice !== '' ? Number(minPrice) : undefined,
+        maxPrice: maxPrice !== '' ? Number(maxPrice) : undefined,
         availability: availabilityFilter !== 'ALL' ? availabilityFilter : undefined,
       })
       .then((data) => {
@@ -225,7 +229,7 @@ export const ArtworkSearchInterface: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [selectedMedium, selectedStyle, searchTerm, availabilityFilter]);
+  }, [selectedMedium, selectedStyle, searchTerm, creatorName, minPrice, maxPrice, availabilityFilter]);
 
   // Combined Collection & Filter & Sort Logic
   const allCollection = useMemo(() => {
@@ -266,10 +270,18 @@ export const ArtworkSearchInterface: React.FC = () => {
         }
       }
 
+      // 3a. Creator filter (for static/demo data)
+      if (creatorName.trim()) {
+        const query = creatorName.toLowerCase();
+        if (!art.artistName.toLowerCase().includes(query)) {
+          return false;
+        }
+      }
+
       // 4. Price filter
-      if (priceFilter === 'UNDER_500' && art.price >= 500) return false;
-      if (priceFilter === '500_TO_1000' && (art.price < 500 || art.price > 1000)) return false;
-      if (priceFilter === 'OVER_1000' && art.price <= 1000) return false;
+      const artPrice = Number(art.price);
+      if (minPrice !== '' && artPrice < Number(minPrice)) return false;
+      if (maxPrice !== '' && artPrice > Number(maxPrice)) return false;
 
       // 5. Availability
       if (availabilityFilter === 'AVAILABLE' && art.availability !== 'AVAILABLE') {
@@ -290,13 +302,15 @@ export const ArtworkSearchInterface: React.FC = () => {
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
     });
-  }, [allCollection, searchTerm, selectedMedium, selectedStyle, priceFilter, availabilityFilter, sortBy]);
+  }, [allCollection, searchTerm, selectedMedium, selectedStyle, creatorName, minPrice, maxPrice, availabilityFilter, sortBy]);
 
   const resetFilters = () => {
     setSearchTerm('');
     setSelectedMedium('ALL');
     setSelectedStyle('ALL');
-    setPriceFilter('ALL');
+    setCreatorName('');
+    setMinPrice('');
+    setMaxPrice('');
     setAvailabilityFilter('ALL');
     setSortBy('LATEST');
   };
@@ -305,7 +319,9 @@ export const ArtworkSearchInterface: React.FC = () => {
     searchTerm !== '' ||
     selectedMedium !== 'ALL' ||
     selectedStyle !== 'ALL' ||
-    priceFilter !== 'ALL' ||
+    creatorName !== '' ||
+    minPrice !== '' ||
+    maxPrice !== '' ||
     availabilityFilter !== 'ALL' ||
     sortBy !== 'LATEST';
 
@@ -443,20 +459,43 @@ export const ArtworkSearchInterface: React.FC = () => {
             </select>
           </div>
 
+          {/* Creator Filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-on-surface-variant font-medium">Creator:</span>
+            <input
+              type="text"
+              id="artwork-creator-filter"
+              value={creatorName}
+              onChange={(e) => setCreatorName(e.target.value)}
+              placeholder="Artist Name"
+              className="bg-surface-container-low text-xs text-on-surface rounded-lg px-3 py-1.5 border border-outline/20 focus:outline-none focus:border-primary font-medium w-32"
+            />
+          </div>
+
           {/* Price Range Filter */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-on-surface-variant font-medium">Price:</span>
-            <select
-              id="artwork-price-filter"
-              value={priceFilter}
-              onChange={(e) => setPriceFilter(e.target.value as PriceFilterOption)}
-              className="bg-surface-container-low text-xs text-on-surface rounded-lg px-3 py-1.5 border border-outline/20 focus:outline-none focus:border-primary"
-            >
-              <option value="ALL">All Prices</option>
-              <option value="UNDER_500">Under 500 Credits</option>
-              <option value="500_TO_1000">500 – 1000 Credits</option>
-              <option value="OVER_1000">Above 1000 Credits</option>
-            </select>
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                id="artwork-min-price-filter"
+                placeholder="Min"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                min="0"
+                className="bg-surface-container-low text-xs text-on-surface rounded-lg px-2 py-1.5 border border-outline/20 focus:outline-none focus:border-primary font-medium w-16"
+              />
+              <span className="text-on-surface-variant">-</span>
+              <input
+                type="number"
+                id="artwork-max-price-filter"
+                placeholder="Max"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                min="0"
+                className="bg-surface-container-low text-xs text-on-surface rounded-lg px-2 py-1.5 border border-outline/20 focus:outline-none focus:border-primary font-medium w-16"
+              />
+            </div>
           </div>
 
           {/* Availability Toggle */}
