@@ -6,6 +6,7 @@ import {
   Settings,
   Plus,
   Edit,
+  Trash2,
   Package,
   CheckCircle2,
   Sparkles,
@@ -21,6 +22,7 @@ interface SellerDashboardLayoutProps {
   isLoadingArtworks: boolean;
   onOpenAddModal: () => void;
   onOpenEditModal?: (artwork: Artwork) => void;
+  onDeleteArtwork?: (id: string) => void;
 }
 
 export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
@@ -29,6 +31,7 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
   isLoadingArtworks,
   onOpenAddModal,
   onOpenEditModal,
+  onDeleteArtwork,
 }) => {
   const [selectedFilter, setSelectedFilter] = useState<string>('ALL');
 
@@ -234,15 +237,29 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
                             {artwork.price.toFixed(2)} Credits
                           </span>
                         </div>
-                        {user.role === 'ARTIST' && user.id === artwork.artistId && onOpenEditModal && (
-                          <button
-                            id={`edit-artwork-btn-${artwork.id}`}
-                            onClick={() => onOpenEditModal(artwork)}
-                            className="px-3 py-1.5 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-medium rounded border border-outline/20 flex items-center gap-1.5 transition-colors cursor-pointer"
-                          >
-                            <Edit className="w-3.5 h-3.5 text-primary" />
-                            <span>Edit Listing</span>
-                          </button>
+                        {user.role === 'ARTIST' && user.id === artwork.artistId && (
+                          <div className="flex items-center gap-2">
+                            {onOpenEditModal && (
+                              <button
+                                id={`edit-artwork-btn-${artwork.id}`}
+                                onClick={() => onOpenEditModal(artwork)}
+                                className="px-3 py-1.5 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-medium rounded border border-outline/20 flex items-center gap-1.5 transition-colors cursor-pointer"
+                              >
+                                <Edit className="w-3.5 h-3.5 text-primary" />
+                                <span>Edit Listing</span>
+                              </button>
+                            )}
+                            {onDeleteArtwork && (
+                              <button
+                                id={`delete-artwork-btn-${artwork.id}`}
+                                onClick={() => onDeleteArtwork(artwork.id)}
+                                className="px-2 py-1.5 bg-error-container/20 hover:bg-error-container/40 text-error text-xs font-medium rounded border border-error/20 flex items-center gap-1.5 transition-colors cursor-pointer"
+                                title="Delete Listing"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>

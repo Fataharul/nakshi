@@ -88,6 +88,12 @@ export const artworkApi = {
     return data.artwork;
   },
 
+  async deleteArtwork(id: string): Promise<void> {
+    await request<{ message: string }>(`/api/artworks/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
   async getMyArtworks(): Promise<Artwork[]> {
     const data = await request<{ artworks: Artwork[] }>('/api/artworks/my-artworks', {
       method: 'GET',

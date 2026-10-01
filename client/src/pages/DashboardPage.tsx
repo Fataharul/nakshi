@@ -64,6 +64,17 @@ export const DashboardPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  const handleDeleteArtwork = async (id: string) => {
+    if (window.confirm('Are you sure you want to permanently delete this artwork from your storefront?')) {
+      try {
+        await artworkApi.deleteArtwork(id);
+        setArtworks((prev) => prev.filter((a) => a.id !== id));
+      } catch (err: any) {
+        alert(err.message || 'Failed to delete artwork');
+      }
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
       {user.role === 'ARTIST' ? (
@@ -73,6 +84,7 @@ export const DashboardPage: React.FC = () => {
           isLoadingArtworks={isLoadingArtworks}
           onOpenAddModal={handleOpenAddModal}
           onOpenEditModal={handleOpenEditModal}
+          onDeleteArtwork={handleDeleteArtwork}
         />
       ) : (
         <>

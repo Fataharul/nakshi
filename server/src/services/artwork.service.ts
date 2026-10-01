@@ -320,4 +320,40 @@ export class ArtworkService {
 
     return this.formatArtwork(updated);
   }
+
+  /**
+   * Deletes an artwork record. Restricted strictly to the artwork owner (artistId).
+   */
+  public static async deleteArtwork(id: string, artistId: string) {
+    const existing = await prisma.artwork.findUnique({
+      where: { id },
+      include: {
+        orders: { select: { id: true } },
+        auctionItems: { select: { id: true, status: true } },
+      },
+    });
+
+    if (!existing) {
+      throw new AppError('Artwork record not found', 404);
+    }
+
+    if (existing.artistId !== artistId) {
+      throw new AppError('Forbidden: You are not authorized to delete an artwork owned by another artist', 403);
+    }
+
+    if (existing.availability === 'SOLD' || existing.orders.length > 0) {
+      throw new AppError('Bad Request: Cannot delete an artwork that has already been purchased or has order records', 400);
+    }
+
+    if (existing.auctionItems.some((a) => a.status === 'ACTIVE' || a.status === 'UPCOMING')) {
+      throw new AppError('Bad Request: Cannot delete an artwork that is currently scheduled or active in an auction', 400);
+    }
+
+    await prisma.artwork.delete({
+      where: { id },
+    });
+
+    return true;
+  }
 }
+
