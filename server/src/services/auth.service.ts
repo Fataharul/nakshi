@@ -141,8 +141,13 @@ export class AuthService {
 
       const { email, name, sub: googleId, picture: avatarUrl } = payload;
 
-      let user = await prisma.user.findUnique({
-        where: { email },
+      let user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { googleId },
+            { email },
+          ],
+        },
         include: { wallet: true },
       });
 
