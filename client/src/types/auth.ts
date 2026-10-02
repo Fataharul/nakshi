@@ -10,6 +10,7 @@ export interface User {
   walletBalance: number;
   createdAt: string;
   hasGoogleLinked?: boolean;
+  isVerified?: boolean;
 }
 
 export interface AuthResponse {
