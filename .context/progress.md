@@ -254,3 +254,14 @@
 - **Verified**:
   - Clean TypeScript compilation for both frontend and backend.
   - All Vitest acceptance and unit tests passed.
+
+## [2026-10-02 14:45:00 +06:00] Milestone: Auction Creation & Seller Auction Management for Verified Artists
+- **Completed**:
+  - Backend `Auction` model, validation schemas, `AuctionService`, and `AuctionController` implemented ensuring atomic reserving of artworks and RBAC checks.
+  - Frontend `AuctionService` integrated with React Dashboard.
+  - Added `CreateAuctionModal.tsx` for validated frontend scheduling.
+  - Added `My Auctions` tabular view in `SellerDashboardLayout.tsx` for verified artists.
+  - Acceptance tests added verifying 403 Forbidden for non-verified or non-artist roles, and 400 Bad Request for overlapping auctions.
+- **Verified**:
+  - Clean TypeScript compilation for frontend.
+  - All Vitest acceptance and unit tests passed.

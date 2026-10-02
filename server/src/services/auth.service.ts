@@ -61,6 +61,7 @@ export class AuthService {
       walletBalance: Number(walletBalance),
       createdAt: user.createdAt,
       hasGoogleLinked: !!user.googleId,
+      isVerified: user.isVerified,
     };
   }
 
