@@ -95,21 +95,7 @@ const CURATED_HERITAGE_ARTWORKS: SearchableArtwork[] = [
     availability: 'AVAILABLE',
     createdAt: '2026-09-25T16:45:00Z',
   },
-  {
-    id: 'art-005',
-    title: 'Kalighat Patua Village Life Scroll',
-    artistName: 'Manojit Chitrakar',
-    artistRegion: 'Sundarbans',
-    medium: 'Folk Painting & Patua',
-    style: 'Traditional Folk',
-    description: 'Hand-ground mineral and river vegetable dyes painted on treated vintage cloth portraying riverine life.',
-    dimensions: '48 x 24 inches',
-    weight: '0.6 kg',
-    price: 680.0,
-    imageUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=800&q=80',
-    availability: 'AVAILABLE',
-    createdAt: '2026-09-24T11:20:00Z',
-  },
+
   {
     id: 'art-006',
     title: 'Sylhet Imperial Murta Cane Shital Pati',

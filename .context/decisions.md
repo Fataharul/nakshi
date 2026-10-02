@@ -141,3 +141,15 @@
   - Explicitly fail the link operation (HTTP 409 Conflict) if the provided Google ID is already tied to a distinct user record.
 - **Rationale**: 
   - Prevents credential hopping between accounts while granting users the flexibility to transition to single-sign-on (SSO) securely.
+
+## 14. Auction Creation & Management for Verified Artists
+- **Timestamp**: 2026-10-02 14:45:00 +06:00
+- **Context**: Allowing verified artisans to list exclusive live bidding events for eligible artworks, avoiding complex frontend polling by strictly enforcing auction integrity through backend Prisma validations.
+- **Decision**:
+  - Introduce an `Auction` Prisma model tracking status (`UPCOMING`, `ACTIVE`, `ENDED`, `CANCELLED`), starting/highest bids, and time constraints.
+  - Enforce atomic transaction safety in the backend: Creating an auction reserves the artwork (`availability = RESERVED`) mitigating race conditions around concurrent sales.
+  - UI logic explicitly evaluates `isVerified` from the backend to ensure RBAC is strictly applied.
+  - Centralize logic in `AuctionService` and integrate directly into the `SellerDashboardLayout` alongside static artworks for a consolidated inventory view.
+- **Rationale**:
+  - Satisfies verified-only creation business rules cleanly using RBAC.
+  - Database acts as the single source of truth for auction timelines and eligibility constraints, preventing timezone or clock manipulation exploits.

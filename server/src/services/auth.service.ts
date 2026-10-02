@@ -23,6 +23,7 @@ export interface SanitizedUser {
   walletBalance: number;
   createdAt: Date;
   hasGoogleLinked?: boolean;
+  isVerified?: boolean;
 }
 
 export interface AuthResult {
@@ -61,6 +62,7 @@ export class AuthService {
       walletBalance: Number(walletBalance),
       createdAt: user.createdAt,
       hasGoogleLinked: !!user.googleId,
+      isVerified: user.isVerified,
     };
   }
 
