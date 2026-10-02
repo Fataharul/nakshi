@@ -263,5 +263,6 @@
   - Added `My Auctions` tabular view in `SellerDashboardLayout.tsx` for verified artists.
   - Acceptance tests added verifying 403 Forbidden for non-verified or non-artist roles, and 400 Bad Request for overlapping auctions.
 - **Verified**:
-  - Clean TypeScript compilation for frontend.
-  - All Vitest acceptance and unit tests passed.
+  - Clean TypeScript compilation for both frontend and backend (`npm --prefix server run build` and `npm --prefix client run build`).
+  - All 9 Vitest test suites (99 tests) passed cleanly.
+
