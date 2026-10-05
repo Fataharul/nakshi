@@ -1,7 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
-import { broadcastAuctionUpdate, AuctionBidPayload } from '../../src/sockets/auction.socket';
+import { describe, it, expect } from 'vitest';
+import { broadcastAuctionUpdate, sendOutbidNotification, AuctionBidPayload, OutbidNotificationPayload } from '../../src/sockets/auction.socket';
 
-describe('Auction Socket Broadcast Unit Tests (T-054)', () => {
+describe('Auction Socket Broadcast Unit Tests (T-054 & T-062)', () => {
   it('broadcasts auction:updated and bid:placed events to the correct auction room with full payload', () => {
     const emittedEvents: { room: string; event: string; payload: any }[] = [];
 
@@ -48,6 +48,38 @@ describe('Auction Socket Broadcast Unit Tests (T-054)', () => {
     expect(payload.timestamp).toBe(testPayload.timestamp);
   });
 
+  it('emits notification:outbid targeted strictly to user:${recipientId} channel (T-062)', () => {
+    const emittedEvents: { room: string; event: string; payload: any }[] = [];
+
+    const mockIo: any = {
+      to: (roomName: string) => {
+        return {
+          emit: (eventName: string, payload: any) => {
+            emittedEvents.push({ room: roomName, event: eventName, payload });
+          },
+        };
+      },
+    };
+
+    const outbidPayload: OutbidNotificationPayload = {
+      recipientId: 'displaced-user-uuid-111',
+      auctionId: 'auction-uuid-222',
+      artworkTitle: 'Nakshi Kantha Scroll',
+      newHighestBid: 550,
+      message: 'You have been outbid on "Nakshi Kantha Scroll". New highest bid is 550 credits.',
+      timestamp: new Date().toISOString(),
+    };
+
+    sendOutbidNotification(mockIo, outbidPayload);
+
+    expect(emittedEvents.length).toBe(1);
+    expect(emittedEvents[0].room).toBe('user:displaced-user-uuid-111');
+    expect(emittedEvents[0].event).toBe('notification:outbid');
+    expect(emittedEvents[0].payload.recipientId).toBe('displaced-user-uuid-111');
+    expect(emittedEvents[0].payload.newHighestBid).toBe(550);
+    expect(emittedEvents[0].payload.artworkTitle).toBe('Nakshi Kantha Scroll');
+  });
+
   it('handles null or undefined io instance gracefully without crashing', () => {
     const testPayload: AuctionBidPayload = {
       auctionId: 'test-auction-uuid-1234',
@@ -58,5 +90,7 @@ describe('Auction Socket Broadcast Unit Tests (T-054)', () => {
     };
 
     expect(() => broadcastAuctionUpdate(null as any, testPayload)).not.toThrow();
+    expect(() => sendOutbidNotification(null as any, null as any)).not.toThrow();
   });
 });
+

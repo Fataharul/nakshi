@@ -4,7 +4,7 @@ import { createAuctionSchema, submitBidSchema } from '../utils/auction.validatio
 import { AppError } from '../services/auth.service';
 import { prisma } from '../config/prisma';
 import { io } from '../server';
-import { broadcastAuctionUpdate } from '../sockets/auction.socket';
+import { broadcastAuctionUpdate, sendOutbidNotification } from '../sockets/auction.socket';
 
 export class AuctionController {
   public static async create(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -43,7 +43,7 @@ export class AuctionController {
 
       const result = await AuctionService.submitBid(auctionId, bidderId, validatedData);
 
-      // Broadcast updated auction state event to all connected viewers in the room
+      // 1. Broadcast updated auction state event to all connected viewers in the room
       const broadcastPayload = {
         auctionId: result.auction.id,
         currentHighestBid: result.bid.amount,
@@ -54,11 +54,17 @@ export class AuctionController {
 
       broadcastAuctionUpdate(io, broadcastPayload);
 
+      // 2. Broadcast targeted outbid notification to displaced previous bidder if applicable (T-062)
+      if (result.outbidNotification) {
+        sendOutbidNotification(io, result.outbidNotification);
+      }
+
       res.status(201).json(result);
     } catch (error) {
       next(error);
     }
   }
 }
+
 
 

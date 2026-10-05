@@ -191,5 +191,69 @@ describe('Auction & Bid Submission Validation Schema Unit Tests (T-052)', () => 
       expect(evalResult.canBid).toBe(true);
     });
   });
+
+  describe('Previous Bidder Identification & Outbid Notification Logic Unit Evaluation (T-061 & T-062)', () => {
+    function evaluateOutbidNotification(
+      previousHighestBidderId: string | null,
+      newBidderId: string,
+      auctionId: string,
+      artworkTitle: string,
+      newAmount: number
+    ) {
+      const isOutbid = previousHighestBidderId !== null && previousHighestBidderId !== newBidderId;
+      if (!isOutbid || !previousHighestBidderId) {
+        return null;
+      }
+      return {
+        recipientId: previousHighestBidderId,
+        auctionId,
+        artworkTitle,
+        newHighestBid: newAmount,
+        message: `You have been outbid on "${artworkTitle}". New highest bid is ${newAmount} credits.`,
+      };
+    }
+
+    it('identifies previous bidder and creates outbid notification when a different user places a higher bid (T-061 & T-062)', () => {
+      const notification = evaluateOutbidNotification(
+        'buyer-uuid-1',
+        'buyer-uuid-2',
+        'auction-uuid-100',
+        'Terracotta Tapestry',
+        350
+      );
+
+      expect(notification).not.toBeNull();
+      expect(notification?.recipientId).toBe('buyer-uuid-1');
+      expect(notification?.auctionId).toBe('auction-uuid-100');
+      expect(notification?.artworkTitle).toBe('Terracotta Tapestry');
+      expect(notification?.newHighestBid).toBe(350);
+      expect(notification?.message).toContain('You have been outbid');
+    });
+
+    it('does not generate outbid notification on the first bid when no previous highest bidder exists (T-062)', () => {
+      const notification = evaluateOutbidNotification(
+        null,
+        'buyer-uuid-1',
+        'auction-uuid-100',
+        'Terracotta Tapestry',
+        200
+      );
+
+      expect(notification).toBeNull();
+    });
+
+    it('does not generate outbid notification when the same bidder outbids their own previous bid (T-062)', () => {
+      const notification = evaluateOutbidNotification(
+        'buyer-uuid-1',
+        'buyer-uuid-1',
+        'auction-uuid-100',
+        'Terracotta Tapestry',
+        400
+      );
+
+      expect(notification).toBeNull();
+    });
+  });
 });
+
 

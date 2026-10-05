@@ -190,6 +190,17 @@ export class AuctionService {
       }
     }
 
+    // Identify previous highest bidder before registering new bid (T-061)
+    const previousHighestBid = await prisma.auctionBid.findFirst({
+      where: { auctionId },
+      orderBy: [
+        { amount: 'desc' },
+        { createdAt: 'desc' },
+      ],
+    });
+
+    const previousHighestBidderId = previousHighestBid ? previousHighestBid.bidderId : null;
+
     const result = await prisma.$transaction(async (tx) => {
       if (auction.status === AuctionStatus.UPCOMING) {
         await tx.auction.update({
@@ -230,6 +241,17 @@ export class AuctionService {
       return { bid, auction: updatedAuction };
     });
 
+    // Generate outbid notification object targeting displaced previous bidder (T-062)
+    const isOutbid = previousHighestBidderId !== null && previousHighestBidderId !== bidderId;
+    const outbidNotification = (isOutbid && previousHighestBidderId) ? {
+      recipientId: previousHighestBidderId,
+      auctionId: auction.id,
+      artworkTitle: auction.artwork.title,
+      newHighestBid: amount,
+      message: `You have been outbid on "${auction.artwork.title}". New highest bid is ${amount} credits.`,
+      timestamp: result.bid.createdAt instanceof Date ? result.bid.createdAt.toISOString() : new Date(result.bid.createdAt).toISOString(),
+    } : null;
+
     return {
       bid: {
         id: result.bid.id,
@@ -243,8 +265,11 @@ export class AuctionService {
         id: result.bid.bidder.id,
         name: result.bid.bidder.name,
       },
+      previousBidderId: previousHighestBidderId,
+      outbidNotification,
     };
   }
 }
+
 
 

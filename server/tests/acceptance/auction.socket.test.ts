@@ -12,7 +12,11 @@ describe('Real-Time Auction Socket State Broadcast Acceptance Tests (T-054)', ()
 
   let artistToken: string;
   let buyerToken: string;
+  let secondBuyerToken: string;
+
   let artistId: string;
+  let buyer1Id: string;
+  let buyer2Id: string;
 
   let activeArtworkId: string;
   let activeAuctionId: string;
@@ -25,8 +29,15 @@ describe('Real-Time Auction Socket State Broadcast Acceptance Tests (T-054)', ()
   };
 
   const buyerUser = {
-    name: `Socket Viewer ${uniqueId}`,
-    email: `socket_buyer_${uniqueId}_${Math.random().toString(36).substring(2, 7)}@nakshi.test`,
+    name: `Socket Buyer 1 ${uniqueId}`,
+    email: `socket_buyer1_${uniqueId}_${Math.random().toString(36).substring(2, 7)}@nakshi.test`,
+    password: 'Password123!',
+    role: 'BUYER',
+  };
+
+  const secondBuyerUser = {
+    name: `Socket Buyer 2 ${uniqueId}`,
+    email: `socket_buyer2_${uniqueId}_${Math.random().toString(36).substring(2, 7)}@nakshi.test`,
     password: 'Password123!',
     role: 'BUYER',
   };
@@ -41,7 +52,7 @@ describe('Real-Time Auction Socket State Broadcast Acceptance Tests (T-054)', ()
       });
     });
 
-    // Register artist and buyer
+    // Register artist and buyers
     const aReg = await fetch(`${baseUrl}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -56,12 +67,23 @@ describe('Real-Time Auction Socket State Broadcast Acceptance Tests (T-054)', ()
       data: { isVerified: true },
     });
 
-    const bReg = await fetch(`${baseUrl}/api/auth/register`, {
+    const bReg1 = await fetch(`${baseUrl}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(buyerUser),
     });
-    buyerToken = ((await bReg.json()) as any).token;
+    const b1Data = (await bReg1.json()) as any;
+    buyerToken = b1Data.token;
+    buyer1Id = b1Data.user.id;
+
+    const bReg2 = await fetch(`${baseUrl}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(secondBuyerUser),
+    });
+    const b2Data = (await bReg2.json()) as any;
+    secondBuyerToken = b2Data.token;
+    buyer2Id = b2Data.user.id;
 
     // Seed artwork and active auction
     const artwork = await prisma.artwork.create({
@@ -150,4 +172,57 @@ describe('Real-Time Auction Socket State Broadcast Acceptance Tests (T-054)', ()
 
     clientSocket.disconnect();
   });
+
+  it('delivers real-time notification:outbid event strictly to the displaced previous highest bidder (T-061 & T-062)', async () => {
+    // Buyer 1 connects socket and joins their user notification channel
+    const buyer1Socket: ClientSocket = ioClient(baseUrl, {
+      transports: ['websocket', 'polling'],
+      reconnection: false,
+    });
+
+    await new Promise<void>((resolve, reject) => {
+      buyer1Socket.on('connect', resolve);
+      buyer1Socket.on('connect_error', reject);
+    });
+
+    buyer1Socket.emit('join_user_channel', buyer1Id);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Listen for outbid notification on Buyer 1's channel
+    const outbidPromise = new Promise<any>((resolve) => {
+      buyer1Socket.on('notification:outbid', (data) => {
+        resolve(data);
+      });
+    });
+
+    // Buyer 2 places a higher bid (amount = 260), displacing Buyer 1 (who held 220)
+    const res = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bids`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${secondBuyerToken}`,
+      },
+      body: JSON.stringify({ amount: 260 }),
+    });
+
+    expect(res.status).toBe(201);
+
+    // Buyer 1 receives notification:outbid event
+    const outbidData = await Promise.race([
+      outbidPromise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Outbid notification timeout')), 5000)
+      ),
+    ]);
+
+    expect(outbidData).toBeDefined();
+    expect(outbidData.recipientId).toBe(buyer1Id);
+    expect(outbidData.auctionId).toBe(activeAuctionId);
+    expect(outbidData.artworkTitle).toBe('Jamdani Saree for Socket Test');
+    expect(outbidData.newHighestBid).toBe(260);
+    expect(outbidData.message).toContain('outbid');
+
+    buyer1Socket.disconnect();
+  });
 });
+

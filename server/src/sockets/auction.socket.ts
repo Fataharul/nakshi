@@ -13,8 +13,17 @@ export interface AuctionBidPayload {
   timestamp: string;
 }
 
+export interface OutbidNotificationPayload {
+  recipientId: string;
+  auctionId: string;
+  artworkTitle: string;
+  newHighestBid: number;
+  message: string;
+  timestamp: string;
+}
+
 /**
- * Initialize Socket.IO connection event listeners for live auction rooms
+ * Initialize Socket.IO connection event listeners for live auction rooms and user notification channels
  */
 export function setupAuctionSockets(io: SocketIOServer) {
   io.on('connection', (socket: Socket) => {
@@ -31,6 +40,13 @@ export function setupAuctionSockets(io: SocketIOServer) {
         socket.leave(`auction:${auctionId}`);
       }
     });
+
+    // Client joins their personal user room for targeted notifications
+    socket.on('join_user_channel', (userId: string) => {
+      if (userId) {
+        socket.join(`user:${userId}`);
+      }
+    });
   });
 }
 
@@ -42,4 +58,13 @@ export function broadcastAuctionUpdate(io: SocketIOServer, payload: AuctionBidPa
   const roomName = `auction:${payload.auctionId}`;
   io.to(roomName).emit('auction:updated', payload);
   io.to(roomName).emit('bid:placed', payload);
+}
+
+/**
+ * Send targeted outbid notification to the displaced previous highest bidder
+ */
+export function sendOutbidNotification(io: SocketIOServer, payload: OutbidNotificationPayload) {
+  if (!io) return;
+  const userRoom = `user:${payload.recipientId}`;
+  io.to(userRoom).emit('notification:outbid', payload);
 }
