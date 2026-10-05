@@ -198,6 +198,14 @@ export class AuctionService {
           bidderId,
           amount,
         },
+        include: {
+          bidder: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
       });
 
       const updatedAuction = await tx.auction.update({
@@ -225,7 +233,12 @@ export class AuctionService {
         createdAt: result.bid.createdAt,
       },
       auction: this.formatAuction(result.auction),
+      highestBidder: {
+        id: result.bid.bidder.id,
+        name: result.bid.bidder.name,
+      },
     };
   }
 }
+
 

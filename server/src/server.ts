@@ -9,6 +9,7 @@ import artworkRoutes from './routes/artwork.routes';
 import sellerRoutes from './routes/seller.routes';
 import auctionRoutes from './routes/auction.routes';
 import { errorHandler } from './middleware/error.middleware';
+import { setupAuctionSockets } from './sockets/auction.socket';
 
 dotenv.config();
 
@@ -21,6 +22,10 @@ const io = new SocketIOServer(server, {
     methods: ['GET', 'POST'],
   },
 });
+
+// Setup socket event handlers for live auction rooms
+setupAuctionSockets(io);
+
 
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
 app.use(express.json());

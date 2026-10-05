@@ -3,6 +3,8 @@ import { AuctionService } from '../services/auction.service';
 import { createAuctionSchema, submitBidSchema } from '../utils/auction.validation';
 import { AppError } from '../services/auth.service';
 import { prisma } from '../config/prisma';
+import { io } from '../server';
+import { broadcastAuctionUpdate } from '../sockets/auction.socket';
 
 export class AuctionController {
   public static async create(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -40,11 +42,23 @@ export class AuctionController {
       const bidderId = req.user!.id;
 
       const result = await AuctionService.submitBid(auctionId, bidderId, validatedData);
+
+      // Broadcast updated auction state event to all connected viewers in the room
+      const broadcastPayload = {
+        auctionId: result.auction.id,
+        currentHighestBid: result.bid.amount,
+        highestBidder: result.highestBidder,
+        bidId: result.bid.id,
+        timestamp: result.bid.createdAt instanceof Date ? result.bid.createdAt.toISOString() : new Date(result.bid.createdAt).toISOString(),
+      };
+
+      broadcastAuctionUpdate(io, broadcastPayload);
+
       res.status(201).json(result);
     } catch (error) {
       next(error);
     }
   }
-
 }
+
 

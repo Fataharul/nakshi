@@ -266,3 +266,25 @@
   - Clean TypeScript compilation for both frontend and backend (`npm --prefix server run build` and `npm --prefix client run build`).
   - All 9 Vitest test suites (99 tests) passed cleanly.
 
+## [2026-10-05 22:45:00 +06:00] Milestone: Ticket T-052 — Valid & Invalid Bid Submission Validation Implemented
+- **Completed**:
+  - Created `submitBidSchema` in `server/src/utils/auction.validation.ts` validating positive numeric bid amounts.
+  - Implemented `AuctionService.submitBid` in `server/src/services/auction.service.ts` enforcing active auction schedule checks, starting bid thresholds, minimum step increments (`currentHighestBid + minIncrement`), seller bidding restrictions, and atomic Prisma transactions.
+  - Implemented `AuctionController.submitBid` and mounted `POST /api/auctions/:id/bids` endpoint in `server/src/routes/auction.routes.ts`.
+  - Added unit test suite `server/tests/unit/auction.service.test.ts` (12 tests) and acceptance test suite `server/tests/acceptance/auction.test.ts` (8 bid submission tests).
+- **Verified**:
+  - Clean TypeScript compilation (`npm --prefix server run build`).
+  - All 119 unit and acceptance tests passed cleanly.
+
+## [2026-10-05 23:16:00 +06:00] Milestone: Ticket T-054 — Real-Time Auction State & Bid Broadcast Implemented
+- **Completed**:
+  - Created `server/src/sockets/auction.socket.ts` managing auction room subscriptions (`auction:${auctionId}`) and emitting `auction:updated` / `bid:placed` broadcast events.
+  - Integrated `setupAuctionSockets` in `server/src/server.ts` to initialize Socket.IO event listeners.
+  - Updated `AuctionController.submitBid` to broadcast real-time payloads (`auctionId`, `currentHighestBid`, `highestBidder` with id/name, `bidId`, `timestamp`) to all connected room viewers upon confirmed high bid.
+  - Added unit test suite `server/tests/unit/auction.socket.test.ts` verifying socket payload emission logic.
+  - Added real-time Socket.IO client acceptance test suite `server/tests/acceptance/auction.socket.test.ts` testing room subscription (`join_auction`) and real-time state reception upon bid submission.
+- **Verified**:
+  - Clean TypeScript compilation (`npm --prefix server run build`).
+  - All 12 Vitest server test suites (122 unit and acceptance tests) passed cleanly (`npm --prefix server run test`).
+
+
