@@ -1,6 +1,6 @@
 import { prisma } from '../config/prisma';
 import { AppError } from './auth.service';
-import { CreateAuctionInput } from '../utils/auction.validation';
+import { CreateAuctionInput, SubmitBidInput } from '../utils/auction.validation';
 import { AuctionStatus, ArtworkAvailability } from '@prisma/client';
 
 export class AuctionService {
@@ -131,4 +131,101 @@ export class AuctionService {
 
     return auctions.map(this.formatAuction);
   }
+
+  public static async submitBid(auctionId: string, bidderId: string, data: SubmitBidInput) {
+    const amount = data.amount;
+
+    const auction = await prisma.auction.findUnique({
+      where: { id: auctionId },
+      include: { artwork: true },
+    });
+
+    if (!auction) {
+      throw new AppError('Auction not found', 404);
+    }
+
+    const now = new Date();
+    if (auction.status === AuctionStatus.CANCELLED || auction.status === AuctionStatus.ENDED) {
+      throw new AppError('Auction is closed or cancelled', 400);
+    }
+
+    if (now < new Date(auction.startTime)) {
+      throw new AppError('Auction has not started yet', 400);
+    }
+
+    if (now > new Date(auction.endTime)) {
+      throw new AppError('Auction has already ended', 400);
+    }
+
+    if (auction.artwork.artistId === bidderId) {
+      throw new AppError('Artists cannot bid on their own auctions', 400);
+    }
+
+    const startingBid = Number(auction.startingBid);
+    const minIncrement = Number(auction.minIncrement);
+    const currentHighest = auction.currentHighestBid !== null && auction.currentHighestBid !== undefined
+      ? Number(auction.currentHighestBid)
+      : null;
+
+    if (currentHighest === null) {
+      if (amount < startingBid) {
+        throw new AppError(`Bid amount must be at least the starting bid of ${startingBid}`, 400);
+      }
+    } else {
+      if (amount <= currentHighest) {
+        throw new AppError('Bid amount must be higher than the current highest bid', 400);
+      }
+      const minRequiredBid = currentHighest + minIncrement;
+      if (amount < minRequiredBid) {
+        throw new AppError(
+          `Bid amount must meet the minimum increment step of ${minIncrement}. Minimum required bid is ${minRequiredBid}`,
+          400
+        );
+      }
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      if (auction.status === AuctionStatus.UPCOMING) {
+        await tx.auction.update({
+          where: { id: auctionId },
+          data: { status: AuctionStatus.ACTIVE },
+        });
+      }
+
+      const bid = await tx.auctionBid.create({
+        data: {
+          auctionId,
+          bidderId,
+          amount,
+        },
+      });
+
+      const updatedAuction = await tx.auction.update({
+        where: { id: auctionId },
+        data: {
+          currentHighestBid: amount,
+          status: AuctionStatus.ACTIVE,
+        },
+        include: {
+          artwork: {
+            include: { artist: true },
+          },
+        },
+      });
+
+      return { bid, auction: updatedAuction };
+    });
+
+    return {
+      bid: {
+        id: result.bid.id,
+        auctionId: result.bid.auctionId,
+        bidderId: result.bid.bidderId,
+        amount: Number(result.bid.amount),
+        createdAt: result.bid.createdAt,
+      },
+      auction: this.formatAuction(result.auction),
+    };
+  }
 }
+

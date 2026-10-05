@@ -23,3 +23,14 @@ export const createAuctionSchema = z.object({
 );
 
 export type CreateAuctionInput = z.infer<typeof createAuctionSchema>;
+
+export const submitBidSchema = z.object({
+  amount: z.coerce
+    .number({
+      required_error: 'Bid amount is required',
+      invalid_type_error: 'Bid amount must be a number',
+    })
+    .positive('Bid amount must be positive'),
+});
+
+export type SubmitBidInput = z.infer<typeof submitBidSchema>;

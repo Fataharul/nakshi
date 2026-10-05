@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuctionService } from '../services/auction.service';
-import { createAuctionSchema } from '../utils/auction.validation';
+import { createAuctionSchema, submitBidSchema } from '../utils/auction.validation';
 import { AppError } from '../services/auth.service';
 import { prisma } from '../config/prisma';
 
@@ -32,4 +32,19 @@ export class AuctionController {
       next(error);
     }
   }
+
+  public static async submitBid(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const auctionId = req.params.id as string;
+      const validatedData = submitBidSchema.parse(req.body);
+      const bidderId = req.user!.id;
+
+      const result = await AuctionService.submitBid(auctionId, bidderId, validatedData);
+      res.status(201).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
 }
+

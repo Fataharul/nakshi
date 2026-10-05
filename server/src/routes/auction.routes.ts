@@ -20,4 +20,12 @@ router.get(
   AuctionController.getMyAuctions
 );
 
+// Bidder routes for submitting bids on active auctions
+router.post(
+  '/:id/bids',
+  authenticateJWT,
+  AuctionController.submitBid
+);
+
 export default router;
+

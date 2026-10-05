@@ -12,6 +12,7 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
   let verifiedArtistToken: string;
   let unverifiedArtistToken: string;
   let buyerToken: string;
+  let secondBuyerToken: string;
   
   let verifiedArtistId: string;
   let secondArtistId: string;
@@ -36,6 +37,13 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
   const buyerUser = {
     name: `Auction Buyer ${uniqueId}`,
     email: `buyer_auction_${uniqueId}_${Math.random().toString(36).substring(2, 7)}@nakshi.test`,
+    password: 'Password123!',
+    role: 'BUYER',
+  };
+
+  const secondBuyerUser = {
+    name: `Second Auction Buyer ${uniqueId}`,
+    email: `second_buyer_auction_${uniqueId}_${Math.random().toString(36).substring(2, 7)}@nakshi.test`,
     password: 'Password123!',
     role: 'BUYER',
   };
@@ -91,6 +99,13 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
     });
     buyerToken = ((await bReg.json()) as any).token;
 
+    const sbReg = await fetch(`${baseUrl}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(secondBuyerUser),
+    });
+    secondBuyerToken = ((await sbReg.json()) as any).token;
+
     // Seed some artworks
     const myArtwork = await prisma.artwork.create({
       data: {
@@ -119,7 +134,8 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
       }
     });
     theirArtworkId = theirArtwork.id;
-  });
+  }, 30000);
+
 
   afterAll(async () => {
     serverInstance.close();
@@ -298,4 +314,182 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
       expect(data.auctions[0].artworkId).toBe(myArtworkId);
     });
   });
+
+  describe('POST /api/auctions/:id/bids Acceptance Tests (T-052)', () => {
+    let activeAuctionId: string;
+    let activeArtworkId: string;
+
+    beforeAll(async () => {
+      // Seed a dedicated artwork and active auction for bid submission tests
+      const artwork = await prisma.artwork.create({
+        data: {
+          title: 'Artwork For Bidding Test',
+          description: 'Authentic Nakshi Kantha tapestry for bid testing.',
+          medium: 'Handloom Jamdani',
+          price: 1000,
+          imageUrl: 'https://example.com/bidding-test.jpg',
+          artistId: verifiedArtistId,
+          availability: 'RESERVED',
+          moderationStatus: 'APPROVED',
+        },
+      });
+      activeArtworkId = artwork.id;
+
+      const now = Date.now();
+      const auction = await prisma.auction.create({
+        data: {
+          artworkId: activeArtworkId,
+          startingBid: 100,
+          minIncrement: 10,
+          startTime: new Date(now - 60000), // started 1 min ago
+          endTime: new Date(now + 86400000), // ends in 24 hours
+          status: 'ACTIVE',
+        },
+      });
+      activeAuctionId = auction.id;
+    });
+
+    it('rejects unauthenticated bid submissions with 401 Unauthorized', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bids`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: 120 }),
+      });
+      expect(res.status).toBe(401);
+    });
+
+    it('rejects non-positive or invalid bid amounts (amount <= 0 or invalid format) with 400 Bad Request', async () => {
+      const negativeRes = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bids`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${buyerToken}`,
+        },
+        body: JSON.stringify({ amount: -50 }),
+      });
+      expect(negativeRes.status).toBe(400);
+
+      const zeroRes = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bids`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${buyerToken}`,
+        },
+        body: JSON.stringify({ amount: 0 }),
+      });
+      expect(zeroRes.status).toBe(400);
+
+      const invalidFormatRes = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bids`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${buyerToken}`,
+        },
+        body: JSON.stringify({ amount: 'not-a-number' }),
+      });
+      expect(invalidFormatRes.status).toBe(400);
+    });
+
+    it('rejects bid submission below starting bid when no highest bid exists with 400 Bad Request', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bids`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${buyerToken}`,
+        },
+        body: JSON.stringify({ amount: 80 }), // startingBid is 100
+      });
+      expect(res.status).toBe(400);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('starting bid');
+    });
+
+    it('accepts initial valid bid meeting starting bid when no highest bid exists', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bids`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${buyerToken}`,
+        },
+        body: JSON.stringify({ amount: 100 }), // startingBid = 100
+      });
+      expect(res.status).toBe(201);
+      const data = (await res.json()) as any;
+      expect(data.bid.amount).toBe(100);
+      expect(data.auction.currentHighestBid).toBe(100);
+    });
+
+    it('rejects bid equal to or less than the current highest bid with 400 Bad Request', async () => {
+      // currentHighest is now 100
+      const equalRes = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bids`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${secondBuyerToken}`,
+        },
+        body: JSON.stringify({ amount: 100 }),
+      });
+      expect(equalRes.status).toBe(400);
+      const equalData = (await equalRes.json()) as any;
+      expect(equalData.error).toContain('higher than the current highest bid');
+
+      const lowerRes = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bids`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${secondBuyerToken}`,
+        },
+        body: JSON.stringify({ amount: 90 }),
+      });
+      expect(lowerRes.status).toBe(400);
+      const lowerData = (await lowerRes.json()) as any;
+      expect(lowerData.error).toContain('higher than the current highest bid');
+    });
+
+    it('rejects bid that is higher than current highest but below required minimum step increment with 400 Bad Request', async () => {
+      // currentHighest is 100, minIncrement is 10 -> required minimum is 110. Submitting 105.
+      const res = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bids`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${secondBuyerToken}`,
+        },
+        body: JSON.stringify({ amount: 105 }),
+      });
+      expect(res.status).toBe(400);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('minimum increment step');
+    });
+
+    it('accepts valid bid submission meeting current highest bid + minimum step increment', async () => {
+      // currentHighest is 100, minIncrement is 10 -> 110 is valid
+      const res = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bids`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${secondBuyerToken}`,
+        },
+        body: JSON.stringify({ amount: 110 }),
+      });
+      expect(res.status).toBe(201);
+      const data = (await res.json()) as any;
+      expect(data.bid.amount).toBe(110);
+      expect(data.auction.currentHighestBid).toBe(110);
+    });
+
+    it('rejects seller attempting to bid on their own auction with 400 Bad Request', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bids`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${verifiedArtistToken}`,
+        },
+        body: JSON.stringify({ amount: 150 }),
+      });
+      expect(res.status).toBe(400);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('own auctions');
+    });
+  });
 });
+
