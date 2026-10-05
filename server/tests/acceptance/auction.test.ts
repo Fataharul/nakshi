@@ -490,6 +490,91 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
       const data = (await res.json()) as any;
       expect(data.error).toContain('own auctions');
     });
+
+    it('rejects bid submission when the auction timer has expired with 400 Bad Request (T-058)', async () => {
+      // Seed an expired auction (endTime in past)
+      const expiredArtwork = await prisma.artwork.create({
+        data: {
+          title: 'Expired Auction Artwork',
+          description: 'Artwork for expired timer test.',
+          medium: 'Brass Metalwork',
+          price: 500,
+          imageUrl: 'https://example.com/expired.jpg',
+          artistId: verifiedArtistId,
+          availability: 'RESERVED',
+          moderationStatus: 'APPROVED',
+        },
+      });
+
+      const now = Date.now();
+      const expiredAuction = await prisma.auction.create({
+        data: {
+          artworkId: expiredArtwork.id,
+          startingBid: 100,
+          minIncrement: 10,
+          startTime: new Date(now - 7200000), // 2 hours ago
+          endTime: new Date(now - 3600000), // 1 hour ago
+          status: 'ACTIVE',
+        },
+      });
+
+      const res = await fetch(`${baseUrl}/api/auctions/${expiredAuction.id}/bids`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${buyerToken}`,
+        },
+        body: JSON.stringify({ amount: 150 }),
+      });
+
+      expect(res.status).toBe(400);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('bidding is locked');
+
+      // Verify auction status was updated to ENDED in database
+      const dbAuction = await prisma.auction.findUnique({ where: { id: expiredAuction.id } });
+      expect(dbAuction?.status).toBe('ENDED');
+    });
+
+    it('rejects bid submission when auction status is explicitly ENDED with 400 Bad Request (T-058)', async () => {
+      const endedArtwork = await prisma.artwork.create({
+        data: {
+          title: 'Explicitly Ended Auction Artwork',
+          description: 'Artwork for ended status test.',
+          medium: 'Wood Carving',
+          price: 600,
+          imageUrl: 'https://example.com/ended.jpg',
+          artistId: verifiedArtistId,
+          availability: 'RESERVED',
+          moderationStatus: 'APPROVED',
+        },
+      });
+
+      const endedAuction = await prisma.auction.create({
+        data: {
+          artworkId: endedArtwork.id,
+          startingBid: 150,
+          minIncrement: 15,
+          startTime: new Date(Date.now() - 7200000),
+          endTime: new Date(Date.now() - 3600000),
+          status: 'ENDED',
+        },
+      });
+
+      const res = await fetch(`${baseUrl}/api/auctions/${endedAuction.id}/bids`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${buyerToken}`,
+        },
+        body: JSON.stringify({ amount: 200 }),
+      });
+
+      expect(res.status).toBe(400);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('bidding is locked');
+    });
   });
 });
+
 

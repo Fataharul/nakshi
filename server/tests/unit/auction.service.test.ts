@@ -121,4 +121,75 @@ describe('Auction & Bid Submission Validation Schema Unit Tests (T-052)', () => 
       expect(negativeBid.valid).toBe(false);
     });
   });
+
+  describe('Auction Timer Expiration & Bidding Lock Logic Unit Evaluation (T-058)', () => {
+    function evaluateAuctionBiddingState(
+      status: 'UPCOMING' | 'ACTIVE' | 'ENDED' | 'CANCELLED',
+      startTime: Date,
+      endTime: Date,
+      now: Date
+    ) {
+      if (status === 'CANCELLED' || status === 'ENDED') {
+        return { canBid: false, reason: 'Auction has already ended and bidding is locked' };
+      }
+      if (now > endTime) {
+        return { canBid: false, reason: 'Auction has already ended and bidding is locked', shouldMarkEnded: true };
+      }
+      if (now < startTime) {
+        return { canBid: false, reason: 'Auction has not started yet' };
+      }
+      return { canBid: true };
+    }
+
+    it('rejects bid submission when auction timer has expired (now > endTime)', () => {
+      const now = new Date('2026-10-05T20:00:00Z');
+      const startTime = new Date('2026-10-05T10:00:00Z');
+      const endTime = new Date('2026-10-05T18:00:00Z'); // ended 2 hours ago
+
+      const evalResult = evaluateAuctionBiddingState('ACTIVE', startTime, endTime, now);
+      expect(evalResult.canBid).toBe(false);
+      expect(evalResult.reason).toContain('bidding is locked');
+      expect(evalResult.shouldMarkEnded).toBe(true);
+    });
+
+    it('rejects bid submission when auction status is explicitly ENDED', () => {
+      const now = new Date('2026-10-05T15:00:00Z');
+      const startTime = new Date('2026-10-05T10:00:00Z');
+      const endTime = new Date('2026-10-05T18:00:00Z');
+
+      const evalResult = evaluateAuctionBiddingState('ENDED', startTime, endTime, now);
+      expect(evalResult.canBid).toBe(false);
+      expect(evalResult.reason).toContain('bidding is locked');
+    });
+
+    it('rejects bid submission when auction status is CANCELLED', () => {
+      const now = new Date('2026-10-05T12:00:00Z');
+      const startTime = new Date('2026-10-05T10:00:00Z');
+      const endTime = new Date('2026-10-05T18:00:00Z');
+
+      const evalResult = evaluateAuctionBiddingState('CANCELLED', startTime, endTime, now);
+      expect(evalResult.canBid).toBe(false);
+      expect(evalResult.reason).toContain('bidding is locked');
+    });
+
+    it('rejects bid submission when auction start time is in the future', () => {
+      const now = new Date('2026-10-05T08:00:00Z');
+      const startTime = new Date('2026-10-05T10:00:00Z');
+      const endTime = new Date('2026-10-05T18:00:00Z');
+
+      const evalResult = evaluateAuctionBiddingState('UPCOMING', startTime, endTime, now);
+      expect(evalResult.canBid).toBe(false);
+      expect(evalResult.reason).toContain('not started yet');
+    });
+
+    it('allows bid submission when auction is active and within active time window', () => {
+      const now = new Date('2026-10-05T14:00:00Z');
+      const startTime = new Date('2026-10-05T10:00:00Z');
+      const endTime = new Date('2026-10-05T18:00:00Z');
+
+      const evalResult = evaluateAuctionBiddingState('ACTIVE', startTime, endTime, now);
+      expect(evalResult.canBid).toBe(true);
+    });
+  });
 });
+

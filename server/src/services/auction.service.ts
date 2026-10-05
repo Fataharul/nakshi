@@ -146,16 +146,22 @@ export class AuctionService {
 
     const now = new Date();
     if (auction.status === AuctionStatus.CANCELLED || auction.status === AuctionStatus.ENDED) {
-      throw new AppError('Auction is closed or cancelled', 400);
+      throw new AppError('Auction has already ended and bidding is locked', 400);
     }
+
+    if (now > new Date(auction.endTime)) {
+      await prisma.auction.update({
+        where: { id: auctionId },
+        data: { status: AuctionStatus.ENDED },
+      });
+      throw new AppError('Auction has already ended and bidding is locked', 400);
+    }
+
 
     if (now < new Date(auction.startTime)) {
       throw new AppError('Auction has not started yet', 400);
     }
 
-    if (now > new Date(auction.endTime)) {
-      throw new AppError('Auction has already ended', 400);
-    }
 
     if (auction.artwork.artistId === bidderId) {
       throw new AppError('Artists cannot bid on their own auctions', 400);

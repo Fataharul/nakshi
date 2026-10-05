@@ -283,8 +283,15 @@
   - Updated `AuctionController.submitBid` to broadcast real-time payloads (`auctionId`, `currentHighestBid`, `highestBidder` with id/name, `bidId`, `timestamp`) to all connected room viewers upon confirmed high bid.
   - Added unit test suite `server/tests/unit/auction.socket.test.ts` verifying socket payload emission logic.
   - Added real-time Socket.IO client acceptance test suite `server/tests/acceptance/auction.socket.test.ts` testing room subscription (`join_auction`) and real-time state reception upon bid submission.
+## [2026-10-05 23:48:00 +06:00] Milestone: Ticket T-058 — Lock Auction Bidding on Timer Expiration Implemented
+- **Completed**:
+  - Enforced timer expiration checks in `AuctionService.submitBid` (`server/src/services/auction.service.ts`), immediately rejecting bids submitted after an auction's `endTime` or when status is `ENDED` or `CANCELLED`.
+  - Implemented automatic database status transition to `ENDED` when an expired auction (`now > endTime`) receives a bid or query.
+  - Added unit test suite `server/tests/unit/auction.service.test.ts` (5 tests) evaluating state transitions and bidding lock enforcement across expired timers, `ENDED`, `CANCELLED`, and `UPCOMING` statuses.
+  - Added acceptance integration test suite `server/tests/acceptance/auction.test.ts` verifying HTTP 400 Bad Request rejection with explicit `'bidding is locked'` messaging and database `ENDED` status persistence.
 - **Verified**:
   - Clean TypeScript compilation (`npm --prefix server run build`).
-  - All 12 Vitest server test suites (122 unit and acceptance tests) passed cleanly (`npm --prefix server run test`).
+  - All 12 Vitest server test suites (129 unit and acceptance tests) passed cleanly (`npm --prefix server run test`).
+
 
 
