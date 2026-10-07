@@ -45,4 +45,14 @@ export class AuctionController {
       next(error);
     }
   }
+
+  static async getById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const auctionId = req.params.id;
+      const auction = await AuctionService.getById(auctionId);
+      res.status(200).json({ auction });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

@@ -91,4 +91,11 @@ export const AuctionService = {
     });
     return data;
   },
+
+  getAuctionById: async (auctionId: string): Promise<AuctionResponse> => {
+    const data = await request<{ auction: AuctionResponse }>(`/api/auctions/${auctionId}`, {
+      method: 'GET',
+    });
+    return data.auction;
+  },
 };

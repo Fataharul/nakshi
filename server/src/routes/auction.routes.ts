@@ -27,4 +27,9 @@ router.post(
   AuctionController.placeBid
 );
 
+router.get(
+  '/:id',
+  AuctionController.getById
+);
+
 export default router;

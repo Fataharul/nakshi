@@ -263,4 +263,44 @@ export class AuctionService {
 
     return newBid;
   }
+
+  static async getById(auctionId: string) {
+    const auction = await prisma.auction.findUnique({
+      where: { id: auctionId },
+      include: {
+        artwork: {
+          select: {
+            id: true,
+            title: true,
+            medium: true,
+            imageUrl: true,
+            artist: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          }
+        },
+        bids: {
+          orderBy: { amount: 'desc' },
+          take: 10,
+          include: {
+            bidder: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!auction) {
+      throw new AppError('Auction not found', 404);
+    }
+
+    return auction;
+  }
 }
