@@ -288,3 +288,13 @@
 - **Verified**:
   - Clean TypeScript compilation for frontend and backend (`npm --prefix client run build`, `npm --prefix server run build`).
   - Merged dependencies from prior WebSocket foundation and bid logic branches effectively.
+
+## [2026-10-07 18:48:00 +06:00] Milestone: Auction Expiration & Automated Settlement Worker
+- **Completed**:
+  - Implemented `AuctionService.processEndedAuctions()` background job that identifies expired `ACTIVE` auctions, marks them as `ENDED`, processes escrow payouts to artist wallets via `CreditTransaction`, and updates artwork `availability` to `SOLD` (if won) or `AVAILABLE` (if no bids).
+  - Integrated `node` `setInterval` daemon in `server.ts` to poll expired auctions automatically.
+  - Implemented client-side visual countdown timer in `LiveAuctionView.tsx` with optimistic UI transition on expiration.
+  - Implemented client WebSocket subscriber (`auction:ended`) for instant synchronized resolution.
+- **Verified**:
+  - Client & Server TypeScript build succeeded (`npm --prefix client run build`, `npm --prefix server run build`).
+  - `tx.creditTransaction.create` model casing resolved.

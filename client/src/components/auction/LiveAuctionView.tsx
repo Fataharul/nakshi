@@ -14,6 +14,37 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
   const [isBidding, setIsBidding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState<string>('');
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const endTime = new Date(auction.endTime);
+      const diff = endTime.getTime() - now.getTime();
+      
+      if (diff <= 0) {
+        setTimeLeft('00h 00m 00s');
+        if (auction.status === 'ACTIVE') {
+          // Optimistically update status to ENDED if time is up
+          setAuction(prev => ({ ...prev, status: 'ENDED' }));
+        }
+        return;
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeLeft(
+        `${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`
+      );
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+
+    return () => clearInterval(interval);
+  }, [auction.endTime, auction.status]);
 
   useEffect(() => {
     // Determine if auction is actually active right now
@@ -40,14 +71,28 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
         setNotification(`You were outbid! The new highest bid is ৳${data.amount}`);
         setTimeout(() => setNotification(null), 5000);
       });
+
+      socketService.onAuctionEnded((data: any) => {
+        setAuction(prev => ({
+          ...prev,
+          status: 'ENDED',
+          winnerId: data.winnerId
+        }));
+        setNotification(
+          data.winnerId === user?.id 
+            ? 'Congratulations! You won the auction!' 
+            : 'Auction has ended.'
+        );
+      });
     }
 
     return () => {
       socketService.offNewBid();
       socketService.offOutbid();
+      socketService.offAuctionEnded();
       socketService.leaveAuctionRoom(auction.id);
     };
-  }, [auction.id, auction.status, auction.startTime, auction.endTime]);
+  }, [auction.id, auction.status, auction.startTime, auction.endTime, user?.id]);
 
   const handlePlaceBid = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,7 +132,7 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
       {/* Right: Details and Bidding */}
       <div className="flex flex-col">
         {/* Status Badge */}
-        <div className="mb-4">
+        <div className="mb-4 flex items-center gap-4">
           {isLive ? (
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse mr-2"></span>
@@ -97,6 +142,13 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-surface-container text-on-surface-variant">
               {auction.status}
             </span>
+          )}
+
+          {(isLive || auction.status === 'UPCOMING') && (
+            <div className="text-sm font-semibold text-primary">
+              <span className="text-on-surface-variant mr-2">Ends in:</span> 
+              {timeLeft}
+            </div>
           )}
         </div>
 

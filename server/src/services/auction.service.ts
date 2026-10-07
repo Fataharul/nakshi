@@ -303,4 +303,80 @@ export class AuctionService {
 
     return auction;
   }
+
+  static async processEndedAuctions() {
+    const now = new Date();
+    
+    // Find all ACTIVE auctions that have passed their endTime
+    const endedAuctions = await prisma.auction.findMany({
+      where: {
+        status: AuctionStatus.ACTIVE,
+        endTime: { lte: now }
+      },
+      include: {
+        artwork: true,
+        bids: {
+          orderBy: { amount: 'desc' },
+          take: 1
+        }
+      }
+    });
+
+    for (const auction of endedAuctions) {
+      await prisma.$transaction(async (tx) => {
+        const highestBid = auction.bids[0];
+
+        // 1. Mark auction as ENDED
+        await tx.auction.update({
+          where: { id: auction.id },
+          data: { 
+            status: AuctionStatus.ENDED,
+            winnerId: highestBid ? highestBid.bidderId : null
+          }
+        });
+
+        if (highestBid) {
+          // 2. Someone won. Mark artwork as SOLD.
+          await tx.artwork.update({
+            where: { id: auction.artworkId },
+            data: { availability: ArtworkAvailability.SOLD }
+          });
+
+          // 3. Transfer the escrowed bid amount to the artist's wallet
+          const artistId = auction.artwork.artistId;
+          const artistWallet = await tx.wallet.findUnique({ where: { userId: artistId } });
+          
+          if (artistWallet) {
+            await tx.wallet.update({
+              where: { id: artistWallet.id },
+              data: { balance: { increment: highestBid.amount } }
+            });
+
+            await tx.creditTransaction.create({
+              data: {
+                walletId: artistWallet.id,
+                amount: highestBid.amount,
+                type: 'AUCTION_WIN_PAYOUT',
+                description: `Revenue from auction ${auction.id}`,
+                referenceId: auction.id
+              }
+            });
+          }
+        } else {
+          // 4. No one bid. Return artwork to AVAILABLE.
+          await tx.artwork.update({
+            where: { id: auction.artworkId },
+            data: { availability: ArtworkAvailability.AVAILABLE }
+          });
+        }
+      });
+
+      // 5. Emit event
+      io.to(`auction:${auction.id}`).emit('auction:ended', {
+        auctionId: auction.id,
+        winnerId: auction.bids[0]?.bidderId || null,
+        finalBid: auction.bids[0]?.amount || 0
+      });
+    }
+  }
 }

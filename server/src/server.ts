@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.routes';
 import artworkRoutes from './routes/artwork.routes';
 import sellerRoutes from './routes/seller.routes';
 import auctionRoutes from './routes/auction.routes';
+import { AuctionService } from './services/auction.service';
 import { errorHandler } from './middleware/error.middleware';
 
 dotenv.config();
@@ -56,6 +57,13 @@ const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV !== 'test') {
   server.listen(PORT, () => {
     console.log(`[Nakshi Server] running on port ${PORT}`);
+    
+    // Start auction expiration checker
+    setInterval(() => {
+      AuctionService.processEndedAuctions().catch(err => {
+        console.error('[Auction Expiration Worker] Error:', err);
+      });
+    }, 10000); // Check every 10 seconds
   });
 }
 

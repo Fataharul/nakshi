@@ -70,6 +70,22 @@ class SocketService {
       }
     }
   }
+
+  onAuctionEnded(callback: (data: any) => void) {
+    if (this.socket) {
+      this.socket.on('auction:ended', callback);
+    }
+  }
+
+  offAuctionEnded(callback?: (data: any) => void) {
+    if (this.socket) {
+      if (callback) {
+        this.socket.off('auction:ended', callback);
+      } else {
+        this.socket.off('auction:ended');
+      }
+    }
+  }
 }
 
 export const socketService = new SocketService();
