@@ -48,7 +48,7 @@ export class AuctionController {
 
   static async getById(req: Request, res: Response, next: NextFunction) {
     try {
-      const auctionId = req.params.id;
+      const auctionId = req.params.id as string;
       const auction = await AuctionService.getById(auctionId);
       res.status(200).json({ auction });
     } catch (error) {

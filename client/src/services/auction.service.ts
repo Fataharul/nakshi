@@ -65,6 +65,10 @@ export interface AuctionResponse {
     title: string;
     medium: string;
     imageUrl: string;
+    artist?: {
+      id: string;
+      name: string;
+    };
   };
 }
 
