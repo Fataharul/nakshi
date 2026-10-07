@@ -406,6 +406,7 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
                   <th className="py-3 px-4 font-semibold">Starting Bid</th>
                   <th className="py-3 px-4 font-semibold">Current Bid</th>
                   <th className="py-3 px-4 font-semibold">Schedule</th>
+                  <th className="py-3 px-4"></th>
                 </tr>
               </thead>
               <tbody className="text-sm">
@@ -448,6 +449,15 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
                         <p><span className="font-medium text-on-surface">Start:</span> {new Date(auction.startTime).toLocaleString()}</p>
                         <p><span className="font-medium text-on-surface">End:</span> {new Date(auction.endTime).toLocaleString()}</p>
                       </div>
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <Link 
+                        id={`view-live-auction-btn-${auction.id}`}
+                        to={`/auctions/${auction.id}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-on-primary text-[10px] font-semibold uppercase tracking-wider rounded border border-primary hover:bg-surface-tint transition-colors"
+                      >
+                        View Live
+                      </Link>
                     </td>
                   </tr>
                 ))}

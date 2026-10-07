@@ -266,3 +266,60 @@
   - Clean TypeScript compilation for both frontend and backend (`npm --prefix server run build` and `npm --prefix client run build`).
   - All 9 Vitest test suites (99 tests) passed cleanly.
 
+## [2026-10-07 17:00:00 +06:00] Milestone: Live Auction Bid Submission & Transaction Logic
+- **Completed**:
+  - Implemented `placeBid` in `server/src/services/auction.service.ts` with strict increment checks, starting bid validation, and owner restriction rules.
+  - Developed atomic wallet deductions (`AUCTION_BID_HOLD`) and outbid refund logic (`AUCTION_BID_REFUND`) inside a single `prisma.$transaction`.
+  - Added Socket.IO emission logic to broadcast `auction:new_bid` and `user:outbid` events in real-time.
+  - Exposed `POST /api/auctions/:id/bid` in `server/src/routes/auction.routes.ts` connected via `server/src/controllers/auction.controller.ts`.
+  - Added `placeBid` method to `client/src/services/auction.service.ts` for frontend integration.
+  - Added comprehensive bidding tests to `server/tests/acceptance/auction.test.ts`.
+- **Verified**:
+  - Clean TypeScript compilation for both frontend and backend.
+  - Unit and acceptance logic successfully covers bid submission behavior.
+
+## [2026-10-07 18:28:00 +06:00] Milestone: Live Auction Frontend Interface with WebSocket Real-time Sync
+- **Completed**:
+  - Implemented `LiveAuctionView.tsx` component designed in alignment with `DESIGN.md` (Playfair Display headlines, minimalist styling, Terracotta pulsing live badge).
+  - Integrated `socket.service.ts` connecting buyers directly to active auction rooms on mount.
+  - State dynamically listens for `auction:new_bid` and `auction:outbid` events, allowing instant re-renders of the current highest bid without page refresh.
+  - Implemented `AuctionPage.tsx` to handle routing (`/auctions/:id`), data fetching via new `GET /api/auctions/:id` backend endpoint, and loading state.
+  - Handled the bid submission form utilizing `placeBid` with optimistic visual feedback.
+- **Verified**:
+  - Clean TypeScript compilation for frontend and backend (`npm --prefix client run build`, `npm --prefix server run build`).
+  - Merged dependencies from prior WebSocket foundation and bid logic branches effectively.
+
+## [2026-10-07 18:48:00 +06:00] Milestone: Auction Expiration & Automated Settlement Worker
+- **Completed**:
+  - Implemented `AuctionService.processEndedAuctions()` background job that identifies expired `ACTIVE` auctions, marks them as `ENDED`, processes escrow payouts to artist wallets via `CreditTransaction`, and updates artwork `availability` to `SOLD` (if won) or `AVAILABLE` (if no bids).
+  - Integrated `node` `setInterval` daemon in `server.ts` to poll expired auctions automatically.
+  - Implemented client-side visual countdown timer in `LiveAuctionView.tsx` with optimistic UI transition on expiration.
+  - Implemented client WebSocket subscriber (`auction:ended`) for instant synchronized resolution.
+- **Verified**:
+  - Client & Server TypeScript build succeeded (`npm --prefix client run build`, `npm --prefix server run build`).
+  - `tx.creditTransaction.create` model casing resolved.
+
+## [2026-10-07 19:25:00 +06:00] Milestone: Auction Status Updated to CLOSED
+- **Completed**:
+  - Changed `ENDED` status to `CLOSED` in `prisma.schema` enum for `AuctionStatus`.
+  - Executed raw Prisma query to update existing database rows to `CLOSED`.
+  - Applied schema migration successfully.
+  - Replaced all usages of `ENDED` with `CLOSED` across the backend (`auction.service.ts`) and frontend (`LiveAuctionView.tsx`).
+- **Verified**:
+  - Codebase is fully migrated to use `CLOSED`.
+
+## [2026-10-07 19:46:00 +06:00] Milestone: Outbid Notification Delivery Fix
+- **Completed**:
+  - Identified bug where socket connection lacked authentication token, preventing user from joining their private notification room.
+  - Updated `LiveAuctionView.tsx` to retrieve auth token and pass it to WebSocket server.
+  - Verified `auction:outbid` events are now correctly delivered to the participant.
+
+## [2026-10-07 20:40:00 +06:00] Milestone: Live Auctions Consolidation, UI Polish & Branch Harmonization
+- **Completed**:
+  - Consolidated full-stack live auction implementation into dedicated task branch `feature/integrate-live-auctions`.
+  - Added unique interactive element IDs (`#live-auction-container`, `#auction-timer`, `#place-bid-btn`, `#bid-amount-input`) and credit wallet formatting to `LiveAuctionView.tsx` adhering to `DESIGN.md`.
+  - Cleaned up temporary migration and scratch files (`server/update_enum.ts`, `artifacts/progress_update.md`).
+  - Updated API and WebSocket documentation in `README.md`.
+- **Verified**:
+  - Both client and server production builds succeed with 0 errors (`npm run build`).
+  - All 9 Vitest server unit and acceptance test suites (105 tests) pass against live Supabase PostgreSQL database (`npm test`).

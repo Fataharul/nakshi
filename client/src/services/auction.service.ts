@@ -59,12 +59,16 @@ export interface AuctionResponse {
   minIncrement: number;
   startTime: string;
   endTime: string;
-  status: 'UPCOMING' | 'ACTIVE' | 'ENDED' | 'CANCELLED';
+  status: 'UPCOMING' | 'ACTIVE' | 'CLOSED' | 'CANCELLED';
   artwork?: {
     id: string;
     title: string;
     medium: string;
     imageUrl: string;
+    artist?: {
+      id: string;
+      name: string;
+    };
   };
 }
 
@@ -82,5 +86,20 @@ export const AuctionService = {
       method: 'GET',
     });
     return data.auctions;
+  },
+
+  placeBid: async (auctionId: string, amount: number): Promise<{ bid: any, currentHighestBid: number }> => {
+    const data = await request<{ bid: any, currentHighestBid: number }>(`/api/auctions/${auctionId}/bid`, {
+      method: 'POST',
+      body: JSON.stringify({ amount }),
+    });
+    return data;
+  },
+
+  getAuctionById: async (auctionId: string): Promise<AuctionResponse> => {
+    const data = await request<{ auction: AuctionResponse }>(`/api/auctions/${auctionId}`, {
+      method: 'GET',
+    });
+    return data.auction;
   },
 };
