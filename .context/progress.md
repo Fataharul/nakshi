@@ -266,3 +266,14 @@
   - Clean TypeScript compilation for both frontend and backend (`npm --prefix server run build` and `npm --prefix client run build`).
   - All 9 Vitest test suites (99 tests) passed cleanly.
 
+## [2026-10-07 17:00:00 +06:00] Milestone: Live Auction Bid Submission & Transaction Logic
+- **Completed**:
+  - Implemented `placeBid` in `server/src/services/auction.service.ts` with strict increment checks, starting bid validation, and owner restriction rules.
+  - Developed atomic wallet deductions (`AUCTION_BID_HOLD`) and outbid refund logic (`AUCTION_BID_REFUND`) inside a single `prisma.$transaction`.
+  - Added Socket.IO emission logic to broadcast `auction:new_bid` and `user:outbid` events in real-time.
+  - Exposed `POST /api/auctions/:id/bid` in `server/src/routes/auction.routes.ts` connected via `server/src/controllers/auction.controller.ts`.
+  - Added `placeBid` method to `client/src/services/auction.service.ts` for frontend integration.
+  - Added comprehensive bidding tests to `server/tests/acceptance/auction.test.ts`.
+- **Verified**:
+  - Clean TypeScript compilation for both frontend and backend.
+  - Unit and acceptance logic successfully covers bid submission behavior.

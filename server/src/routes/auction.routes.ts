@@ -20,4 +20,11 @@ router.get(
   AuctionController.getMyAuctions
 );
 
+// Bidding route (authenticated users can bid)
+router.post(
+  '/:id/bid',
+  authenticateJWT,
+  AuctionController.placeBid
+);
+
 export default router;

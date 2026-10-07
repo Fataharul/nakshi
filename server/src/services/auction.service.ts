@@ -1,7 +1,8 @@
 import { prisma } from '../config/prisma';
 import { AppError } from './auth.service';
-import { CreateAuctionInput } from '../utils/auction.validation';
-import { AuctionStatus, ArtworkAvailability } from '@prisma/client';
+import { CreateAuctionInput, PlaceBidInput } from '../utils/auction.validation';
+import { AuctionStatus, ArtworkAvailability, TransactionType } from '@prisma/client';
+import { io } from '../server';
 
 export class AuctionService {
   /**
@@ -130,5 +131,136 @@ export class AuctionService {
     });
 
     return auctions.map(this.formatAuction);
+  }
+
+  public static async placeBid(userId: string, auctionId: string, data: PlaceBidInput) {
+    const auction = await prisma.auction.findUnique({
+      where: { id: auctionId },
+      include: {
+        artwork: true,
+        bids: {
+          orderBy: { amount: 'desc' },
+          take: 1
+        }
+      }
+    });
+
+    if (!auction) {
+      throw new AppError('Auction not found', 404);
+    }
+
+    if (auction.status !== AuctionStatus.ACTIVE) {
+      throw new AppError(`Cannot bid on auction. Current status: ${auction.status}`, 400);
+    }
+
+    if (auction.artwork.artistId === userId) {
+      throw new AppError('You cannot bid on your own artwork', 400);
+    }
+
+    // Bid validation
+    const bidAmount = Number(data.amount);
+    const startingBid = Number(auction.startingBid);
+    const minIncrement = Number(auction.minIncrement);
+    const currentHighest = auction.currentHighestBid ? Number(auction.currentHighestBid) : null;
+
+    if (bidAmount < startingBid) {
+      throw new AppError(`Bid must be at least the starting bid of ${startingBid}`, 400);
+    }
+
+    if (currentHighest !== null && bidAmount < currentHighest + minIncrement) {
+      throw new AppError(`Bid must be at least ${currentHighest + minIncrement} (current highest + increment)`, 400);
+    }
+
+    const previousHighestBid = auction.bids.length > 0 ? auction.bids[0] : null;
+
+    // Transaction to handle the bid, deductions, and refunds
+    const newBid = await prisma.$transaction(async (tx) => {
+      // 1. Verify and hold funds from the new bidder
+      const wallet = await tx.wallet.findUnique({
+        where: { userId: userId },
+      });
+
+      if (!wallet || Number(wallet.balance) < bidAmount) {
+        throw new AppError('Insufficient credits to place this bid', 400);
+      }
+
+      await tx.wallet.update({
+        where: { id: wallet.id },
+        data: { balance: { decrement: bidAmount } }
+      });
+
+      await tx.creditTransaction.create({
+        data: {
+          walletId: wallet.id,
+          amount: bidAmount,
+          type: TransactionType.AUCTION_BID_HOLD,
+          description: `Bid hold for auction ${auctionId}`,
+          referenceId: auctionId
+        }
+      });
+
+      // 2. Refund the previous highest bidder if they exist
+      if (previousHighestBid) {
+        const prevWallet = await tx.wallet.findUnique({
+          where: { userId: previousHighestBid.bidderId }
+        });
+
+        if (prevWallet) {
+          await tx.wallet.update({
+            where: { id: prevWallet.id },
+            data: { balance: { increment: previousHighestBid.amount } }
+          });
+
+          await tx.creditTransaction.create({
+            data: {
+              walletId: prevWallet.id,
+              amount: previousHighestBid.amount,
+              type: TransactionType.AUCTION_BID_REFUND,
+              description: `Refund for outbid on auction ${auctionId}`,
+              referenceId: auctionId
+            }
+          });
+        }
+      }
+
+      // 3. Create the new bid record
+      const bid = await tx.auctionBid.create({
+        data: {
+          auctionId,
+          bidderId: userId,
+          amount: bidAmount
+        }
+      });
+
+      // 4. Update the auction's highest bid
+      await tx.auction.update({
+        where: { id: auctionId },
+        data: { currentHighestBid: bidAmount }
+      });
+
+      return bid;
+    });
+
+    // 5. Emit Real-time events
+    try {
+      io.to(`auction:${auctionId}`).emit('auction:new_bid', {
+        auctionId,
+        bidderId: userId,
+        amount: bidAmount,
+        timestamp: newBid.createdAt
+      });
+
+      if (previousHighestBid) {
+        io.to(`user:${previousHighestBid.bidderId}`).emit('auction:outbid', {
+          auctionId,
+          artworkTitle: auction.artwork.title,
+          newHighestBid: bidAmount
+        });
+      }
+    } catch (err) {
+      console.error('Socket emission failed', err);
+    }
+
+    return newBid;
   }
 }

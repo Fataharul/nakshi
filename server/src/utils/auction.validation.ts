@@ -23,3 +23,9 @@ export const createAuctionSchema = z.object({
 );
 
 export type CreateAuctionInput = z.infer<typeof createAuctionSchema>;
+
+export const placeBidSchema = z.object({
+  amount: z.number().positive('Bid amount must be positive'),
+});
+
+export type PlaceBidInput = z.infer<typeof placeBidSchema>;

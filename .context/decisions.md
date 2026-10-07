@@ -153,3 +153,15 @@
 - **Rationale**:
   - Satisfies verified-only creation business rules cleanly using RBAC.
   - Database acts as the single source of truth for auction timelines and eligibility constraints, preventing timezone or clock manipulation exploits.
+
+## 15. Transactional Auction Bid Submission & Wallet Logic
+- **Timestamp**: 2026-10-07 17:00:00 +06:00
+- **Context**: Need a robust backend system to securely process live auction bids, deduct credits from the current bidder, and accurately refund the previous highest bidder, all while ensuring no race conditions affect credit ledgers.
+- **Decision**:
+  - Implemented `placeBid` in `AuctionService` executing entirely within a `prisma.$transaction`.
+  - Atomically verifies bidder wallet balance, deducts the bid as an `AUCTION_BID_HOLD`, creates the new `AuctionBid`, and updates `currentHighestBid` on the `Auction`.
+  - Automatically identifies the previous highest bidder (if any) and increments their wallet balance back by the previous bid amount, logging an `AUCTION_BID_REFUND`.
+  - Uses `Socket.IO` instance to immediately broadcast `auction:new_bid` to the room and a private `user:outbid` message to the displaced highest bidder.
+- **Rationale**:
+  - Strongly protects financial constraints defined in requirements.md (no negative balances, atomic operations).
+  - Guarantees immediate real-time updates for connected participants.
