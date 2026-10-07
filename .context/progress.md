@@ -307,3 +307,9 @@
   - Replaced all usages of `ENDED` with `CLOSED` across the backend (`auction.service.ts`) and frontend (`LiveAuctionView.tsx`).
 - **Verified**:
   - Codebase is fully migrated to use `CLOSED`.
+
+## [2026-10-07 19:46:00 +06:00] Milestone: Outbid Notification Delivery Fix
+- **Completed**:
+  - Identified bug where socket connection lacked authentication token, preventing user from joining their private notification room.
+  - Updated `LiveAuctionView.tsx` to retrieve auth token and pass it to WebSocket server.
+  - Verified `auction:outbid` events are now correctly delivered to the participant.

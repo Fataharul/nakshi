@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { AuctionService, AuctionResponse } from '../../services/auction.service';
 import { socketService } from '../../services/socket.service';
+import { getStoredToken } from '../../services/auth.service';
 
 interface LiveAuctionViewProps {
   initialAuction: AuctionResponse;
@@ -55,7 +56,8 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
 
     if (isActuallyActive) {
       // Connect and join room
-      socketService.connect(); // uses token automatically if logged in
+      const token = getStoredToken();
+      socketService.connect(token || undefined); 
       socketService.joinAuctionRoom(auction.id);
 
       socketService.onNewBid((data: any) => {
