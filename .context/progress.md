@@ -205,8 +205,25 @@
   - All 8 Vitest server unit and acceptance test suites (69 tests) passed cleanly (`npm test`).
   - Server TypeScript compilation passed with 0 errors (`npm run build`).
   - Client Vite production build succeeded cleanly with 0 errors (`npm run build`).
+
+## [2026-10-07 21:15:00 +06:00] Milestone: Bidding Step Increment Validation & Auction Bidding Implemented
+- **Completed**:
+  - Implemented bidding calculation and validation utilities in `server/src/utils/auction.validation.ts` (`calculateMinimumBid`, `validateBidStepIncrement`, `roundToTwoDecimals`, and Zod schemas `placeBidSchema` and `createAuctionSchema`).
+  - Implemented domain service `server/src/services/auction.service.ts` with transactional bid placement (`AuctionService.placeBid`), auction retrieval with computed `minNextBid`, and admin auction creation.
+  - Implemented HTTP controller `server/src/controllers/auction.controller.ts` and routes `server/src/routes/auction.routes.ts` mounting `POST /api/auctions/:id/bid` (BUYER only), `GET /api/auctions/:id`, and `POST /api/auctions` (ADMIN only) in `server/src/server.ts`.
+  - Added unit test suite `server/tests/unit/auction.validation.test.ts` (20 tests passing) covering opening bids, minimum increments, 2-decimal rounding precision, and schema constraints.
+  - Added unit test suite `server/tests/unit/auction.service.test.ts` (2 tests passing) verifying `formatAuction` and minimum next bid computations.
+  - Added acceptance integration test suite `server/tests/acceptance/auction.test.ts` (12 tests passing) validating 401 unauthenticated, 403 non-buyer, 404 not found, 400 below starting bid, 400 below minimum increment, 400 insufficient credits, 400 closed auction, 201 opening bid, and 201 subsequent valid bids.
+  - Implemented and un-skipped server-side increment validation test in Playwright suite `e2e/04_live_auction.spec.ts` (3 tests passing across Desktop, Mobile 360px, and Tablet 768px viewports).
+  - Synchronized database enum `AuctionStatus` to support `ENDED`.
+  - Documented Decision #13 in `.context/decisions.md`.
+- **Verified**:
+  - All 11 Vitest test suites (103 unit and acceptance tests) passed cleanly (`npm test`).
+  - Both server (`tsc`) and client (`vite build`) compiled cleanly with 0 errors.
+  - All Playwright test checks in `e2e/04_live_auction.spec.ts` passed across Desktop Chrome, Mobile 360px, and Tablet 768px viewports.
 - **Next Steps**:
-  - Connect search interface to live backend artwork search/filter API endpoint with pagination and database queries.
+  - Implement real-time Socket.IO bid room broadcasting and client auction room UI.
+  - Implement auction countdown sync and settlement cron/worker.
   - Implement async queue worker for Sharp dHash duplicate detection.
-  - Implement buyer purchase, credit transaction, and commission distribution logic.
+
 

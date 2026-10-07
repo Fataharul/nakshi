@@ -126,6 +126,16 @@
   - Delivers an art-first minimalist gallery experience putting handcrafted heritage textiles and ceramics at the visual center.
   - Ensures seamless usability across desktop, tablet, and mobile 360px viewports.
 
+## 13. Bidding Step Increment Validation & Atomic Bid Placement
+- **Timestamp**: 2026-10-07 21:15:00 +06:00
+- **Context**: Requirement 2.5 mandates server-side bid validation where any bid failing to satisfy the required minimum increment is rejected. Opening bids must meet or exceed the auction starting bid, subsequent bids must meet or exceed `currentHighestBid + minIncrement`, buyers must possess sufficient wallet credit balances, and bids on inactive/closed auctions must be rejected.
+- **Decision**:
+  - Implement pure increment evaluation helpers `calculateMinimumBid` and `validateBidStepIncrement` in `server/src/utils/auction.validation.ts` enforcing 2-decimal currency rounding precision without floating-point drift.
+  - Implement `AuctionService.placeBid` executing an atomic interactive PostgreSQL transaction (`prisma.$transaction`) that enforces auction status (`ACTIVE`), timing validity (`startTime <= now <= endTime`), artist self-bidding prevention, bidder wallet balance sufficiency, and optimistic/row-level lock validation on `currentHighestBid`.
+  - Expose `POST /api/auctions/:id/bid` protected with `authenticateJWT` and `requireRoles(Role.BUYER)` returning HTTP 400 with human-readable error descriptions upon increment or balance violations.
+- **Rationale**:
+  - Guarantees server authoritative bid validation and prevents concurrent race conditions where out-of-order bids could overwrite higher bids or violate increment steps.
+  - Aligns with zero external cost architecture and Prisma transactional guarantees.
 
 
 

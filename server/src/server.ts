@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes';
 import artworkRoutes from './routes/artwork.routes';
 import sellerRoutes from './routes/seller.routes';
+import auctionRoutes from './routes/auction.routes';
 import { errorHandler } from './middleware/error.middleware';
 
 dotenv.config();
@@ -38,6 +39,9 @@ app.use('/api/artworks', artworkRoutes);
 
 // Seller Sales Metrics & Analytics Routes
 app.use('/api/seller', sellerRoutes);
+
+// Live Auction & Bidding Routes
+app.use('/api/auctions', auctionRoutes);
 
 // Centralized error handling
 app.use(errorHandler);

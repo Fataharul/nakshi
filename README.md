@@ -145,6 +145,10 @@ npm run dev
   - `GET /api/artworks/storefront/:artistId` — Public storefront profile and published inventory.
 - **Seller Analytics (`/api/seller`)**:
   - `GET /api/seller/metrics` — Aggregate sales volume, gross revenue, AOV, and recent customer orders (`ARTIST` / `ADMIN` role).
+- **Live Auctions & Bidding (`/api/auctions`)**:
+  - `POST /api/auctions/:id/bid` — Submit bid with step increment validation & wallet balance check (`BUYER` role).
+  - `GET /api/auctions/:id` — Get auction details, bid history, and next required minimum bid.
+  - `POST /api/auctions` — Schedule and configure live auction (`ADMIN` role).
 
 ---
 
