@@ -30,7 +30,7 @@ enum ArtworkAvailability {
 enum AuctionStatus {
   UPCOMING
   ACTIVE
-  ENDED
+  CLOSED
   CANCELLED
 }
 

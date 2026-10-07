@@ -298,3 +298,12 @@
 - **Verified**:
   - Client & Server TypeScript build succeeded (`npm --prefix client run build`, `npm --prefix server run build`).
   - `tx.creditTransaction.create` model casing resolved.
+
+## [2026-10-07 19:25:00 +06:00] Milestone: Auction Status Updated to CLOSED
+- **Completed**:
+  - Changed `ENDED` status to `CLOSED` in `prisma.schema` enum for `AuctionStatus`.
+  - Executed raw Prisma query to update existing database rows to `CLOSED`.
+  - Applied schema migration successfully.
+  - Replaced all usages of `ENDED` with `CLOSED` across the backend (`auction.service.ts`) and frontend (`LiveAuctionView.tsx`).
+- **Verified**:
+  - Codebase is fully migrated to use `CLOSED`.

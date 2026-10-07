@@ -25,8 +25,8 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
       if (diff <= 0) {
         setTimeLeft('00h 00m 00s');
         if (auction.status === 'ACTIVE') {
-          // Optimistically update status to ENDED if time is up
-          setAuction(prev => ({ ...prev, status: 'ENDED' }));
+          // Optimistically update status to CLOSED if time is up
+          setAuction(prev => ({ ...prev, status: 'CLOSED' }));
         }
         return;
       }
@@ -75,7 +75,7 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
       socketService.onAuctionEnded((data: any) => {
         setAuction(prev => ({
           ...prev,
-          status: 'ENDED',
+          status: 'CLOSED',
           winnerId: data.winnerId
         }));
         setNotification(

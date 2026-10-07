@@ -59,7 +59,7 @@ export interface AuctionResponse {
   minIncrement: number;
   startTime: string;
   endTime: string;
-  status: 'UPCOMING' | 'ACTIVE' | 'ENDED' | 'CANCELLED';
+  status: 'UPCOMING' | 'ACTIVE' | 'CLOSED' | 'CANCELLED';
   artwork?: {
     id: string;
     title: string;

@@ -326,11 +326,11 @@ export class AuctionService {
       await prisma.$transaction(async (tx) => {
         const highestBid = auction.bids[0];
 
-        // 1. Mark auction as ENDED
+        // 1. Mark auction as CLOSED
         await tx.auction.update({
           where: { id: auction.id },
           data: { 
-            status: AuctionStatus.ENDED,
+            status: AuctionStatus.CLOSED,
             winnerId: highestBid ? highestBid.bidderId : null
           }
         });
