@@ -99,7 +99,8 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(buyerUser),
     });
-    buyerToken = ((await bReg.json()) as any).token;
+    const bData = await bReg.json() as any;
+    buyerToken = bData.token;
 
     const b2Reg = await fetch(`${baseUrl}/api/auth/register`, {
       method: 'POST',
@@ -110,7 +111,7 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
     buyer2Token = b2Data.token;
 
     const buyer2Id = b2Data.user.id;
-    const buyer1Id = ((await bReg.json()) as any)?.user?.id || (await prisma.user.findUnique({ where: { email: buyerUser.email } }))!.id;
+    const buyer1Id = bData.user?.id || (await prisma.user.findUnique({ where: { email: buyerUser.email } }))!.id;
 
     // Add credits to both buyers for bidding
     await prisma.wallet.update({
@@ -390,16 +391,17 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
       });
       expect(res.status).toBe(201);
       const data = await res.json() as any;
-      expect(data.bid.amount).toBe(250);
+      expect(Number(data.bid.amount)).toBe(250);
       expect(data.bid.auctionId).toBe(activeAuctionId);
+      expect(data.currentHighestBid).toBe(250);
       
       // Verify auction highest bid is updated
       const auction = await prisma.auction.findUnique({ where: { id: activeAuctionId } });
       expect(Number(auction?.currentHighestBid)).toBe(250);
       
       // Verify buyer1's wallet was deducted
-      const buyer1User = await prisma.user.findUnique({ where: { email: buyerUser.email }, include: { wallet: true } });
-      expect(Number(buyer1User?.wallet?.balance)).toBe(750); // 1000 - 250
+      const fetchedBuyer1 = await prisma.user.findUnique({ where: { email: buyerUser.email }, include: { wallet: true } });
+      expect(Number(fetchedBuyer1?.wallet?.balance)).toBe(750); // 1000 - 250
     });
 
     it('rejects a second bid that does not meet the minimum increment', async () => {
@@ -426,14 +428,16 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
         body: JSON.stringify({ amount: 300 }),
       });
       expect(res.status).toBe(201);
+      const data = await res.json() as any;
+      expect(data.currentHighestBid).toBe(300);
       
       // Verify buyer2's wallet was deducted
-      const buyer2User = await prisma.user.findUnique({ where: { email: buyer2User.email }, include: { wallet: true } });
-      expect(Number(buyer2User?.wallet?.balance)).toBe(700); // 1000 - 300
+      const fetchedBuyer2 = await prisma.user.findUnique({ where: { email: buyer2User.email }, include: { wallet: true } });
+      expect(Number(fetchedBuyer2?.wallet?.balance)).toBe(700); // 1000 - 300
       
       // Verify buyer1's wallet was refunded the 250
-      const buyer1User = await prisma.user.findUnique({ where: { email: buyerUser.email }, include: { wallet: true } });
-      expect(Number(buyer1User?.wallet?.balance)).toBe(1000); // 750 + 250
+      const fetchedBuyer1Refunded = await prisma.user.findUnique({ where: { email: buyerUser.email }, include: { wallet: true } });
+      expect(Number(fetchedBuyer1Refunded?.wallet?.balance)).toBe(1000); // 750 + 250
     });
   });
 });

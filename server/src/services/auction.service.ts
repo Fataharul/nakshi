@@ -233,12 +233,12 @@ export class AuctionService {
       });
 
       // 4. Update the auction's highest bid
-      await tx.auction.update({
+      const updatedAuction = await tx.auction.update({
         where: { id: auctionId },
         data: { currentHighestBid: bidAmount }
       });
 
-      return bid;
+      return { bid, currentHighestBid: Number(updatedAuction.currentHighestBid) };
     });
 
     // 5. Emit Real-time events
@@ -247,7 +247,7 @@ export class AuctionService {
         auctionId,
         bidderId: userId,
         amount: bidAmount,
-        timestamp: newBid.createdAt
+        timestamp: newBid.bid.createdAt
       });
 
       if (previousHighestBid) {

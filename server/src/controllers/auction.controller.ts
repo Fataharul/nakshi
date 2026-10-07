@@ -39,8 +39,8 @@ export class AuctionController {
       const validatedData = placeBidSchema.parse(req.body);
       const userId = req.user!.id;
 
-      const bid = await AuctionService.placeBid(userId, auctionId, validatedData);
-      res.status(201).json({ bid });
+      const { bid, currentHighestBid } = await AuctionService.placeBid(userId, auctionId, validatedData);
+      res.status(201).json({ bid, currentHighestBid });
     } catch (error) {
       next(error);
     }

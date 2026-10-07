@@ -84,11 +84,11 @@ export const AuctionService = {
     return data.auctions;
   },
 
-  placeBid: async (auctionId: string, amount: number): Promise<any> => {
-    const data = await request<{ bid: any }>(`/api/auctions/${auctionId}/bid`, {
+  placeBid: async (auctionId: string, amount: number): Promise<{ bid: any, currentHighestBid: number }> => {
+    const data = await request<{ bid: any, currentHighestBid: number }>(`/api/auctions/${auctionId}/bid`, {
       method: 'POST',
       body: JSON.stringify({ amount }),
     });
-    return data.bid;
+    return data;
   },
 };
