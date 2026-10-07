@@ -70,7 +70,8 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
 
       socketService.onOutbid((data: any) => {
         // We were outbid
-        setNotification(`You were outbid! The new highest bid is ৳${data.amount}`);
+        const amount = data.newHighestBid ?? data.amount;
+        setNotification(`You were outbid! The new highest bid is ${amount} Credits`);
         setTimeout(() => setNotification(null), 5000);
       });
 
