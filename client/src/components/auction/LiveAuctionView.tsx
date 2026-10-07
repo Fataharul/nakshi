@@ -132,35 +132,35 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
       </div>
 
       {/* Right: Details and Bidding */}
-      <div className="flex flex-col">
+      <div id="live-auction-container" className="flex flex-col">
         {/* Status Badge */}
         <div className="mb-4 flex items-center gap-4">
           {isLive ? (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary">
+            <span id="auction-status-badge" className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse mr-2"></span>
               Live Auction
             </span>
           ) : (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-surface-container text-on-surface-variant">
+            <span id="auction-status-badge" className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-surface-container text-on-surface-variant">
               {auction.status}
             </span>
           )}
 
           {(isLive || auction.status === 'UPCOMING') && (
-            <div className="text-sm font-semibold text-primary">
+            <div id="auction-timer" className="text-sm font-semibold text-primary">
               <span className="text-on-surface-variant mr-2">Ends in:</span> 
               {timeLeft}
             </div>
           )}
         </div>
 
-        <h1 className="text-4xl font-serif font-bold text-on-surface mb-2">{auction.artwork?.title}</h1>
+        <h1 id="auction-artwork-title" className="text-4xl font-serif font-bold text-on-surface mb-2">{auction.artwork?.title}</h1>
         <p className="text-on-surface-variant mb-8 text-sm">
           {auction.artwork?.medium} • By <span className="font-semibold text-on-surface">{auction.artwork?.artist?.name || 'Unknown Artist'}</span>
         </p>
 
         {notification && (
-          <div className="mb-6 p-4 bg-error/10 border border-error/20 text-error rounded-md text-sm">
+          <div id="bid-notification-banner" className="mb-6 p-4 bg-error/10 border border-error/20 text-error rounded-md text-sm">
             {notification}
           </div>
         )}
@@ -172,25 +172,26 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
               <p className="text-xs uppercase tracking-wider text-on-surface-variant mb-1 font-semibold">
                 {auction.currentHighestBid ? 'Current Highest Bid' : 'Starting Bid'}
               </p>
-              <p className="text-3xl font-bold text-primary">
-                ৳{auction.currentHighestBid || auction.startingBid}
+              <p id="auction-current-bid" className="text-3xl font-bold text-primary">
+                {auction.currentHighestBid || auction.startingBid} <span className="text-sm font-sans font-normal text-on-surface-variant">Credits</span>
               </p>
             </div>
             <div className="text-right">
               <p className="text-xs text-on-surface-variant">Minimum Increment</p>
-              <p className="font-medium text-sm">৳{auction.minIncrement}</p>
+              <p id="auction-min-increment" className="font-medium text-sm">+{auction.minIncrement} Credits</p>
             </div>
           </div>
 
-          {error && <p className="text-error text-sm mb-4">{error}</p>}
+          {error && <p id="bid-error-message" className="text-error text-sm mb-4">{error}</p>}
 
           {isLive ? (
-            <form onSubmit={handlePlaceBid} className="flex gap-4">
+            <form id="place-bid-form" onSubmit={handlePlaceBid} className="flex gap-4">
               <input
+                id="bid-amount-input"
                 type="number"
                 min={minNextBid}
                 step={auction.minIncrement}
-                placeholder={`Min: ৳${minNextBid}`}
+                placeholder={`Min: ${minNextBid} Credits`}
                 value={bidAmount}
                 onChange={(e) => setBidAmount(e.target.value)}
                 className="flex-1 bg-surface border border-outline/40 rounded px-4 text-sm focus:outline-none focus:border-primary"
@@ -198,6 +199,7 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
                 required
               />
               <button
+                id="place-bid-btn"
                 type="submit"
                 disabled={isBidding || !user || user.role !== 'BUYER' || Number(bidAmount) < minNextBid}
                 className="bg-primary text-on-primary px-8 py-3 rounded text-sm font-semibold hover:bg-surface-tint disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -212,14 +214,14 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
           )}
 
           {(!user || user.role !== 'BUYER') && isLive && (
-            <p className="text-xs text-on-surface-variant mt-4 text-center">
+            <p id="buyer-only-notice" className="text-xs text-on-surface-variant mt-4 text-center">
               You must be logged in as a Buyer to place a bid.
             </p>
           )}
         </div>
 
         <div className="text-sm text-on-surface-variant">
-          <p>Ends: {new Date(auction.endTime).toLocaleString()}</p>
+          <p id="auction-end-time">Ends: {new Date(auction.endTime).toLocaleString()}</p>
         </div>
       </div>
     </div>

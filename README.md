@@ -145,6 +145,13 @@ npm run dev
   - `GET /api/artworks/storefront/:artistId` — Public storefront profile and published inventory.
 - **Seller Analytics (`/api/seller`)**:
   - `GET /api/seller/metrics` — Aggregate sales volume, gross revenue, AOV, and recent customer orders (`ARTIST` / `ADMIN` role).
+- **Live Auctions (`/api/auctions`)**:
+  - `POST /api/auctions` — Create/schedule new artwork auction (`ARTIST` role).
+  - `GET /api/auctions/:id` — Retrieve auction details with current highest bid and artwork information.
+  - `POST /api/auctions/:id/bid` — Place bid with atomic wallet balance check, hold, and previous bidder refund (`BUYER` role).
+  - **WebSocket Events (Socket.IO)**:
+    - Client emits: `join_auction`, `leave_auction`.
+    - Server emits: `auction:new_bid` (broadcast to room), `user:outbid` (displaced bidder private notification), `auction:ended` (broadcast on settlement).
 
 ---
 

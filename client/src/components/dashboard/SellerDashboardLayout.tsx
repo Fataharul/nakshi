@@ -452,6 +452,7 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
                     </td>
                     <td className="py-3 px-4 text-right">
                       <Link 
+                        id={`view-live-auction-btn-${auction.id}`}
                         to={`/auctions/${auction.id}`}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-on-primary text-[10px] font-semibold uppercase tracking-wider rounded border border-primary hover:bg-surface-tint transition-colors"
                       >
