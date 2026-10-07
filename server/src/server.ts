@@ -15,12 +15,16 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
+import { setupSocket } from './socket';
+
 const io = new SocketIOServer(server, {
   cors: {
     origin: process.env.CLIENT_URL || 'http://localhost:5173',
     methods: ['GET', 'POST'],
   },
 });
+
+setupSocket(io);
 
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
 app.use(express.json());
