@@ -97,6 +97,12 @@ export interface PlaceBidResult {
     highestBid: number;
   };
 }
+/**
+ * Auction API client.
+ * - createAuction / getMyAuctions: artist-only endpoints
+ * - getActiveAuctions / getAuction: public endpoints
+ * - placeBid: buyer-only endpoint (T-049); the server re-validates every bid
+ */
 export const AuctionService = {
   createAuction: async (payload: CreateAuctionPayload): Promise<AuctionResponse> => {
     const data = await request<{ auction: AuctionResponse }>('/api/auctions', {
