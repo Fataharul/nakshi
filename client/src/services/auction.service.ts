@@ -59,19 +59,44 @@ export interface AuctionResponse {
   minIncrement: number;
   startTime: string;
   endTime: string;
-  status: 'UPCOMING' | 'ACTIVE' | 'CLOSED' | 'CANCELLED';
+  status: 'UPCOMING' | 'ACTIVE' | 'ENDED' | 'CANCELLED';
   artwork?: {
     id: string;
     title: string;
     medium: string;
     imageUrl: string;
-    artist?: {
-      id: string;
-      name: string;
-    };
+    availability?: string;
+    artist?: { id: string; name: string };
   };
+  bidCount?: number;
 }
 
+// T-049: Bid submission types
+export interface AuctionBid {
+  id: string;
+  auctionId: string;
+  bidderId: string;
+  bidderName?: string;
+  amount: number;
+  createdAt: string;
+}
+
+export interface AuctionDetail extends AuctionResponse {
+  bids: AuctionBid[];
+}
+
+export interface PlaceBidResult {
+  message: string;
+  bid: AuctionBid;
+  auction: {
+    id: string;
+    status: AuctionResponse['status'];
+    startingBid: number;
+    minIncrement: number;
+    endTime: string;
+    highestBid: number;
+  };
+}
 export const AuctionService = {
   createAuction: async (payload: CreateAuctionPayload): Promise<AuctionResponse> => {
     const data = await request<{ auction: AuctionResponse }>('/api/auctions', {
@@ -87,14 +112,31 @@ export const AuctionService = {
     });
     return data.auctions;
   },
+    // Public: active and upcoming auctions
+  getActiveAuctions: async (): Promise<AuctionResponse[]> => {
+    const data = await request<{ auctions: AuctionResponse[] }>('/api/auctions/active', {
+      method: 'GET',
+    });
+    return data.auctions;
+  },
 
-  placeBid: async (auctionId: string, amount: number): Promise<{ bid: any, currentHighestBid: number }> => {
-    const data = await request<{ bid: any, currentHighestBid: number }>(`/api/auctions/${auctionId}/bid`, {
+  // Public: one auction with its recent bids
+  getAuction: async (auctionId: string): Promise<AuctionDetail> => {
+    const data = await request<{ auction: AuctionDetail }>(`/api/auctions/${auctionId}`, {
+      method: 'GET',
+    });
+    return data.auction;
+  },
+
+  // T-049: submit a bid (BUYER only)
+  placeBid: async (auctionId: string, amount: number): Promise<PlaceBidResult> => {
+    return request<PlaceBidResult>(`/api/auctions/${auctionId}/bids`, {
       method: 'POST',
       body: JSON.stringify({ amount }),
     });
-    return data;
   },
+
+  
 
   getAuctionById: async (auctionId: string): Promise<AuctionResponse> => {
     const data = await request<{ auction: AuctionResponse }>(`/api/auctions/${auctionId}`, {
