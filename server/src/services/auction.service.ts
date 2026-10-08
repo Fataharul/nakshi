@@ -1,6 +1,11 @@
 import { prisma } from '../config/prisma';
 import { AppError } from './auth.service';
-import { CreateAuctionInput, PlaceBidInput } from '../utils/auction.validation';
+import {
+  CreateAuctionInput,
+  PlaceBidInput,
+  isAuctionOpenForBidding,
+  getMinimumAcceptableBid,
+} from '../utils/auction.validation';
 import { AuctionStatus, ArtworkAvailability, TransactionType } from '@prisma/client';
 import { io } from '../server';
 
