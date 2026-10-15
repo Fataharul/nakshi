@@ -165,3 +165,15 @@
 - **Rationale**:
   - Strongly protects financial constraints defined in requirements.md (no negative balances, atomic operations).
   - Guarantees immediate real-time updates for connected participants.
+
+## 16. Modular Artwork Card Component & RESTful Artwork Like Action
+- **Timestamp**: 2026-10-15 07:50:00 +06:00
+- **Context**: Need a consistent, reusable card presentation across marketplace search and dashboards with interactive actions (such as likes) without cluttering monolithic search views.
+- **Decision**:
+  - Extracted `<ArtworkCard />` component into `client/src/components/marketplace/ArtworkCard.tsx` isolating image presentation, status badges, typography, and interactive buttons.
+  - Implemented optimistic UI updates for the Like button with automatic state reversion on network errors.
+  - Established standard REST action endpoint `POST /api/artworks/:id/like` updating database `like` counter with atomic increment.
+  - Created `.context/guidelines.md` as the unified full-stack developer guide for feature additions and Playwright E2E workflows.
+- **Rationale**:
+  - Eliminates 100+ lines of duplicate card markup from `ArtworkSearchInterface.tsx`.
+  - Ensures clean separation of concerns and reliable, isolated Playwright E2E testability.

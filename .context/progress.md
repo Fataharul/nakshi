@@ -323,3 +323,18 @@
 - **Verified**:
   - Both client and server production builds succeed with 0 errors (`npm run build`).
   - All 9 Vitest server unit and acceptance test suites (105 tests) pass against live Supabase PostgreSQL database (`npm test`).
+
+## [2026-10-15 07:50:00 +06:00] Milestone: Modular Artwork Card Component, Like Feature & Developer Guidelines
+- **Completed**:
+  - Implemented backend artwork like feature (`POST /api/artworks/:id/like`) with Prisma `Artwork.like` counter increment in `ArtworkService` and `ArtworkController`.
+  - Added unit test suite `server/tests/unit/artwork_like.test.ts`.
+  - Updated client `Artwork` type and `artworkApi.likeArtwork` in `client/src/services/artwork.service.ts`.
+  - Created modular `client/src/components/marketplace/ArtworkCard.tsx` encapsulating artwork presentation, metadata badges, test IDs, and an optimistic UI Like button.
+  - Refactored `ArtworkSearchInterface.tsx` to use `<ArtworkCard />` and prioritize live backend data over demo mock items.
+  - Added Playwright end-to-end test suite `e2e/like_artwork.spec.ts`.
+  - Authored comprehensive developer instructions in `.context/guidelines.md`.
+- **Verified**:
+  - All 37 server unit tests passed (`npx --prefix server vitest run tests/unit`).
+  - Playwright E2E test `e2e/like_artwork.spec.ts` passed across Desktop Chrome, Tablet 768px, and Mobile 360px (`npx playwright test e2e/like_artwork.spec.ts`).
+  - Client Vite production build compiled with 0 errors (`npm --prefix client run build`).
+  - Server TypeScript build compiled with 0 errors (`npm --prefix server run build`).

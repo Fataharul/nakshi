@@ -36,15 +36,16 @@ export class ArtworkService {
       imageHash: artwork.imageHash ?? null,
       availability: artwork.availability,
       moderationStatus: artwork.moderationStatus,
+      like: artwork.like ?? 0,
       artistId: artwork.artistId,
       artist: artwork.artist
         ? {
-            id: artwork.artist.id,
-            name: artwork.artist.name,
-            email: artwork.artist.email,
-            avatarUrl: artwork.artist.avatarUrl ?? null,
-            bio: artwork.artist.bio ?? null,
-          }
+          id: artwork.artist.id,
+          name: artwork.artist.name,
+          email: artwork.artist.email,
+          avatarUrl: artwork.artist.avatarUrl ?? null,
+          bio: artwork.artist.bio ?? null,
+        }
         : undefined,
       createdAt: artwork.createdAt,
       updatedAt: artwork.updatedAt,
@@ -364,5 +365,32 @@ export class ArtworkService {
 
     return true;
   }
-}
+  // like
+  public static async likeArtwork(id: string) {
+    const existing = await prisma.artwork.findUnique({
+      where: { id },
+    });
 
+    if (!existing) {
+      throw new AppError('Artwork record not found', 404);
+    }
+
+    const artwork = await prisma.artwork.update({
+      where: { id },
+      data: { like: { increment: 1 } },
+      include: {
+        artist: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+            bio: true,
+          },
+        },
+      },
+    });
+
+    return this.formatArtwork(artwork);
+  }
+}
