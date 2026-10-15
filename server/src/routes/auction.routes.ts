@@ -32,4 +32,17 @@ router.get(
   AuctionController.getById
 );
 
+// Public routes: buyers can browse auctions
+router.get('/active', AuctionController.getActive);
+
+router.get('/:id', AuctionController.getById);
+
+// T-049: Bid submission — only BUYER
+router.post(
+  '/:id/bids',
+  authenticateJWT,
+  requireRoles(Role.BUYER),
+  AuctionController.placeBid
+);
+
 export default router;

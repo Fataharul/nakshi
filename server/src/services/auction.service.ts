@@ -1,6 +1,11 @@
 import { prisma } from '../config/prisma';
 import { AppError } from './auth.service';
-import { CreateAuctionInput, PlaceBidInput } from '../utils/auction.validation';
+import {
+  CreateAuctionInput,
+  PlaceBidInput,
+  isAuctionOpenForBidding,
+  getMinimumAcceptableBid,
+} from '../utils/auction.validation';
 import { AuctionStatus, ArtworkAvailability, TransactionType } from '@prisma/client';
 import { io } from '../server';
 
@@ -378,5 +383,188 @@ export class AuctionService {
         finalBid: auction.bids[0]?.amount || 0
       });
     }
+  }
+    /**
+   * AuctionBid record ke JSON e convert kore (shudhu bidder er nam dekhay)
+   */
+  private static formatBid(bid: any) {
+    return {
+      id: bid.id,
+      auctionId: bid.auctionId,
+      bidderId: bid.bidderId,
+      bidderName: bid.bidder ? bid.bidder.name : undefined,
+      amount: Number(bid.amount),
+      createdAt: bid.createdAt,
+    };
+  }
+
+  /**
+   * Public: ACTIVE + UPCOMING auction list
+   */
+  public static async getActiveAuctions() {
+    const now = new Date();
+    const auctions = await prisma.auction.findMany({
+      where: {
+        status: { in: [AuctionStatus.ACTIVE, AuctionStatus.UPCOMING] },
+        endTime: { gt: now },
+      },
+      include: {
+        artwork: { include: { artist: true } },
+        bids: { orderBy: { amount: 'desc' }, take: 1 },
+        _count: { select: { bids: true } },
+      },
+      orderBy: { endTime: 'asc' },
+    });
+
+    return auctions.map((a: any) => ({
+      ...this.formatAuction(a),
+      currentHighestBid: this.resolveHighestBid(
+        a.currentHighestBid,
+        a.bids && a.bids.length > 0 ? Number(a.bids[0].amount) : null
+      ),
+      bidCount: a._count?.bids ?? 0,
+    }));
+  }
+
+  /**
+   * Public: ekta auction + recent bids
+   */
+  public static async getAuctionById(auctionId: string) {
+    const auction = await prisma.auction.findUnique({
+      where: { id: auctionId },
+      include: {
+        artwork: { include: { artist: true } },
+        bids: {
+          include: { bidder: true },
+          orderBy: [{ amount: 'desc' }, { createdAt: 'asc' }],
+          take: 20,
+        },
+        _count: { select: { bids: true } },
+      },
+    });
+
+    if (!auction) {
+      throw new AppError('Auction not found', 404);
+    }
+
+    const highestBid = auction.bids.length > 0 ? Number(auction.bids[0].amount) : null;
+
+    return {
+      ...this.formatAuction(auction),
+      currentHighestBid: this.resolveHighestBid(auction.currentHighestBid, highestBid),
+      bidCount: (auction as any)._count?.bids ?? auction.bids.length,
+      bids: auction.bids.map((b: any) => this.formatBid(b)),
+    };
+  }
+
+  /**
+   * Highest bid = stored currentHighestBid ar AuctionBid table er max, duitar moddhe boro ta
+   */
+  private static resolveHighestBid(stored: any, fromBids: number | null): number | null {
+    const storedNum = stored !== null && stored !== undefined ? Number(stored) : null;
+    if (storedNum === null) return fromBids;
+    if (fromBids === null) return storedNum;
+    return Math.max(storedNum, fromBids);
+  }
+
+  /**
+   * T-049: Bid submission.
+   * Shob check ekta transaction e hoy, auction row lock kora thake (concurrency safe).
+   */
+  public static async placeBid(bidderId: string, auctionId: string, data: PlaceBidInput) {
+    const amount = Number(data.amount);
+
+    const result = await prisma.$transaction(async (tx) => {
+      // Auction row lock (eki shathe duijon bid dileo vul hobe na)
+      await tx.$queryRaw`SELECT id FROM "Auction" WHERE id = ${auctionId} FOR UPDATE`;
+
+      const auction = await tx.auction.findUnique({
+        where: { id: auctionId },
+        include: { artwork: true },
+      });
+
+      if (!auction) {
+        throw new AppError('Auction not found', 404);
+      }
+
+      const now = new Date();
+      if (!isAuctionOpenForBidding(auction, now)) {
+        if (auction.status === AuctionStatus.CANCELLED) {
+          throw new AppError('This auction has been cancelled', 400);
+        }
+        if (now < new Date(auction.startTime)) {
+          throw new AppError('This auction has not started yet', 400);
+        }
+        throw new AppError('This auction has ended. Bids are no longer accepted', 400);
+      }
+
+      // UPCOMING auction er start time par hole ACTIVE kore dei
+      if (auction.status === AuctionStatus.UPCOMING) {
+        await tx.auction.update({
+          where: { id: auctionId },
+          data: { status: AuctionStatus.ACTIVE },
+        });
+      }
+
+      if (auction.artwork && auction.artwork.artistId === bidderId) {
+        throw new AppError('You cannot bid on your own artwork', 403);
+      }
+
+      const topBid = await tx.auctionBid.findFirst({
+        where: { auctionId },
+        orderBy: { amount: 'desc' },
+      });
+      const currentHighest = this.resolveHighestBid(
+        auction.currentHighestBid,
+        topBid ? Number(topBid.amount) : null
+      );
+
+      const minimum = getMinimumAcceptableBid(Number(auction.startingBid), currentHighest);
+      if (minimum.inclusive && amount < minimum.amount) {
+        throw new AppError(
+          `Bid must be at least the starting bid of ${minimum.amount.toFixed(2)} credits`,
+          400
+        );
+      }
+      if (!minimum.inclusive && amount <= minimum.amount) {
+        throw new AppError(
+          `Bid must be higher than the current highest bid of ${minimum.amount.toFixed(2)} credits`,
+          400
+        );
+      }
+
+      // T-050 (bidding step increment validation) plugs in here.
+
+      // Wallet balance check
+      const wallet = await tx.wallet.findUnique({ where: { userId: bidderId } });
+      const balance = wallet ? Number(wallet.balance) : 0;
+      if (balance < amount) {
+        throw new AppError(
+          `Insufficient credits. Your balance is ${balance.toFixed(2)} credits`,
+          400
+        );
+      }
+
+      const bid = await tx.auctionBid.create({
+        data: { auctionId, bidderId, amount },
+        include: { bidder: true },
+      });
+
+      // T-051 (update currentHighestBid) and T-054 (WebSocket broadcast) plug in here.
+
+      return { bid, auction, previousHighest: currentHighest };
+    });
+
+    return {
+      bid: this.formatBid(result.bid),
+      auction: {
+        id: result.auction.id,
+        status: AuctionStatus.ACTIVE,
+        startingBid: Number(result.auction.startingBid),
+        minIncrement: Number(result.auction.minIncrement),
+        endTime: result.auction.endTime,
+        highestBid: Math.max(result.previousHighest ?? 0, Number(result.bid.amount)),
+      },
+    };
   }
 }
