@@ -143,4 +143,11 @@ export const artworkApi = {
 
     return data;
   },
+
+  async likeArtwork(id: string): Promise<Artwork> {
+    const data = await request<{ artwork: Artwork }>(`/api/artworks/${id}/like`, {
+      method: 'POST',
+    });
+    return data.artwork;
+  },
 };

@@ -91,5 +91,15 @@ export class ArtworkController {
       next(error);
     }
   }
+
+  public static async likeArtwork(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = req.params.id as string;
+      const artwork = await ArtworkService.likeArtwork(id);
+      res.status(200).json({ artwork });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 

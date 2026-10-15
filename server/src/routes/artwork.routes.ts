@@ -18,5 +18,6 @@ router.get('/my-artworks', authenticateJWT, requireRoles(Role.ARTIST), ArtworkCo
 router.get('/', ArtworkController.getAll);
 router.get('/storefront/:artistId', ArtworkController.getStorefront);
 router.get('/:id', ArtworkController.getById);
+router.post('/:id/like', ArtworkController.likeArtwork);
 
 export default router;

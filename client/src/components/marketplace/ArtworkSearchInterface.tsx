@@ -3,33 +3,17 @@ import {
   Search,
   X,
   Filter,
-  Sparkles,
   Tag,
   Package,
   ArrowUpDown,
-  MapPin,
   Layers,
 } from 'lucide-react';
 import { CRAFT_MEDIUMS, CRAFT_STYLES } from './CreateArtworkModal';
 import { artworkApi } from '../../services/artwork.service';
 import { Artwork } from '../../types/artwork';
+import { ArtworkCard, SearchableArtwork } from './ArtworkCard';
 
-export interface SearchableArtwork {
-  id: string;
-  title: string;
-  artistName: string;
-  artistRegion: string;
-  medium: string;
-  style?: string;
-  description: string;
-  dimensions: string;
-  weight?: string;
-  price: number;
-  imageUrl: string;
-  availability: 'AVAILABLE' | 'SOLD' | 'RESERVED';
-  createdAt: string;
-  featured?: boolean;
-}
+export type { SearchableArtwork };
 
 // Curated authentic Bangladeshi craft demonstration collection
 const CURATED_HERITAGE_ARTWORKS: SearchableArtwork[] = [
@@ -203,6 +187,7 @@ export const ArtworkSearchInterface: React.FC = () => {
             imageUrl: item.imageUrl,
             availability: item.availability === 'SOLD' ? 'SOLD' : item.availability === 'RESERVED' ? 'RESERVED' : 'AVAILABLE',
             createdAt: item.createdAt,
+            like: item.like ?? 0,
           }));
           setApiArtworks(mapped);
           setIsApiLoaded(true);
@@ -217,13 +202,10 @@ export const ArtworkSearchInterface: React.FC = () => {
     };
   }, [selectedMedium, selectedStyle, searchTerm, creatorName, minPrice, maxPrice, availabilityFilter]);
 
-  // Combined Collection & Filter & Sort Logic
+  // Combined Collection & Filter & Sort Logic: Prioritize real backend artworks
   const allCollection = useMemo(() => {
     if (isApiLoaded && apiArtworks.length > 0) {
-      // Merge unique backend artworks with demonstration dataset
-      const apiIds = new Set(apiArtworks.map((a) => a.id));
-      const demoRemainder = CURATED_HERITAGE_ARTWORKS.filter((a) => !apiIds.has(a.id));
-      return [...apiArtworks, ...demoRemainder];
+      return apiArtworks;
     }
     return CURATED_HERITAGE_ARTWORKS;
   }, [apiArtworks, isApiLoaded]);
@@ -546,98 +528,7 @@ export const ArtworkSearchInterface: React.FC = () => {
       ) : (
         <div id="search-artworks-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {filteredArtworks.map((artwork) => (
-            <div
-              key={artwork.id}
-              className="bg-surface-container-lowest rounded-xl border border-outline/20 ambient-shadow overflow-hidden flex flex-col hover:border-outline/40 transition-all hover:scale-[1.01] duration-300 group"
-            >
-              {/* Image Frame */}
-              <div className="h-60 bg-surface-container-high relative overflow-hidden">
-                <img
-                  src={artwork.imageUrl}
-                  alt={artwork.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                {/* Availability Badge */}
-                <span
-                  className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-semibold tracking-wider uppercase backdrop-blur-xs border ${
-                    artwork.availability === 'AVAILABLE'
-                      ? 'bg-surface-container-lowest/90 text-status-valid border-status-valid/30'
-                      : 'bg-surface-container-lowest/90 text-on-surface-variant border-outline/20'
-                  }`}
-                >
-                  {artwork.availability}
-                </span>
-
-                {artwork.featured && (
-                  <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-primary text-on-primary flex items-center gap-1 shadow-xs">
-                    <Sparkles className="w-3 h-3" />
-                    <span>Curator Pick</span>
-                  </span>
-                )}
-              </div>
-
-              {/* Card Body */}
-              <div className="p-5 flex-1 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] uppercase tracking-wider font-semibold text-primary">
-                      {artwork.medium}
-                    </span>
-                    <span className="text-[11px] text-on-surface-variant flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-outline" />
-                      <span>{artwork.artistRegion}</span>
-                    </span>
-                  </div>
-
-                  <h3 className="font-serif text-lg font-bold text-on-surface mb-1 group-hover:text-primary transition-colors line-clamp-1">
-                    {artwork.title}
-                  </h3>
-
-                  <p className="text-xs text-on-surface-variant/90 font-medium mb-2">
-                    By <span className="text-on-surface font-semibold">{artwork.artistName}</span>
-                  </p>
-
-                  <p className="text-xs text-on-surface-variant line-clamp-2 leading-relaxed mb-4">
-                    {artwork.description}
-                  </p>
-
-                  <div className="text-[11px] text-on-surface-variant/80 mb-3 flex flex-wrap gap-2">
-                    {artwork.style && (
-                      <span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-medium border border-primary/20">
-                        {artwork.style}
-                      </span>
-                    )}
-                    <span className="px-2 py-0.5 rounded bg-surface-container-low border border-outline/10">
-                      {artwork.dimensions}
-                    </span>
-                    {artwork.weight && (
-                      <span className="px-2 py-0.5 rounded bg-surface-container-low border border-outline/10">
-                        {artwork.weight}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Card Footer: Price & Details */}
-                <div className="pt-3 border-t border-outline/10 flex items-center justify-between mt-auto">
-                  <div>
-                    <span className="text-[10px] uppercase tracking-wider text-on-surface-variant block font-medium">
-                      Valuation
-                    </span>
-                    <span className="font-serif font-bold text-base text-primary">
-                      {artwork.price.toFixed(2)}{' '}
-                      <span className="text-xs font-sans font-normal text-on-surface-variant">Credits</span>
-                    </span>
-                  </div>
-
-                  <button
-                    className="px-4 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold uppercase tracking-wider rounded-full border border-outline/20 hover:border-outline/40 transition-colors"
-                  >
-                    View Details
-                  </button>
-                </div>
-              </div>
-            </div>
+            <ArtworkCard key={artwork.id} artwork={artwork} />
           ))}
         </div>
       )}

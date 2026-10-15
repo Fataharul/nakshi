@@ -27,6 +27,7 @@ export interface Artwork {
   availability: ArtworkAvailability;
   moderationStatus: ModerationStatus;
   artistId: string;
+  like?: number;
   artist?: ArtworkArtist;
   createdAt: string;
   updatedAt: string;
