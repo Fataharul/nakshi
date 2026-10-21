@@ -9,6 +9,7 @@ import { AccountSetupPage } from './pages/AccountSetupPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { MarketplacePage } from './pages/MarketplacePage';
 import { AuctionPage } from './pages/AuctionPage';
+import { ArtworkDetailPage } from './pages/ArtworkDetailPage';
 
 const HomePage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -27,11 +28,11 @@ const HomePage: React.FC = () => {
 
       <div className="flex flex-wrap items-center justify-center gap-4">
         <Link
-          to="/marketplace"
+          to="/gallery"
           id="home-explore-marketplace-btn"
           className="px-8 py-3.5 bg-primary text-on-primary font-semibold text-xs uppercase tracking-wider rounded-full hover:bg-surface-tint transition-all shadow-sm"
         >
-          Explore Marketplace
+          Explore Gallery
         </Link>
         {isAuthenticated && user ? (
           <>
@@ -76,8 +77,11 @@ export const App: React.FC = () => {
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<HomePage />} />
+              <Route path="/gallery" element={<MarketplacePage />} />
               <Route path="/marketplace" element={<MarketplacePage />} />
               <Route path="/search" element={<MarketplacePage />} />
+              <Route path="/artworks/:id" element={<ArtworkDetailPage />} />
+              <Route path="/gallery/:id" element={<ArtworkDetailPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/auctions/:id" element={<AuctionPage />} />

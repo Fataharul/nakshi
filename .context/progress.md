@@ -338,3 +338,28 @@
   - Playwright E2E test `e2e/like_artwork.spec.ts` passed across Desktop Chrome, Tablet 768px, and Mobile 360px (`npx playwright test e2e/like_artwork.spec.ts`).
   - Client Vite production build compiled with 0 errors (`npm --prefix client run build`).
   - Server TypeScript build compiled with 0 errors (`npm --prefix server run build`).
+
+## [2026-10-21 22:05:00 +06:00] Milestone: Phase 1 (Gallery Discovery Hub, Artwork Details & Community Interactions) Implemented & Verified
+- **Completed**:
+  - **Navbar Refinement**: Removed "Marketplace" link from desktop and mobile menus in `client/src/components/Navbar.tsx`. Linked "Gallery" directly to `/gallery` (`#navbar-gallery-link`, `#mobile-navbar-gallery-link`).
+  - **Database & Prisma**:
+    - Created `ArtworkComment` model in `server/prisma/schema.prisma` with foreign key relations to `User` and `Artwork` (cascade delete).
+    - Migrated schema and regenerated Prisma client.
+    - Updated `server/prisma/seed.ts` with authentic heritage artworks and executed seeding.
+  - **Backend API & Service**:
+    - Added `addComment` and `getComments` methods to `ArtworkService` and updated `getArtworkById` to include author-populated comments.
+    - Added `ArtworkController.addComment` and `ArtworkController.getComments`.
+    - Mounted routes `GET /api/artworks/:id/comments` and `POST /api/artworks/:id/comments` (protected by `authenticateJWT`) in `server/src/routes/artwork.routes.ts`.
+    - Added unit test suite `server/tests/unit/artwork_comments.test.ts`.
+  - **Frontend Artwork Detail Page & Interactions**:
+    - Built `client/src/pages/ArtworkDetailPage.tsx` (`/artworks/:id` and `/gallery/:id`) adhering strictly to `DESIGN.md` (Muslin `#FBF9F4` canvas, Terracotta `#86452a` accents, Playfair Display headers, Inter body, and 4px/8px border radii).
+    - Features: high-res matted hero display, provenance tags (medium, style), physical specifications (dimensions, weight), artisan profile card with avatar and verification badge, credit valuation and purchase button (`#buy-artwork-btn`), like counter & optimistic button (`#artwork-detail-like-btn`), and an interactive comments section with input form (`#comment-input`, `#comment-submit-btn`) and list (`#comments-list`).
+    - Updated `client/src/components/marketplace/ArtworkCard.tsx` so "Details" buttons and title links route to `/artworks/:id`.
+    - Updated `client/src/components/marketplace/ArtworkSearchInterface.tsx` to prioritize database artworks, fetch up to 50 items per query, display `#gallery-loading-spinner`, and handle empty results.
+  - **Automated Verification**:
+    - Created end-to-end Playwright acceptance suite `e2e/09_artwork_search.spec.ts` covering Gallery navigation, search filtering, medium chip selection, empty states, detail page navigation, liking, and commenting across Desktop Chrome, Tablet 768px, and Mobile 360px (18 tests).
+- **Verified**:
+  - All 112 Vitest server unit and acceptance tests passed (`npm --prefix server test`).
+  - All 51 Playwright end-to-end tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px viewport (`npx playwright test e2e/01_auth_rbac.spec.ts e2e/08_create_artwork.spec.ts e2e/like_artwork.spec.ts e2e/09_artwork_search.spec.ts`).
+  - Client production build passed with 0 errors (`npm --prefix client run build`).
+  - Server TypeScript compilation passed with 0 errors (`npm --prefix server run build`).

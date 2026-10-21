@@ -19,5 +19,7 @@ router.get('/', ArtworkController.getAll);
 router.get('/storefront/:artistId', ArtworkController.getStorefront);
 router.get('/:id', ArtworkController.getById);
 router.post('/:id/like', ArtworkController.likeArtwork);
+router.get('/:id/comments', ArtworkController.getComments);
+router.post('/:id/comments', authenticateJWT, ArtworkController.addComment);
 
 export default router;

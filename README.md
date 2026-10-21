@@ -140,8 +140,12 @@ npm run dev
 - **Artwork & Storefront (`/api/artworks`)**:
   - `POST /api/artworks/upload` — Direct multipart image upload to Supabase Storage via S3 (`ARTIST` role).
   - `POST /api/artworks` — Publish new artwork listing with craft mediums, dimensions, and weight (`ARTIST` role).
+  - `GET /api/artworks` — Search and filter artworks by query, craft medium, price range, and availability.
   - `GET /api/artworks/my-artworks` — Retrieve all artworks published by the authenticated artist.
-  - `GET /api/artworks/:id` — Get single artwork details and metadata.
+  - `GET /api/artworks/:id` — Get single artwork details, artisan bio, specifications, and comments.
+  - `POST /api/artworks/:id/like` — Increment like count on an artwork.
+  - `GET /api/artworks/:id/comments` — Retrieve community comments for an artwork.
+  - `POST /api/artworks/:id/comments` — Post a new comment on an artwork (authenticated users).
   - `GET /api/artworks/storefront/:artistId` — Public storefront profile and published inventory.
 - **Seller Analytics (`/api/seller`)**:
   - `GET /api/seller/metrics` — Aggregate sales volume, gross revenue, AOV, and recent customer orders (`ARTIST` / `ADMIN` role).

@@ -66,6 +66,7 @@ model User {
   exhibitions        Exhibition[]         @relation("OrganizerExhibitions")
   tickets            ExhibitionTicket[]
   reviewedFlags      ModerationReview[]   @relation("AdminReviews")
+  comments           ArtworkComment[]
 
   @@index([role])
   @@index([email])
@@ -128,6 +129,7 @@ model Artwork {
   exhibitionItems  ExhibitionArtwork[]
   flaggedAsSource  ModerationReview[]  @relation("SourceArtwork")
   flaggedAsMatch   ModerationReview[]  @relation("SuspectedMatchArtwork")
+  comments         ArtworkComment[]
 
   @@index([artistId])
   @@index([availability])
@@ -260,4 +262,19 @@ model ModerationReview {
 
   @@index([sourceArtworkId])
   @@index([suspectedMatchId])
+}
+
+model ArtworkComment {
+  id        String   @id @default(uuid())
+  artworkId String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  artwork   Artwork  @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([artworkId])
+  @@index([userId])
 }

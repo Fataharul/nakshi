@@ -101,5 +101,27 @@ export class ArtworkController {
       next(error);
     }
   }
+
+  public static async addComment(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const artworkId = req.params.id as string;
+      const userId = req.user!.id;
+      const { content } = req.body;
+      const comment = await ArtworkService.addComment(artworkId, userId, content);
+      res.status(201).json({ comment });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public static async getComments(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const artworkId = req.params.id as string;
+      const comments = await ArtworkService.getComments(artworkId);
+      res.status(200).json({ comments });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 

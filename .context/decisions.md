@@ -177,3 +177,16 @@
 - **Rationale**:
   - Eliminates 100+ lines of duplicate card markup from `ArtworkSearchInterface.tsx`.
   - Ensures clean separation of concerns and reliable, isolated Playwright E2E testability.
+
+## 17. Gallery Discovery Hub Consolidation & Community Interaction (Phase 1)
+- **Timestamp**: 2026-10-21 22:00:00 +06:00
+- **Context**: The navbar previously featured a disjointed "Marketplace" link with mock data, while "Gallery" navigated back to the landing page. Buyers had no way to view artwork details, purchase pieces, or engage (like, comment) on artworks posted by artisans.
+- **Decision**:
+  - Deprecate and remove "Marketplace" from the primary navbar in `Navbar.tsx`; designate **Gallery** (`/gallery`) as the canonical discovery hub for curated heritage artworks.
+  - Create `ArtworkDetailPage.tsx` (`/artworks/:id`) presenting high-resolution matted frames, provenance metadata (medium, style, dimensions, weight), artisan biography card, purchase action CTA, and interactive like & comment feeds.
+  - Wire all "Details" action buttons and card title links to navigate directly to `/artworks/:id`.
+  - Introduce `ArtworkComment` Prisma model (`content`, `userId`, `artworkId`, `createdAt`) with cascading artwork deletion and relationships to `User` and `Artwork`.
+  - Provide authenticated REST endpoints `GET /api/artworks/:id/comments` and `POST /api/artworks/:id/comments`.
+- **Rationale**:
+  - Aligns customer journey with `.context/DESIGN_DIRECTION.md` and `.context/DESIGN.md`, reinforcing an exhibition and heritage gallery experience instead of a sterile retail storefront.
+  - Enforces database-backed interaction integrity with role-based checks and automatic cleanup on artwork deletion.

@@ -150,4 +150,19 @@ export const artworkApi = {
     });
     return data.artwork;
   },
+
+  async addComment(id: string, content: string): Promise<any> {
+    const data = await request<{ comment: any }>(`/api/artworks/${id}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+    return data.comment;
+  },
+
+  async getComments(id: string): Promise<any[]> {
+    const data = await request<{ comments: any[] }>(`/api/artworks/${id}/comments`, {
+      method: 'GET',
+    });
+    return data.comments;
+  },
 };

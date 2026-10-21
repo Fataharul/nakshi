@@ -38,26 +38,22 @@ export const Navbar: React.FC = () => {
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-8">
             <Link
-              to="/"
+              to="/gallery"
+              id="navbar-gallery-link"
               className="text-xs uppercase tracking-wider font-semibold text-on-surface-variant hover:text-on-surface transition-colors"
             >
               Gallery
             </Link>
             <Link
-              to="/marketplace"
-              id="navbar-marketplace-link"
-              className="text-xs uppercase tracking-wider font-semibold text-on-surface-variant hover:text-on-surface transition-colors"
-            >
-              Marketplace
-            </Link>
-            <Link
-              to="/"
+              to="/auctions"
+              id="navbar-auctions-link"
               className="text-xs uppercase tracking-wider font-semibold text-on-surface-variant hover:text-on-surface transition-colors"
             >
               Live Auctions
             </Link>
             <Link
-              to="/"
+              to="/exhibitions"
+              id="navbar-exhibitions-link"
               className="text-xs uppercase tracking-wider font-semibold text-on-surface-variant hover:text-on-surface transition-colors"
             >
               Exhibitions
@@ -230,25 +226,27 @@ export const Navbar: React.FC = () => {
               onClick={() => setMobileMenuOpen(false)}
               className="block py-2 text-sm font-medium text-on-surface hover:text-primary"
             >
-              Gallery Home
+              Home
             </Link>
             <Link
-              to="/marketplace"
-              id="mobile-navbar-marketplace-link"
+              to="/gallery"
+              id="mobile-navbar-gallery-link"
               onClick={() => setMobileMenuOpen(false)}
               className="block py-2 text-sm font-medium text-on-surface hover:text-primary"
             >
-              Marketplace
+              Gallery
             </Link>
             <Link
-              to="/"
+              to="/auctions"
+              id="mobile-navbar-auctions-link"
               onClick={() => setMobileMenuOpen(false)}
               className="block py-2 text-sm font-medium text-on-surface hover:text-primary"
             >
               Live Auctions
             </Link>
             <Link
-              to="/"
+              to="/exhibitions"
+              id="mobile-navbar-exhibitions-link"
               onClick={() => setMobileMenuOpen(false)}
               className="block py-2 text-sm font-medium text-on-surface hover:text-primary"
             >

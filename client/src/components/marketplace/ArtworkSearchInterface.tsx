@@ -157,10 +157,11 @@ export const ArtworkSearchInterface: React.FC = () => {
 
   // Live Backend API items state
   const [apiArtworks, setApiArtworks] = useState<SearchableArtwork[]>([]);
-  const [isApiLoaded, setIsApiLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
+    setIsLoading(true);
     artworkApi
       .getArtworks({
         medium: selectedMedium !== 'ALL' ? selectedMedium : undefined,
@@ -170,9 +171,10 @@ export const ArtworkSearchInterface: React.FC = () => {
         minPrice: minPrice !== '' ? Number(minPrice) : undefined,
         maxPrice: maxPrice !== '' ? Number(maxPrice) : undefined,
         availability: availabilityFilter !== 'ALL' ? availabilityFilter : undefined,
+        limit: 50,
       })
       .then((data) => {
-        if (isMounted && data.artworks && data.artworks.length > 0) {
+        if (isMounted && data && Array.isArray(data.artworks)) {
           const mapped: SearchableArtwork[] = data.artworks.map((item: Artwork) => ({
             id: item.id,
             title: item.title,
@@ -183,18 +185,20 @@ export const ArtworkSearchInterface: React.FC = () => {
             description: item.description,
             dimensions: item.dimensions || 'N/A',
             weight: item.weight ? `${item.weight} ${item.weightUnit || 'kg'}` : undefined,
-            price: item.price,
+            price: Number(item.price),
             imageUrl: item.imageUrl,
             availability: item.availability === 'SOLD' ? 'SOLD' : item.availability === 'RESERVED' ? 'RESERVED' : 'AVAILABLE',
             createdAt: item.createdAt,
             like: item.like ?? 0,
           }));
           setApiArtworks(mapped);
-          setIsApiLoaded(true);
         }
       })
-      .catch(() => {
-        // Fallback to static collection if backend is offline/unreachable
+      .catch((err) => {
+        console.error('Failed to load artworks from API:', err);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
       });
 
     return () => {
@@ -202,13 +206,10 @@ export const ArtworkSearchInterface: React.FC = () => {
     };
   }, [selectedMedium, selectedStyle, searchTerm, creatorName, minPrice, maxPrice, availabilityFilter]);
 
-  // Combined Collection & Filter & Sort Logic: Prioritize real backend artworks
+  // Use authentic live artworks
   const allCollection = useMemo(() => {
-    if (isApiLoaded && apiArtworks.length > 0) {
-      return apiArtworks;
-    }
-    return CURATED_HERITAGE_ARTWORKS;
-  }, [apiArtworks, isApiLoaded]);
+    return apiArtworks;
+  }, [apiArtworks]);
 
   const filteredArtworks = useMemo(() => {
     return allCollection.filter((art) => {
@@ -510,8 +511,15 @@ export const ArtworkSearchInterface: React.FC = () => {
         </div>
       </div>
 
-      {/* 6. Gallery Grid / Empty State */}
-      {filteredArtworks.length === 0 ? (
+      {/* 6. Gallery Grid / Loading / Empty State */}
+      {isLoading ? (
+        <div id="gallery-loading-spinner" className="text-center py-20 flex flex-col items-center justify-center gap-3">
+          <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-serif uppercase tracking-widest text-on-surface-variant">
+            Loading Authentic Gallery Collection...
+          </span>
+        </div>
+      ) : filteredArtworks.length === 0 ? (
         <div id="no-search-results-banner" className="text-center py-16 px-6 bg-surface-container-low rounded-xl border border-dashed border-outline/30">
           <Package className="w-12 h-12 text-on-surface-variant/40 mx-auto mb-3" />
           <h3 className="font-serif text-xl font-bold text-on-surface mb-2">No Artworks Found</h3>

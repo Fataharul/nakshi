@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Heart, MapPin, Sparkles } from 'lucide-react';
 import { artworkApi } from '../../services/artwork.service';
 
@@ -31,9 +32,18 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
   onLike,
   onViewDetails,
 }) => {
+  const navigate = useNavigate();
   const [likes, setLikes] = useState<number>(artwork.like ?? 0);
   const [isLiked, setIsLiked] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const handleViewDetails = () => {
+    if (onViewDetails) {
+      onViewDetails(artwork);
+    } else {
+      navigate(`/artworks/${artwork.id}`);
+    }
+  };
 
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -112,7 +122,10 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
             </span>
           </div>
 
-          <h3 className="font-serif text-lg font-bold text-on-surface mb-1 group-hover:text-primary transition-colors line-clamp-1">
+          <h3
+            onClick={handleViewDetails}
+            className="font-serif text-lg font-bold text-on-surface mb-1 group-hover:text-primary transition-colors line-clamp-1 cursor-pointer"
+          >
             {artwork.title}
           </h3>
 
@@ -181,7 +194,7 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
             <button
               id={`view-details-btn-${artwork.id}`}
               type="button"
-              onClick={() => onViewDetails?.(artwork)}
+              onClick={handleViewDetails}
               className="px-3.5 py-1.5 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold uppercase tracking-wider rounded-full border border-outline/20 hover:border-outline/40 transition-colors cursor-pointer"
             >
               Details

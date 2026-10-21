@@ -47,6 +47,19 @@ export class ArtworkService {
           bio: artwork.artist.bio ?? null,
         }
         : undefined,
+      comments: artwork.comments
+        ? artwork.comments.map((c: any) => ({
+            id: c.id,
+            content: c.content,
+            createdAt: c.createdAt,
+            user: {
+              id: c.user?.id,
+              name: c.user?.name,
+              avatarUrl: c.user?.avatarUrl ?? null,
+              role: c.user?.role,
+            },
+          }))
+        : [],
       createdAt: artwork.createdAt,
       updatedAt: artwork.updatedAt,
     };
@@ -234,6 +247,19 @@ export class ArtworkService {
             bio: true,
           },
         },
+        comments: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                avatarUrl: true,
+                role: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -242,6 +268,81 @@ export class ArtworkService {
     }
 
     return this.formatArtwork(artwork);
+  }
+
+  /**
+   * Adds a comment to an artwork.
+   */
+  public static async addComment(artworkId: string, userId: string, content: string) {
+    if (!content || !content.trim()) {
+      throw new AppError('Comment content cannot be empty', 400);
+    }
+    if (content.trim().length > 500) {
+      throw new AppError('Comment content cannot exceed 500 characters', 400);
+    }
+
+    const artwork = await prisma.artwork.findUnique({
+      where: { id: artworkId },
+      select: { id: true },
+    });
+
+    if (!artwork) {
+      throw new AppError('Artwork record not found', 404);
+    }
+
+    const comment = await prisma.artworkComment.create({
+      data: {
+        artworkId,
+        userId,
+        content: content.trim(),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true,
+            role: true,
+          },
+        },
+      },
+    });
+
+    return {
+      id: comment.id,
+      artworkId: comment.artworkId,
+      content: comment.content,
+      createdAt: comment.createdAt,
+      user: comment.user,
+    };
+  }
+
+  /**
+   * Retrieves comments for an artwork.
+   */
+  public static async getComments(artworkId: string) {
+    const comments = await prisma.artworkComment.findMany({
+      where: { artworkId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true,
+            role: true,
+          },
+        },
+      },
+    });
+
+    return comments.map((c) => ({
+      id: c.id,
+      artworkId: c.artworkId,
+      content: c.content,
+      createdAt: c.createdAt,
+      user: c.user,
+    }));
   }
 
   /**

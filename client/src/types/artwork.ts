@@ -29,8 +29,24 @@ export interface Artwork {
   artistId: string;
   like?: number;
   artist?: ArtworkArtist;
+  comments?: ArtworkComment[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ArtworkCommentUser {
+  id: string;
+  name: string;
+  avatarUrl?: string | null;
+  role: string;
+}
+
+export interface ArtworkComment {
+  id: string;
+  artworkId: string;
+  content: string;
+  createdAt: string;
+  user: ArtworkCommentUser;
 }
 
 export interface CreateArtworkPayload {
