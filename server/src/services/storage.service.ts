@@ -3,6 +3,8 @@ import path from 'path';
 import crypto from 'crypto';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
+import { generateDHash } from '../utils/similarity.util';
+
 export class AppError extends Error {
   statusCode: number;
   constructor(message: string, statusCode: number) {
@@ -15,9 +17,11 @@ export class AppError extends Error {
 export interface UploadResult {
   imageUrl: string;
   key: string;
+  imageHash?: string;
 }
 
 export class StorageService {
+
   private static s3Client: S3Client | null = null;
   public static readonly ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   public static readonly MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -81,7 +85,18 @@ export class StorageService {
 
     const ext = file.mimetype === 'image/jpeg' ? 'jpg' : file.mimetype === 'image/webp' ? 'webp' : 'png';
     const randomHex = crypto.randomBytes(6).toString('hex');
-    const objectKey = `artworks/${artistId}/${Date.now()}-${randomHex}.${ext}`;
+    const timestamp = Date.now();
+    const filename = `${timestamp}-${randomHex}.${ext}`;
+    const objectKey = `artworks/${artistId}/${filename}`;
+
+    let imageHash: string | undefined = undefined;
+    try {
+      imageHash = await generateDHash(file.buffer);
+    } catch (err) {
+      if (process.env.NODE_ENV !== 'test') {
+        console.warn('[StorageService] Could not generate dHash for uploaded image:', err);
+      }
+    }
 
     const client = this.getS3Client();
     const bucket = process.env.SUPABASE_S3_BUCKET || 'nakshi-artworks';
@@ -104,6 +119,7 @@ export class StorageService {
         return {
           imageUrl: publicUrl,
           key: objectKey,
+          imageHash,
         };
       } catch (error: any) {
         console.error('[StorageService] Error uploading to Supabase S3:', error);
@@ -117,15 +133,15 @@ export class StorageService {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
 
-    const localFilePath = path.join(uploadDir, `${Date.now()}-${randomHex}.${ext}`);
+    const localFilePath = path.join(uploadDir, filename);
     fs.writeFileSync(localFilePath, file.buffer);
 
-    const relativePath = path.relative(path.resolve('.'), localFilePath).replace(/\\/g, '/');
     const fallbackUrl = `/uploads/${objectKey}`;
 
     return {
       imageUrl: fallbackUrl,
       key: objectKey,
+      imageHash,
     };
   }
 }

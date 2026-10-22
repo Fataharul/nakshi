@@ -11,6 +11,8 @@ import {
 const TOKEN_KEY = 'nakshi_token';
 
 
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || '';
+
 export const getStoredToken = (): string | null => {
   return localStorage.getItem(TOKEN_KEY);
 };
@@ -32,7 +34,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const response = await fetch(endpoint, {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers,
   });

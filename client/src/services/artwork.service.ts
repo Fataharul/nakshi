@@ -116,7 +116,7 @@ export const artworkApi = {
     });
   },
 
-  async uploadImage(file: File): Promise<{ imageUrl: string; key: string }> {
+  async uploadImage(file: File): Promise<{ imageUrl: string; key: string; imageHash?: string }> {
     const token = getStoredToken();
     const formData = new FormData();
     formData.append('image', file);

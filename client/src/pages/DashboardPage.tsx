@@ -7,9 +7,11 @@ import { CreateAuctionModal } from '../components/dashboard/CreateAuctionModal';
 import { SellerDashboardLayout } from '../components/dashboard/SellerDashboardLayout';
 import { BuyerDashboardView } from '../components/dashboard/BuyerDashboardView';
 import { TopUpCreditsModal } from '../components/wallet/TopUpCreditsModal';
+import { AdminModerationQueue } from '../components/admin/AdminModerationQueue';
 import { artworkApi } from '../services/artwork.service';
 import { AuctionService, AuctionResponse } from '../services/auction.service';
 import { Artwork } from '../types/artwork';
+
 
 export const DashboardPage: React.FC = () => {
   const { role } = useParams<{ role: string }>();
@@ -119,6 +121,49 @@ export const DashboardPage: React.FC = () => {
           user={user}
           onOpenTopUp={() => setIsTopUpOpen(true)}
         />
+      ) : user.role === 'ADMIN' ? (
+        <div className="space-y-8">
+          {/* Admin Header Banner */}
+          <div className="bg-surface-container-lowest rounded-xl ambient-shadow p-6 sm:p-8 border border-outline/20 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-primary-container/20 text-primary border border-primary/20 flex items-center justify-center font-serif text-2xl font-bold overflow-hidden">
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span>{user.name.charAt(0).toUpperCase()}</span>
+                )}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 id="dashboard-user-name" className="font-serif text-2xl sm:text-3xl font-bold text-on-surface">
+                    {user.name}
+                  </h1>
+                  <span
+                    id="dashboard-role-badge"
+                    className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wider uppercase bg-primary-container/20 text-primary border border-primary/20"
+                  >
+                    ADMIN
+                  </span>
+                </div>
+                <p className="text-xs text-on-surface-variant mt-0.5">{user.email}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <Link
+                to="/setup"
+                id="dashboard-edit-profile-btn"
+                className="flex items-center gap-2 py-2.5 px-4 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold uppercase tracking-wider rounded-lg border border-outline/20 transition-colors shadow-xs"
+              >
+                <Settings className="w-4 h-4 text-primary" />
+                <span>Account Settings</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Admin Moderation Queue */}
+          <AdminModerationQueue />
+        </div>
       ) : (
         <>
           {/* General Role Header Banner */}

@@ -78,9 +78,16 @@ export const createArtworkSchema = z.object({
     .max(1000000, 'Price cannot exceed 1,000,000 credits'),
   imageUrl: z
     .string()
-    .url('Please provide a valid image URL')
+    .refine((val) => !val || val.startsWith('/uploads/') || /^https?:\/\//i.test(val), {
+      message: 'Please provide a valid image URL or upload path',
+    })
     .optional()
     .or(z.literal('')),
+  imageHash: z
+    .string()
+    .max(64)
+    .optional()
+    .nullable(),
   availability: z
     .enum(['AVAILABLE', 'RESERVED', 'SOLD'])
     .default('AVAILABLE'),
@@ -135,9 +142,16 @@ export const updateArtworkSchema = z.object({
     .optional(),
   imageUrl: z
     .string()
-    .url('Please provide a valid image URL')
+    .refine((val) => !val || val.startsWith('/uploads/') || /^https?:\/\//i.test(val), {
+      message: 'Please provide a valid image URL or upload path',
+    })
     .optional()
     .or(z.literal('')),
+  imageHash: z
+    .string()
+    .max(64)
+    .optional()
+    .nullable(),
   availability: z
     .enum(['AVAILABLE', 'RESERVED', 'SOLD'])
     .optional(),
@@ -147,6 +161,7 @@ export const artworkQuerySchema = z.object({
   medium: z.string().optional(),
   style: z.string().optional(),
   availability: z.enum(['ALL', 'AVAILABLE', 'RESERVED', 'SOLD']).default('ALL'),
+  moderationStatus: z.enum(['ALL', 'PENDING', 'APPROVED', 'FLAGGED', 'REJECTED']).optional().default('APPROVED'),
   search: z.string().optional(),
   creatorName: z.string().optional(),
   minPrice: z.coerce.number().min(0).optional(),
@@ -159,3 +174,4 @@ export const artworkQuerySchema = z.object({
 export type CreateArtworkInput = z.infer<typeof createArtworkSchema>;
 export type UpdateArtworkInput = z.infer<typeof updateArtworkSchema>;
 export type ArtworkQueryInput = z.infer<typeof artworkQuerySchema>;
+

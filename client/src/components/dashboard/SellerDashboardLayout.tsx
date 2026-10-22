@@ -227,6 +227,14 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
                         alt={artwork.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
+                      {artwork.moderationStatus === 'FLAGGED' ? (
+                        <span
+                          id={`artwork-moderation-badge-${artwork.id}`}
+                          className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider backdrop-blur-xs bg-amber-600/90 text-white border border-amber-700/30 shadow-xs"
+                        >
+                          Flagged
+                        </span>
+                      ) : null}
                       <span
                         className={`absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider backdrop-blur-xs border ${
                           artwork.availability === 'AVAILABLE'
