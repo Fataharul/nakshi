@@ -3,6 +3,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { artworkApi } from '../services/artwork.service';
 import { Artwork, ArtworkComment } from '../types/artwork';
+import { Order } from '../types/order';
+import { PurchaseConfirmationModal } from '../components/marketplace/PurchaseConfirmationModal';
+import { TopUpCreditsModal } from '../components/wallet/TopUpCreditsModal';
 import {
   Heart,
   ArrowLeft,
@@ -37,7 +40,9 @@ export const ArtworkDetailPage: React.FC = () => {
   const [isPostingComment, setIsPostingComment] = useState<boolean>(false);
   const [commentError, setCommentError] = useState<string | null>(null);
 
-  // Purchase modal placeholder
+  // Purchase & Top-Up Modals
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
   const [purchaseNotice, setPurchaseNotice] = useState<string | null>(null);
 
   useEffect(() => {
@@ -116,18 +121,18 @@ export const ArtworkDetailPage: React.FC = () => {
       navigate('/login');
       return;
     }
-    if (user && user.role !== 'BUYER') {
-      setPurchaseNotice('Only registered Buyer accounts can purchase artworks with internal credits.');
+    if (user && user.role !== 'BUYER' && user.role !== 'ADMIN') {
+      setPurchaseNotice('Only registered Buyer or Admin accounts can purchase artworks with internal credits.');
       return;
     }
-    if (user && user.walletBalance < (artwork?.price || 0)) {
-      setPurchaseNotice(
-        `Insufficient credit balance (${user.walletBalance.toFixed(2)} Credits). You need ${Number(artwork?.price).toFixed(2)} Credits to complete this purchase.`
-      );
-      return;
-    }
+    setPurchaseNotice(null);
+    setIsPurchaseModalOpen(true);
+  };
+
+  const handleOrderSuccess = (order: Order, _newBalance: number) => {
+    setArtwork((prev) => (prev ? { ...prev, availability: 'SOLD' } : null));
     setPurchaseNotice(
-      `Purchase order confirmed for ${artwork?.title} at ${Number(artwork?.price).toFixed(2)} Credits. Processing order record...`
+      `Order #${order.id.slice(0, 8)} successfully completed! You are now the owner of "${order.artwork.title}".`
     );
   };
 
@@ -498,6 +503,30 @@ export const ArtworkDetailPage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Fixed-Price Purchase Confirmation Modal */}
+      {artwork && (
+        <PurchaseConfirmationModal
+          isOpen={isPurchaseModalOpen}
+          onClose={() => setIsPurchaseModalOpen(false)}
+          artwork={{
+            id: artwork.id,
+            title: artwork.title,
+            price: Number(artwork.price),
+            imageUrl: artwork.imageUrl,
+            medium: artwork.medium,
+            artistName: artwork.artist?.name,
+          }}
+          onSuccess={handleOrderSuccess}
+          onOpenTopUp={() => setIsTopUpModalOpen(true)}
+        />
+      )}
+
+      {/* Internal Credit Top-Up Modal */}
+      <TopUpCreditsModal
+        isOpen={isTopUpModalOpen}
+        onClose={() => setIsTopUpModalOpen(false)}
+      />
     </div>
   );
 };

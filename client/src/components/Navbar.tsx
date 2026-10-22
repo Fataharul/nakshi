@@ -222,6 +222,7 @@ export const Navbar: React.FC = () => {
               </div>
 
               <button
+                id="mobile-logout-btn"
                 onClick={handleLogout}
                 className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-error hover:bg-error-container/20 rounded transition-colors"
               >

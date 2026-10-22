@@ -385,3 +385,28 @@
   - Client production build passed with 0 errors (`npm --prefix client run build`).
   - Server TypeScript compilation passed with 0 errors (`npm --prefix server run build`).
 
+## [2026-10-22 18:44:00 +06:00] Milestone: Phase 3 (Fixed-Price Purchase & Order Checkout Flow) Implemented & Verified
+- **Completed**:
+  - **Backend Order Service & Atomic Concurrency Engine**:
+    - Created Zod validation schema in `server/src/utils/order.validation.ts` (`checkoutSchema`).
+    - Implemented `OrderService` in `server/src/services/order.service.ts` with `checkout`, `getMyOrders`, and `getOrderById`.
+    - Executed checkout in an atomic `prisma.$transaction` with row-level optimistic concurrency locking (`where: { id: artworkId, availability: 'AVAILABLE' }`).
+    - Handled automatic buyer credit debit (`PURCHASE_DEBIT`), seller payout (`SALE_CREDIT`), `Order` record creation, and marking artwork `availability = 'SOLD'`.
+    - Created `OrderController` in `server/src/controllers/order.controller.ts` and mounted `/api/orders` routes (`POST /api/orders/checkout`, `GET /api/orders/my-orders`, `GET /api/orders/:id`) in `server/src/server.ts` protected by `authenticateJWT` and `requireRoles(Role.BUYER, Role.ADMIN)`.
+    - Created comprehensive acceptance suite `server/tests/acceptance/order.test.ts` (7 tests) verifying successful purchase, unauthorized rejection, insufficient balance rejection, self-purchase prohibition, sold piece conflict, and concurrent double-purchase rejection.
+  - **Frontend Confirmation Modal & Checkout Integration**:
+    - Created TypeScript interfaces in `client/src/types/order.ts` and API service in `client/src/services/order.service.ts`.
+    - Built `client/src/components/marketplace/PurchaseConfirmationModal.tsx` portalled to `document.body` with `z-[9999]`:
+      - Displays artwork provenance, valuation in credits, available wallet balance, and calculated remaining balance.
+      - Displays warning banner and "+ Top Up Credits" button if buyer credit balance is insufficient.
+      - Celebratory order confirmation banner with Order Reference ID and automatic user wallet balance refresh.
+    - Updated `client/src/pages/ArtworkDetailPage.tsx` wiring the `#buy-artwork-btn` to `PurchaseConfirmationModal`, dynamically shifting status to `SOLD` upon purchase.
+  - **End-to-End Automated Verification**:
+    - Unskipped and implemented `e2e/03_marketplace_buy.spec.ts` covering full flow (artist lists -> buyer registers -> tops up dummy credits -> purchases artwork -> balance deduction & sold badge display) and concurrent double-purchase race conditions across Desktop Chrome, Tablet 768px, and Mobile 360px (6 tests).
+- **Verified**:
+  - All 127 Vitest server unit and acceptance tests passed (`npm --prefix server test`).
+  - All 66 Playwright end-to-end tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px (`npx playwright test e2e/01_auth_rbac.spec.ts e2e/02_credit_transactions.spec.ts e2e/03_marketplace_buy.spec.ts e2e/08_create_artwork.spec.ts e2e/09_artwork_search.spec.ts e2e/like_artwork.spec.ts`).
+  - Client production build passed with 0 errors (`npm --prefix client run build`).
+  - Server TypeScript compilation passed with 0 errors (`npm --prefix server run build`).
+
+

@@ -9,6 +9,7 @@ import artworkRoutes from './routes/artwork.routes';
 import sellerRoutes from './routes/seller.routes';
 import auctionRoutes from './routes/auction.routes';
 import walletRoutes from './routes/wallet.routes';
+import orderRoutes from './routes/order.routes';
 import { AuctionService } from './services/auction.service';
 import { errorHandler } from './middleware/error.middleware';
 
@@ -51,6 +52,9 @@ app.use('/api/auctions', auctionRoutes);
 
 // Wallet & Credit Transaction Routes
 app.use('/api/wallet', walletRoutes);
+
+// Fixed-Price Order & Checkout Routes
+app.use('/api/orders', orderRoutes);
 
 // Centralized error handling
 app.use(errorHandler);

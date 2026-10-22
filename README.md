@@ -153,6 +153,10 @@ npm run dev
   - `POST /api/wallet/top-up` — Top up dummy credits via preset tiers (250, 500, 1000, 2500) or custom positive amount (simulated; zero external payment gateways).
   - `GET /api/wallet/balance` — Retrieve authenticated user's current available credit balance.
   - `GET /api/wallet/transactions` — Paginated chronological audit ledger of all credit transactions (`TOP_UP`, `PURCHASE_DEBIT`, `SALE_CREDIT`, `AUCTION_BID_HOLD`, `AUCTION_BID_REFUND`).
+- **Fixed-Price Marketplace Orders (`/api/orders`)**:
+  - `POST /api/orders/checkout` — Atomic purchase of an available single-edition artwork using internal credits with concurrency row-locking (`BUYER` / `ADMIN` role).
+  - `GET /api/orders/my-orders` — Paginated list of purchased artworks and order receipts for authenticated buyer.
+  - `GET /api/orders/:id` — Order receipt details with populated artwork specifications, buyer info, and artisan details.
 - **Live Auctions (`/api/auctions`)**:
   - `POST /api/auctions` — Create/schedule new artwork auction (`ARTIST` role).
   - `GET /api/auctions/:id` — Retrieve auction details with current highest bid and artwork information.

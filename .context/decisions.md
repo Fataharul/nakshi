@@ -204,3 +204,22 @@
   - Strictly fulfills the zero-external-gateway specification while giving buyers and collectors full freedom to simulate platform transactions.
   - Atomic database transactions ensure balance consistency and prevent financial drift across concurrent operations.
 
+## 19. Atomic Order Checkout Engine & Concurrency Locking (Phase 3)
+- **Timestamp**: 2026-10-22 18:35:00 +06:00
+- **Context**: To fulfill Requirement 2.4 ("Single-edition fixed-price marketplace purchase using internal credits with race-condition double-purchase prevention"), buyers must be able to acquire artworks atomically, deduct credits, credit artisans, and generate official order records without double-purchasing.
+- **Decision**:
+  - Create `OrderService` and `OrderController` exposed via `POST /api/orders/checkout`, `GET /api/orders/my-orders`, and `GET /api/orders/:id` protected by `authenticateJWT` and `requireRoles(Role.BUYER, Role.ADMIN)`.
+  - Perform checkout in an interactive `prisma.$transaction`:
+    - Validates that the artwork is `AVAILABLE` and `APPROVED`.
+    - Prohibits self-purchase if `buyerId === artwork.artistId`.
+    - Enforces optimistic concurrency locking via `tx.artwork.updateMany({ where: { id: artworkId, availability: 'AVAILABLE' }, data: { availability: 'SOLD' } })`. If another concurrent checkout already acquired the piece, `updateMany.count === 0`, causing an immediate transaction rollback with a clean `409 Conflict`.
+    - Atomically debits buyer wallet (`PURCHASE_DEBIT`), credits seller wallet (`SALE_CREDIT`), and creates an immutable `Order` record linking buyer, seller, artwork, and amount paid.
+  - Provide frontend `PurchaseConfirmationModal.tsx` portalled to `document.body` with `z-[9999]`:
+    - Shows artwork provenance, valuation, available credits, and remaining balance.
+    - Displays an insufficient balance alert with a direct trigger to open `TopUpCreditsModal` if balance is lower than artwork price.
+    - Shows celebration banner upon successful purchase and triggers automatic refresh of `AuthContext.user.walletBalance` and `artwork.availability`.
+- **Rationale**:
+  - Enforces database-level consistency guarantees, ensuring zero double-purchasing or phantom credit deductions during high-concurrency race conditions.
+  - Seamlessly links internal credit top-up to fixed-price checkout without breaking user momentum.
+
+

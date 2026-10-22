@@ -680,6 +680,7 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
             {/* Optional URL Toggle */}
             <div className="mt-1.5 text-right">
               <button
+                id="toggle-url-input-btn"
                 type="button"
                 onClick={() => setShowUrlInput(!showUrlInput)}
                 className="text-[11px] text-primary hover:underline font-medium cursor-pointer"
