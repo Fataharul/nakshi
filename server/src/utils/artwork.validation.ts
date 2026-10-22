@@ -146,7 +146,7 @@ export const updateArtworkSchema = z.object({
 export const artworkQuerySchema = z.object({
   medium: z.string().optional(),
   style: z.string().optional(),
-  availability: z.enum(['ALL', 'AVAILABLE', 'RESERVED', 'SOLD']).default('AVAILABLE'),
+  availability: z.enum(['ALL', 'AVAILABLE', 'RESERVED', 'SOLD']).default('ALL'),
   search: z.string().optional(),
   creatorName: z.string().optional(),
   minPrice: z.coerce.number().min(0).optional(),

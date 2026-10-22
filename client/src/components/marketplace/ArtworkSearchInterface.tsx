@@ -187,7 +187,7 @@ export const ArtworkSearchInterface: React.FC = () => {
           creatorName: creatorName.trim() || undefined,
           minPrice: minPrice !== '' ? Number(minPrice) : undefined,
           maxPrice: maxPrice !== '' ? Number(maxPrice) : undefined,
-          availability: availabilityFilter !== 'ALL' ? availabilityFilter : undefined,
+          availability: availabilityFilter,
           sortBy: sortBy,
           page: targetPage,
           limit: ITEMS_PER_PAGE,
