@@ -425,6 +425,8 @@
   - All 127 Vitest backend unit & acceptance tests passed (`npm --prefix server test`).
   - All 21 Playwright end-to-end tests in `e2e/09_artwork_search.spec.ts` passed across Desktop Chrome, Tablet 768px, and Mobile 360px.
   - All 6 Playwright end-to-end tests in `e2e/03_marketplace_buy.spec.ts` passed across all viewports.
+  - Fixed backend `artworkQuerySchema` default (`availability` defaulted to `'ALL'` instead of `'AVAILABLE'`) so sold artworks remain visible in gallery with `SOLD` badges.
+  - Verified live in browser with screenshot confirming "Wildflowers Sway" rendered with `SOLD` badge and accurate provenance metadata.
   - Both client and server production builds passed cleanly with 0 errors (`npm run build`).
 
 
