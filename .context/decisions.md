@@ -222,4 +222,18 @@
   - Enforces database-level consistency guarantees, ensuring zero double-purchasing or phantom credit deductions during high-concurrency race conditions.
   - Seamlessly links internal credit top-up to fixed-price checkout without breaking user momentum.
 
+## 20. Infinite Scroll Gallery Architecture & Dynamic Chunk Streaming
+- **Timestamp**: 2026-10-22 19:33:00 +06:00
+- **Context**: The gallery previously loaded a fixed top-50 artwork snapshot. As catalog size grows (400+ artworks), users requested a continuous discovery experience similar to Instagram and Facebook feeds without missing older listings.
+- **Decision**:
+  - Replace static single-batch loading with dynamic batched pagination (`ITEMS_PER_PAGE = 48`, optimized for 1, 2, 3, and 4-column responsive grid layouts).
+  - Use modern browser `IntersectionObserver` on an invisible sentinel element (`#gallery-infinite-scroll-sentinel`) with `rootMargin: '250px'` to preemptively stream and append the next page chunk before reaching the page bottom.
+  - Implement request ID generation (`activeRequestIdRef`) to prevent asynchronous race conditions and ensure that out-of-order network responses during rapid keystroke searches do not overwrite active feeds.
+  - Support global backend ordering via `sortBy` parameter (`LATEST`, `PRICE_ASC`, `PRICE_DESC`, `TITLE_ASC`) in `server/src/utils/artwork.validation.ts` and `ArtworkService.getArtworks` to ensure continuous pagination accurately reflects user sorting criteria across all pages.
+  - Display heritage aesthetic loading spinner (`#gallery-loading-more-spinner`), an accessible fallback trigger (`#gallery-load-more-btn`), and an end-of-catalog indicator (`#gallery-end-of-collection`).
+- **Rationale**:
+  - Provides a frictionless discovery UX while preventing client DOM bloat and minimizing initial page load payload.
+  - Discarding stale out-of-order responses eliminates ghost listings during rapid query updates.
+
+
 

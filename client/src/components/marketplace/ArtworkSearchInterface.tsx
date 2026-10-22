@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Search,
   X,
@@ -7,6 +7,7 @@ import {
   Package,
   ArrowUpDown,
   Layers,
+  Sparkles,
 } from 'lucide-react';
 import { CRAFT_MEDIUMS, CRAFT_STYLES } from './CreateArtworkModal';
 import { artworkApi } from '../../services/artwork.service';
@@ -144,6 +145,8 @@ const CURATED_HERITAGE_ARTWORKS: SearchableArtwork[] = [
 
 type SortOption = 'LATEST' | 'PRICE_ASC' | 'PRICE_DESC' | 'TITLE_ASC';
 
+const ITEMS_PER_PAGE = 48;
+
 export const ArtworkSearchInterface: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMedium, setSelectedMedium] = useState('ALL');
@@ -155,26 +158,46 @@ export const ArtworkSearchInterface: React.FC = () => {
   const [sortBy, setSortBy] = useState<SortOption>('LATEST');
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
 
-  // Live Backend API items state
+  // Infinite Scroll & Pagination state
   const [apiArtworks, setApiArtworks] = useState<SearchableArtwork[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState<number>(1);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isFetchingNextPage, setIsFetchingNextPage] = useState<boolean>(false);
 
-  useEffect(() => {
-    let isMounted = true;
-    setIsLoading(true);
-    artworkApi
-      .getArtworks({
-        medium: selectedMedium !== 'ALL' ? selectedMedium : undefined,
-        style: selectedStyle !== 'ALL' ? selectedStyle : undefined,
-        search: searchTerm.trim() || undefined,
-        creatorName: creatorName.trim() || undefined,
-        minPrice: minPrice !== '' ? Number(minPrice) : undefined,
-        maxPrice: maxPrice !== '' ? Number(maxPrice) : undefined,
-        availability: availabilityFilter !== 'ALL' ? availabilityFilter : undefined,
-        limit: 50,
-      })
-      .then((data) => {
-        if (isMounted && data && Array.isArray(data.artworks)) {
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const activeRequestIdRef = useRef<number>(0);
+
+  // Fetch a page of artworks from backend
+  const fetchArtworks = useCallback(
+    async (targetPage: number, isReset: boolean) => {
+      const currentRequestId = ++activeRequestIdRef.current;
+      if (isReset) {
+        setIsLoading(true);
+      } else {
+        setIsFetchingNextPage(true);
+      }
+
+      try {
+        const data = await artworkApi.getArtworks({
+          medium: selectedMedium !== 'ALL' ? selectedMedium : undefined,
+          style: selectedStyle !== 'ALL' ? selectedStyle : undefined,
+          search: searchTerm.trim() || undefined,
+          creatorName: creatorName.trim() || undefined,
+          minPrice: minPrice !== '' ? Number(minPrice) : undefined,
+          maxPrice: maxPrice !== '' ? Number(maxPrice) : undefined,
+          availability: availabilityFilter !== 'ALL' ? availabilityFilter : undefined,
+          sortBy: sortBy,
+          page: targetPage,
+          limit: ITEMS_PER_PAGE,
+        });
+
+        if (currentRequestId !== activeRequestIdRef.current) {
+          return;
+        }
+
+        if (data && Array.isArray(data.artworks)) {
           const mapped: SearchableArtwork[] = data.artworks.map((item: Artwork) => ({
             id: item.id,
             title: item.title,
@@ -187,91 +210,82 @@ export const ArtworkSearchInterface: React.FC = () => {
             weight: item.weight ? `${item.weight} ${item.weightUnit || 'kg'}` : undefined,
             price: Number(item.price),
             imageUrl: item.imageUrl,
-            availability: item.availability === 'SOLD' ? 'SOLD' : item.availability === 'RESERVED' ? 'RESERVED' : 'AVAILABLE',
+            availability:
+              item.availability === 'SOLD'
+                ? 'SOLD'
+                : item.availability === 'RESERVED'
+                ? 'RESERVED'
+                : 'AVAILABLE',
             createdAt: item.createdAt,
             like: item.like ?? 0,
           }));
-          setApiArtworks(mapped);
+
+          const paginationTotalPages = data.pagination?.totalPages || 1;
+          const paginationTotal = data.pagination?.total ?? mapped.length;
+
+          setTotalCount(paginationTotal);
+          setHasMore(targetPage < paginationTotalPages && mapped.length > 0);
+
+          if (isReset) {
+            setApiArtworks(mapped);
+            setPage(1);
+          } else {
+            setApiArtworks((prev) => {
+              const existingIds = new Set(prev.map((a) => a.id));
+              const uniqueNew = mapped.filter((a) => !existingIds.has(a.id));
+              return [...prev, ...uniqueNew];
+            });
+            setPage(targetPage);
+          }
         }
-      })
-      .catch((err) => {
-        console.error('Failed to load artworks from API:', err);
-      })
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
-      });
+      } catch (err) {
+        if (currentRequestId === activeRequestIdRef.current) {
+          console.error('Failed to load artworks from API:', err);
+        }
+      } finally {
+        if (currentRequestId === activeRequestIdRef.current) {
+          setIsLoading(false);
+          setIsFetchingNextPage(false);
+        }
+      }
+    },
+    [selectedMedium, selectedStyle, searchTerm, creatorName, minPrice, maxPrice, availabilityFilter, sortBy]
+  );
+
+  // When filters or search criteria change, reset to Page 1
+  useEffect(() => {
+    fetchArtworks(1, true);
+  }, [fetchArtworks]);
+
+  // Set up IntersectionObserver on sentinel element for automatic infinite scroll
+  useEffect(() => {
+    if (!hasMore || isLoading || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && hasMore && !isLoading && !isFetchingNextPage) {
+          fetchArtworks(page + 1, false);
+        }
+      },
+      {
+        rootMargin: '250px',
+        threshold: 0.05,
+      }
+    );
+
+    const currentSentinel = sentinelRef.current;
+    if (currentSentinel) {
+      observer.observe(currentSentinel);
+    }
 
     return () => {
-      isMounted = false;
+      if (currentSentinel) {
+        observer.unobserve(currentSentinel);
+      }
+      observer.disconnect();
     };
-  }, [selectedMedium, selectedStyle, searchTerm, creatorName, minPrice, maxPrice, availabilityFilter]);
-
-  // Use authentic live artworks
-  const allCollection = useMemo(() => {
-    return apiArtworks;
-  }, [apiArtworks]);
-
-  const filteredArtworks = useMemo(() => {
-    return allCollection.filter((art) => {
-      // 1. Text Search query
-      if (searchTerm.trim()) {
-        const query = searchTerm.toLowerCase();
-        const matchesTitle = art.title.toLowerCase().includes(query);
-        const matchesArtist = art.artistName.toLowerCase().includes(query);
-        const matchesRegion = art.artistRegion.toLowerCase().includes(query);
-        const matchesMedium = art.medium.toLowerCase().includes(query);
-        const matchesStyle = art.style ? art.style.toLowerCase().includes(query) : false;
-        const matchesDesc = art.description.toLowerCase().includes(query);
-        if (!matchesTitle && !matchesArtist && !matchesRegion && !matchesMedium && !matchesStyle && !matchesDesc) {
-          return false;
-        }
-      }
-
-      // 2. Medium filter
-      if (selectedMedium !== 'ALL' && art.medium.toLowerCase() !== selectedMedium.toLowerCase()) {
-        return false;
-      }
-
-      // 3. Style filter
-      if (selectedStyle !== 'ALL') {
-        if (!art.style || art.style.toLowerCase() !== selectedStyle.toLowerCase()) {
-          return false;
-        }
-      }
-
-      // 3a. Creator filter (for static/demo data)
-      if (creatorName.trim()) {
-        const query = creatorName.toLowerCase();
-        if (!art.artistName.toLowerCase().includes(query)) {
-          return false;
-        }
-      }
-
-      // 4. Price filter
-      const artPrice = Number(art.price);
-      if (minPrice !== '' && artPrice < Number(minPrice)) return false;
-      if (maxPrice !== '' && artPrice > Number(maxPrice)) return false;
-
-      // 5. Availability
-      if (availabilityFilter === 'AVAILABLE' && art.availability !== 'AVAILABLE') {
-        return false;
-      }
-
-      return true;
-    }).sort((a, b) => {
-      switch (sortBy) {
-        case 'PRICE_ASC':
-          return a.price - b.price;
-        case 'PRICE_DESC':
-          return b.price - a.price;
-        case 'TITLE_ASC':
-          return a.title.localeCompare(b.title);
-        case 'LATEST':
-        default:
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-    });
-  }, [allCollection, searchTerm, selectedMedium, selectedStyle, creatorName, minPrice, maxPrice, availabilityFilter, sortBy]);
+  }, [hasMore, isLoading, isFetchingNextPage, page, fetchArtworks]);
 
   const resetFilters = () => {
     setSearchTerm('');
@@ -505,7 +519,8 @@ export const ArtworkSearchInterface: React.FC = () => {
       {/* 5. Results Counter Summary */}
       <div className="flex items-center justify-between text-xs text-on-surface-variant px-1">
         <div>
-          Showing <strong className="text-on-surface font-semibold">{filteredArtworks.length}</strong> {filteredArtworks.length === 1 ? 'artwork' : 'artworks'}
+          Showing <strong className="text-on-surface font-semibold">{apiArtworks.length}</strong> of{' '}
+          <strong className="text-primary font-semibold">{totalCount}</strong> {totalCount === 1 ? 'artwork' : 'artworks'}
           {selectedMedium !== 'ALL' && <span> in <strong className="text-primary">{selectedMedium}</strong></span>}
           {searchTerm && <span> matching "<strong>{searchTerm}</strong>"</span>}
         </div>
@@ -519,7 +534,7 @@ export const ArtworkSearchInterface: React.FC = () => {
             Loading Authentic Gallery Collection...
           </span>
         </div>
-      ) : filteredArtworks.length === 0 ? (
+      ) : apiArtworks.length === 0 ? (
         <div id="no-search-results-banner" className="text-center py-16 px-6 bg-surface-container-low rounded-xl border border-dashed border-outline/30">
           <Package className="w-12 h-12 text-on-surface-variant/40 mx-auto mb-3" />
           <h3 className="font-serif text-xl font-bold text-on-surface mb-2">No Artworks Found</h3>
@@ -534,10 +549,58 @@ export const ArtworkSearchInterface: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div id="search-artworks-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          {filteredArtworks.map((artwork) => (
-            <ArtworkCard key={artwork.id} artwork={artwork} />
-          ))}
+        <div className="space-y-8">
+          <div id="search-artworks-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {apiArtworks.map((artwork) => (
+              <ArtworkCard key={artwork.id} artwork={artwork} />
+            ))}
+          </div>
+
+          {/* Infinite Scroll Sentinel */}
+          {hasMore && (
+            <div
+              id="gallery-infinite-scroll-sentinel"
+              ref={sentinelRef}
+              className="h-10 w-full flex items-center justify-center pointer-events-none"
+              aria-hidden="true"
+            />
+          )}
+
+          {/* Loading More Spinner */}
+          {isFetchingNextPage && (
+            <div id="gallery-loading-more-spinner" className="text-center py-8 flex flex-col items-center justify-center gap-2">
+              <div className="w-7 h-7 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+              <span className="text-xs font-serif uppercase tracking-widest text-on-surface-variant">
+                Curating more heritage masterworks...
+              </span>
+            </div>
+          )}
+
+          {/* Manual Load More fallback button */}
+          {hasMore && !isFetchingNextPage && !isLoading && (
+            <div className="text-center pt-2 pb-2">
+              <button
+                id="gallery-load-more-btn"
+                onClick={() => fetchArtworks(page + 1, false)}
+                className="px-6 py-2 border border-outline/30 hover:border-primary/50 text-xs font-medium text-on-surface-variant hover:text-primary rounded-full transition-colors cursor-pointer bg-surface-container-lowest shadow-2xs"
+              >
+                Scroll down or tap to load more
+              </button>
+            </div>
+          )}
+
+          {/* End of Collection Banner */}
+          {!hasMore && apiArtworks.length > 0 && !isLoading && (
+            <div id="gallery-end-of-collection" className="text-center py-12 px-4 border-t border-outline/10 mt-6">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-surface-container mb-3 text-primary">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <h4 className="font-serif text-base font-bold text-on-surface">You've reached the end of the collection</h4>
+              <p className="text-xs text-on-surface-variant mt-1 max-w-sm mx-auto">
+                All {totalCount} authentic Bengali heritage pieces have been presented.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

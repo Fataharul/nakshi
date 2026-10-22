@@ -58,10 +58,12 @@ export const artworkApi = {
     const query = new URLSearchParams();
     if (params.medium && params.medium !== 'ALL') query.append('medium', params.medium);
     if (params.style && params.style !== 'ALL') query.append('style', params.style);
+    if (params.creatorName) query.append('creatorName', params.creatorName);
     if (params.search) query.append('search', params.search);
     if (params.availability) query.append('availability', params.availability);
     if (params.minPrice !== undefined) query.append('minPrice', String(params.minPrice));
     if (params.maxPrice !== undefined) query.append('maxPrice', String(params.maxPrice));
+    if (params.sortBy) query.append('sortBy', params.sortBy);
     if (params.page !== undefined) query.append('page', String(params.page));
     if (params.limit !== undefined) query.append('limit', String(params.limit));
 

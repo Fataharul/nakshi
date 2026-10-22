@@ -176,11 +176,22 @@ export class ArtworkService {
     const limit = query.limit || 20;
     const skip = (page - 1) * limit;
 
+    let orderBy: any = { createdAt: 'desc' };
+    if (query.sortBy === 'PRICE_ASC') {
+      orderBy = { price: 'asc' };
+    } else if (query.sortBy === 'PRICE_DESC') {
+      orderBy = { price: 'desc' };
+    } else if (query.sortBy === 'TITLE_ASC') {
+      orderBy = { title: 'asc' };
+    } else {
+      orderBy = { createdAt: 'desc' };
+    }
+
     const [total, artworks] = await Promise.all([
       prisma.artwork.count({ where }),
       prisma.artwork.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         skip,
         take: limit,
         include: {

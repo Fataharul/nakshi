@@ -89,6 +89,7 @@ export interface ArtworkFilterParams {
   availability?: ArtworkAvailability | 'ALL';
   minPrice?: number;
   maxPrice?: number;
+  sortBy?: 'LATEST' | 'PRICE_ASC' | 'PRICE_DESC' | 'TITLE_ASC';
   page?: number;
   limit?: number;
 }

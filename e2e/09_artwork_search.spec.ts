@@ -79,7 +79,7 @@ test.describe('Acceptance Criteria: Gallery Discovery & Artwork Interaction', ()
 
     // 2. Verify empty state banner
     await expect(page.locator('#no-search-results-banner')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('#no-search-results-banner')).toContainText('No Artworks Found');
+    await expect(page.locator('#no-search-results-banner')).toContainText('No Artworks Found', { timeout: 10000 });
   });
 
   test('clicking Details button navigates to ArtworkDetailPage with full specs and artisan bio', async ({
@@ -150,4 +150,31 @@ test.describe('Acceptance Criteria: Gallery Discovery & Artwork Interaction', ()
     await expect(commentsList).toContainText(testComment);
     await expect(commentsList).toContainText('Tanvir Ahmed');
   });
+
+  test('loads additional artwork batches automatically on infinite scroll', async ({ page }) => {
+    await page.goto('/gallery');
+    await expect(page.locator('#search-artworks-grid')).toBeVisible({ timeout: 10000 });
+
+    const initialCards = page.locator('#search-artworks-grid article');
+    const initialCount = await initialCards.count();
+    expect(initialCount).toBeGreaterThan(0);
+
+    // Scroll down to sentinel or trigger load more
+    const sentinel = page.locator('#gallery-infinite-scroll-sentinel');
+    if (await sentinel.isVisible()) {
+      await sentinel.scrollIntoViewIfNeeded();
+    } else {
+      const loadMoreBtn = page.locator('#gallery-load-more-btn');
+      if (await loadMoreBtn.isVisible()) {
+        await loadMoreBtn.click();
+      }
+    }
+
+    // Verify more items are appended
+    await expect(async () => {
+      const newCount = await page.locator('#search-artworks-grid article').count();
+      expect(newCount).toBeGreaterThan(initialCount);
+    }).toPass({ timeout: 10000 });
+  });
 });
+

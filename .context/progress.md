@@ -409,4 +409,22 @@
   - Client production build passed with 0 errors (`npm --prefix client run build`).
   - Server TypeScript compilation passed with 0 errors (`npm --prefix server run build`).
 
+## [2026-10-22 19:33:00 +06:00] Milestone: Infinite Scroll Gallery Architecture Implemented & Verified
+- **Completed**:
+  - **Infinite Scroll Engine & Intersection Observer**:
+    - Replaced static single-batch gallery fetching with responsive continuous infinite scroll pagination (`ITEMS_PER_PAGE = 48`, optimized for 1, 2, 3, and 4-column responsive grid layouts).
+    - Implemented native `IntersectionObserver` observing `#gallery-infinite-scroll-sentinel` with `rootMargin: '250px'` for smooth preemptive chunk appending.
+    - Implemented `activeRequestIdRef` request tracking to discard stale out-of-order network responses and prevent async race conditions during rapid keyword searching.
+    - Added Terracotta loading spinner (`#gallery-loading-more-spinner`), accessible fallback button (`#gallery-load-more-btn`), and museum end-of-catalog message (`#gallery-end-of-collection`).
+  - **Backend Global Sorting Support**:
+    - Added `sortBy` parameter (`LATEST`, `PRICE_ASC`, `PRICE_DESC`, `TITLE_ASC`) to `artworkQuerySchema` in `server/src/utils/artwork.validation.ts` and `ArtworkService.getArtworks` in `server/src/services/artwork.service.ts` to ensure consistent ordering across multi-page infinite scroll streams.
+    - Updated client `artworkApi.getArtworks` to propagate `sortBy` and `creatorName` query parameters.
+  - **End-to-End Automated Verification**:
+    - Extended `e2e/09_artwork_search.spec.ts` with test verifying automatic infinite scroll chunk loading when scrolling into view.
+- **Verified**:
+  - All 127 Vitest backend unit & acceptance tests passed (`npm --prefix server test`).
+  - All 21 Playwright end-to-end tests in `e2e/09_artwork_search.spec.ts` passed across Desktop Chrome, Tablet 768px, and Mobile 360px.
+  - All 6 Playwright end-to-end tests in `e2e/03_marketplace_buy.spec.ts` passed across all viewports.
+  - Both client and server production builds passed cleanly with 0 errors (`npm run build`).
+
 
