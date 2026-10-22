@@ -30,6 +30,10 @@ export const setupSocket = (io: SocketIOServer) => {
     // Join an auction room
     socket.on('auction:join', (auctionId: string) => {
       socket.join(`auction:${auctionId}`);
+      const currentUser = (socket as any).user;
+      if (currentUser) {
+        socket.join(`user:${currentUser.id}`);
+      }
     });
 
     // Leave an auction room

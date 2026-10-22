@@ -8,16 +8,19 @@ export class AuctionController {
   public static async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const validatedData = createAuctionSchema.parse(req.body);
-      const artistId = req.user!.id;
-      
-      // Ensure the artist is verified before allowing them to create an auction
-      const user = await prisma.user.findUnique({ where: { id: artistId } });
-      if (!user?.isVerified) {
-        throw new AppError('Only verified artists can create auctions', 403);
-      }
-
-      const auction = await AuctionService.createAuction(artistId, validatedData);
+      const adminId = req.user!.id;
+      const auction = await AuctionService.createAuction(adminId, validatedData);
       res.status(201).json({ auction });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public static async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const status = req.query.status as string | undefined;
+      const auctions = await AuctionService.getAll(status);
+      res.status(200).json({ auctions });
     } catch (error) {
       next(error);
     }

@@ -9,6 +9,7 @@ import { AccountSetupPage } from './pages/AccountSetupPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { MarketplacePage } from './pages/MarketplacePage';
 import { AuctionPage } from './pages/AuctionPage';
+import { AuctionsPage } from './pages/AuctionsPage';
 import { ArtworkDetailPage } from './pages/ArtworkDetailPage';
 
 const HomePage: React.FC = () => {
@@ -84,6 +85,7 @@ export const App: React.FC = () => {
               <Route path="/gallery/:id" element={<ArtworkDetailPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/auctions" element={<AuctionsPage />} />
               <Route path="/auctions/:id" element={<AuctionPage />} />
 
               {/* Protected User Routes */}

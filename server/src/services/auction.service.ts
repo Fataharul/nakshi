@@ -35,8 +35,8 @@ export class AuctionService {
     };
   }
 
-  public static async createAuction(artistId: string, data: CreateAuctionInput) {
-    // 1. Verify artwork exists and belongs to the artist
+  public static async createAuction(adminId: string, data: CreateAuctionInput) {
+    // 1. Verify artwork exists
     const artwork = await prisma.artwork.findUnique({
       where: { id: data.artworkId },
     });
@@ -45,13 +45,7 @@ export class AuctionService {
       throw new AppError('Artwork not found', 404);
     }
 
-    if (artwork.artistId !== artistId) {
-      throw new AppError('You do not have permission to auction this artwork', 403);
-    }
-
     // 2. Check if eligible (only APPROVED and AVAILABLE artworks)
-    // Wait, the requirements say 'eligible for auction according to existing business rules'. 
-    // Usually it needs to be APPROVED (or not REJECTED) and AVAILABLE.
     if (artwork.availability !== ArtworkAvailability.AVAILABLE) {
       throw new AppError(`Artwork is not available for auction (current status: ${artwork.availability})`, 400);
     }
@@ -109,6 +103,44 @@ export class AuctionService {
     });
 
     return this.formatAuction(auction);
+  }
+
+  public static async getAll(statusFilter?: string) {
+    // Synchronize time-based transitions (UPCOMING -> ACTIVE, ACTIVE -> CLOSED)
+    await this.syncAuctionStatuses().catch(() => {});
+
+    const where: any = {};
+    if (statusFilter && statusFilter !== 'ALL') {
+      const upper = statusFilter.toUpperCase();
+      if (['ACTIVE', 'UPCOMING', 'CLOSED', 'CANCELLED'].includes(upper)) {
+        where.status = upper as AuctionStatus;
+      }
+    }
+
+    const auctions = await prisma.auction.findMany({
+      where,
+      include: {
+        artwork: {
+          include: {
+            artist: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        bids: {
+          orderBy: { amount: 'desc' },
+          take: 1,
+        },
+      },
+      orderBy: [
+        { startTime: 'desc' },
+      ],
+    });
+
+    return auctions.map(this.formatAuction);
   }
 
   public static async getMyAuctions(artistId: string) {
@@ -251,11 +283,16 @@ export class AuctionService {
       });
 
       if (previousHighestBid) {
-        io.to(`user:${previousHighestBid.bidderId}`).emit('auction:outbid', {
+        const outbidPayload = {
           auctionId,
           artworkTitle: auction.artwork.title,
-          newHighestBid: bidAmount
-        });
+          newHighestBid: bidAmount,
+          outbidUserId: previousHighestBid.bidderId,
+          previousBidderId: previousHighestBid.bidderId,
+        };
+
+        io.to(`user:${previousHighestBid.bidderId}`).emit('auction:outbid', outbidPayload);
+        io.to(`auction:${auctionId}`).emit('auction:outbid', outbidPayload);
       }
     } catch (err) {
       console.error('Socket emission failed', err);
@@ -274,6 +311,7 @@ export class AuctionService {
             title: true,
             medium: true,
             imageUrl: true,
+            availability: true,
             artist: {
               select: {
                 id: true,
@@ -301,7 +339,34 @@ export class AuctionService {
       throw new AppError('Auction not found', 404);
     }
 
-    return auction;
+    const formatted = this.formatAuction(auction);
+    return {
+      ...formatted,
+      bids: auction.bids.map((b) => ({
+        id: b.id,
+        amount: Number(b.amount),
+        createdAt: b.createdAt,
+        bidder: b.bidder,
+      })),
+    };
+  }
+
+  static async syncAuctionStatuses() {
+    const now = new Date();
+    // 1. Transition UPCOMING -> ACTIVE if startTime has arrived and endTime is in the future
+    await prisma.auction.updateMany({
+      where: {
+        status: AuctionStatus.UPCOMING,
+        startTime: { lte: now },
+        endTime: { gt: now },
+      },
+      data: {
+        status: AuctionStatus.ACTIVE,
+      },
+    });
+
+    // 2. Process ended auctions
+    await this.processEndedAuctions();
   }
 
   static async processEndedAuctions() {

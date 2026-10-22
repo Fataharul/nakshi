@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AuctionResponse } from '../../services/auction.service';
+import { getArtworkImageUrl, DEFAULT_ARTWORK_IMAGE } from '../../utils/image.util';
 import {
   Palette,
   Wallet,
@@ -28,7 +29,6 @@ interface SellerDashboardLayoutProps {
   onDeleteArtwork?: (id: string) => void;
   auctions?: AuctionResponse[];
   isLoadingAuctions?: boolean;
-  onOpenCreateAuctionModal?: () => void;
 }
 
 export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
@@ -40,7 +40,6 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
   onDeleteArtwork,
   auctions = [],
   isLoadingAuctions = false,
-  onOpenCreateAuctionModal,
 }) => {
   const [selectedFilter, setSelectedFilter] = useState<string>('ALL');
   const [isTopUpOpen, setIsTopUpOpen] = useState<boolean>(false);
@@ -121,18 +120,6 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
                 + Top Up
               </button>
             </div>
-
-            {/* Create Auction Button */}
-            {user.isVerified && onOpenCreateAuctionModal && (
-              <button
-                id="create-auction-btn"
-                onClick={onOpenCreateAuctionModal}
-                className="px-5 py-3 bg-surface-container hover:bg-surface-container-high text-on-surface font-semibold text-xs uppercase tracking-wider rounded-full border border-outline/20 transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer shrink-0"
-              >
-                <Gavel className="w-4 h-4 text-primary" />
-                <span>Create Auction</span>
-              </button>
-            )}
 
             {/* Add Artwork Button */}
             <button
@@ -404,18 +391,9 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
             <h3 className="font-serif text-lg font-bold text-on-surface mb-1">
               No Auctions Scheduled
             </h3>
-            <p className="text-xs text-on-surface-variant max-w-md mx-auto mb-5 leading-relaxed">
-              Verified artisans can schedule exclusive live bidding events for eligible available artworks.
+            <p className="text-xs text-on-surface-variant max-w-md mx-auto mb-2 leading-relaxed">
+              Auctions are curated and scheduled by administrators for approved heritage artworks.
             </p>
-            {user.isVerified && onOpenCreateAuctionModal && (
-              <button
-                onClick={onOpenCreateAuctionModal}
-                className="px-5 py-2.5 bg-primary text-on-primary font-semibold text-xs uppercase tracking-wider rounded-full hover:bg-surface-tint transition-all inline-flex items-center gap-2 shadow-sm cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                <span>+ Create First Auction</span>
-              </button>
-            )}
           </div>
         ) : (
           <div id="auctions-list" className="overflow-x-auto">
@@ -435,11 +413,19 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
                   <tr key={auction.id} className="border-b border-outline/10 hover:bg-surface-container/30 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        {auction.artwork?.imageUrl && (
-                          <div className="w-10 h-10 rounded overflow-hidden shrink-0 bg-surface-container-high">
-                            <img src={auction.artwork.imageUrl} alt={auction.artwork.title} className="w-full h-full object-cover" />
-                          </div>
-                        )}
+                        <div className="w-10 h-10 rounded overflow-hidden shrink-0 bg-surface-container-high">
+                          <img
+                            src={getArtworkImageUrl(auction.artwork?.imageUrl)}
+                            alt={auction.artwork?.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.currentTarget as HTMLImageElement;
+                              if (target.src !== DEFAULT_ARTWORK_IMAGE) {
+                                target.src = DEFAULT_ARTWORK_IMAGE;
+                              }
+                            }}
+                          />
+                        </div>
                         <div>
                           <p className="font-serif font-bold text-on-surface">{auction.artwork?.title || 'Unknown'}</p>
                           <p className="text-xs text-on-surface-variant">{auction.artwork?.medium || ''}</p>

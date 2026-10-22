@@ -4,12 +4,19 @@ const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_UR
 
 class SocketService {
   private socket: Socket | null = null;
+  private currentToken: string | undefined = undefined;
 
   connect(token?: string) {
-    if (this.socket?.connected) {
+    if (this.socket && this.currentToken === token) {
       return;
     }
 
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+    }
+
+    this.currentToken = token;
     this.socket = io(API_URL, {
       auth: token ? { token } : {},
       transports: ['websocket', 'polling'], // Fallback to polling if websocket fails
@@ -24,6 +31,7 @@ class SocketService {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
+      this.currentToken = undefined;
     }
   }
 
