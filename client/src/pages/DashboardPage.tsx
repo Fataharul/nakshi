@@ -5,6 +5,7 @@ import { Wallet, Settings, ShoppingBag, Palette, Compass, ShieldCheck } from 'lu
 import { CreateArtworkModal } from '../components/marketplace/CreateArtworkModal';
 import { CreateAuctionModal } from '../components/dashboard/CreateAuctionModal';
 import { SellerDashboardLayout } from '../components/dashboard/SellerDashboardLayout';
+import { TopUpCreditsModal } from '../components/wallet/TopUpCreditsModal';
 import { artworkApi } from '../services/artwork.service';
 import { AuctionService, AuctionResponse } from '../services/auction.service';
 import { Artwork } from '../types/artwork';
@@ -21,6 +22,7 @@ export const DashboardPage: React.FC = () => {
   const [isAuctionModalOpen, setIsAuctionModalOpen] = useState(false);
   const [auctions, setAuctions] = useState<AuctionResponse[]>([]);
   const [isLoadingAuctions, setIsLoadingAuctions] = useState(false);
+  const [isTopUpOpen, setIsTopUpOpen] = useState(false);
 
   useEffect(() => {
     if (user && user.role === 'ARTIST') {
@@ -140,19 +142,29 @@ export const DashboardPage: React.FC = () => {
             </div>
 
             {/* Credit Balance Card */}
-            <div className="flex items-center gap-4 bg-surface-container-low px-5 py-3 rounded-lg border border-outline/20">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                <Wallet className="w-5 h-5" />
+            <div className="flex items-center justify-between gap-4 bg-surface-container-low px-5 py-3 rounded-lg border border-outline/20">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Wallet className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-on-surface-variant block">
+                    Internal Credit Balance
+                  </span>
+                  <span id="dashboard-wallet-balance" className="font-serif text-xl sm:text-2xl font-bold text-on-surface">
+                    {user.walletBalance.toFixed(2)}{' '}
+                    <span className="text-xs font-sans font-normal text-on-surface-variant">Credits</span>
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-on-surface-variant block">
-                  Internal Credit Balance
-                </span>
-                <span id="dashboard-wallet-balance" className="font-serif text-xl sm:text-2xl font-bold text-on-surface">
-                  {user.walletBalance.toFixed(2)}{' '}
-                  <span className="text-xs font-sans font-normal text-on-surface-variant">Credits</span>
-                </span>
-              </div>
+              <button
+                type="button"
+                id="dashboard-topup-btn"
+                onClick={() => setIsTopUpOpen(true)}
+                className="px-3 py-1.5 bg-primary text-on-primary text-xs font-semibold uppercase tracking-wider rounded hover:bg-surface-tint transition-all"
+              >
+                + Top Up
+              </button>
             </div>
           </div>
 
@@ -234,6 +246,12 @@ export const DashboardPage: React.FC = () => {
           onSubmit={handleCreateAuction}
         />
       )}
+
+      {/* Top Up Modal */}
+      <TopUpCreditsModal
+        isOpen={isTopUpOpen}
+        onClose={() => setIsTopUpOpen(false)}
+      />
     </div>
   );
 };

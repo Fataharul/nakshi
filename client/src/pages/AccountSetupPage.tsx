@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Wallet, Shield, CheckCircle, AlertCircle, Save } from 'lucide-react';
+import { Wallet, Shield, CheckCircle, AlertCircle, Save, Plus } from 'lucide-react';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
+import { TopUpCreditsModal } from '../components/wallet/TopUpCreditsModal';
+import { TransactionLedgerView } from '../components/wallet/TransactionLedgerView';
 
 export const AccountSetupPage: React.FC = () => {
-  const { user, updateProfile, linkGoogleAccount } = useAuth();
+  const { user, updateProfile, linkGoogleAccount, refreshUser } = useAuth();
 
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
@@ -14,6 +16,7 @@ export const AccountSetupPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTopUpOpen, setIsTopUpOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -122,9 +125,18 @@ export const AccountSetupPage: React.FC = () => {
             <div className="text-3xl font-serif font-bold text-on-surface my-2">
               {user.walletBalance.toFixed(2)} <span className="text-sm font-sans font-normal text-on-surface-variant">Credits</span>
             </div>
-            <p className="text-xs text-on-surface-variant leading-relaxed">
+            <p className="text-xs text-on-surface-variant leading-relaxed mb-4">
               Fictional internal credits used for simulated purchases, live auction bidding, and virtual exhibition tickets.
             </p>
+            <button
+              type="button"
+              id="setup-wallet-topup-btn"
+              onClick={() => setIsTopUpOpen(true)}
+              className="w-full py-2.5 px-4 bg-primary text-on-primary text-xs font-semibold uppercase tracking-wider rounded-lg hover:bg-surface-tint transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Top Up Credits</span>
+            </button>
           </div>
         </div>
 
@@ -286,6 +298,18 @@ export const AccountSetupPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Transaction History & Audit Ledger */}
+      <div className="mt-12">
+        <TransactionLedgerView key={user?.walletBalance} />
+      </div>
+
+      {/* Top Up Modal */}
+      <TopUpCreditsModal
+        isOpen={isTopUpOpen}
+        onClose={() => setIsTopUpOpen(false)}
+        onSuccess={() => refreshUser()}
+      />
     </div>
   );
 };

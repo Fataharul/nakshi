@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.routes';
 import artworkRoutes from './routes/artwork.routes';
 import sellerRoutes from './routes/seller.routes';
 import auctionRoutes from './routes/auction.routes';
+import walletRoutes from './routes/wallet.routes';
 import { AuctionService } from './services/auction.service';
 import { errorHandler } from './middleware/error.middleware';
 
@@ -47,6 +48,9 @@ app.use('/api/seller', sellerRoutes);
 
 // Auction Routes
 app.use('/api/auctions', auctionRoutes);
+
+// Wallet & Credit Transaction Routes
+app.use('/api/wallet', walletRoutes);
 
 // Centralized error handling
 app.use(errorHandler);

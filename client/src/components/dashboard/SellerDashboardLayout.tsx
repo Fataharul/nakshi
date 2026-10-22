@@ -17,6 +17,7 @@ import {
 import { User } from '../../types/auth';
 import { Artwork } from '../../types/artwork';
 import { SellerMetricsView } from './SellerMetricsView';
+import { TopUpCreditsModal } from '../wallet/TopUpCreditsModal';
 
 interface SellerDashboardLayoutProps {
   user: User;
@@ -42,6 +43,7 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
   onOpenCreateAuctionModal,
 }) => {
   const [selectedFilter, setSelectedFilter] = useState<string>('ALL');
+  const [isTopUpOpen, setIsTopUpOpen] = useState<boolean>(false);
 
   // Filter artworks by availability if filter is applied
   const filteredArtworks = artworks.filter((artwork) => {
@@ -94,19 +96,30 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
           {/* Right Header Controls: Wallet & Quick Actions */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             {/* Credit Balance Card */}
-            <div className="flex items-center gap-3.5 bg-surface-container-low px-4 py-3 rounded-lg border border-outline/20">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                <Wallet className="w-5 h-5" />
+            <div className="flex items-center justify-between gap-3.5 bg-surface-container-low px-4 py-3 rounded-lg border border-outline/20">
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <Wallet className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-on-surface-variant block">
+                    Credit Wallet
+                  </span>
+                  <span id="dashboard-wallet-balance" className="font-serif text-xl sm:text-2xl font-bold text-on-surface">
+                    {user.walletBalance.toFixed(2)}{' '}
+                    <span className="text-xs font-sans font-normal text-on-surface-variant">Credits</span>
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-on-surface-variant block">
-                  Credit Wallet
-                </span>
-                <span id="dashboard-wallet-balance" className="font-serif text-xl sm:text-2xl font-bold text-on-surface">
-                  {user.walletBalance.toFixed(2)}{' '}
-                  <span className="text-xs font-sans font-normal text-on-surface-variant">Credits</span>
-                </span>
-              </div>
+              <button
+                type="button"
+                id="seller-topup-btn"
+                onClick={() => setIsTopUpOpen(true)}
+                className="px-2.5 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-on-primary text-[11px] font-semibold rounded transition-colors"
+                title="Top up credits"
+              >
+                + Top Up
+              </button>
             </div>
 
             {/* Create Auction Button */}
@@ -466,6 +479,12 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
           </div>
         )}
       </div>
+
+      {/* Internal Credit Top-Up Modal */}
+      <TopUpCreditsModal
+        isOpen={isTopUpOpen}
+        onClose={() => setIsTopUpOpen(false)}
+      />
     </div>
   );
 };

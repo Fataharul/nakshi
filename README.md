@@ -149,6 +149,10 @@ npm run dev
   - `GET /api/artworks/storefront/:artistId` — Public storefront profile and published inventory.
 - **Seller Analytics (`/api/seller`)**:
   - `GET /api/seller/metrics` — Aggregate sales volume, gross revenue, AOV, and recent customer orders (`ARTIST` / `ADMIN` role).
+- **Internal Wallet & Credit Ledger (`/api/wallet`)**:
+  - `POST /api/wallet/top-up` — Top up dummy credits via preset tiers (250, 500, 1000, 2500) or custom positive amount (simulated; zero external payment gateways).
+  - `GET /api/wallet/balance` — Retrieve authenticated user's current available credit balance.
+  - `GET /api/wallet/transactions` — Paginated chronological audit ledger of all credit transactions (`TOP_UP`, `PURCHASE_DEBIT`, `SALE_CREDIT`, `AUCTION_BID_HOLD`, `AUCTION_BID_REFUND`).
 - **Live Auctions (`/api/auctions`)**:
   - `POST /api/auctions` — Create/schedule new artwork auction (`ARTIST` role).
   - `GET /api/auctions/:id` — Retrieve auction details with current highest bid and artwork information.

@@ -190,3 +190,17 @@
 - **Rationale**:
   - Aligns customer journey with `.context/DESIGN_DIRECTION.md` and `.context/DESIGN.md`, reinforcing an exhibition and heritage gallery experience instead of a sterile retail storefront.
   - Enforces database-backed interaction integrity with role-based checks and automatic cleanup on artwork deletion.
+
+## 18. Simulated Credit Top-Up & Transaction Ledger (Phase 2)
+- **Timestamp**: 2026-10-22 18:00:00 +06:00
+- **Context**: To fulfill Requirement 2.3 ("Platform operates strictly using simulated internal credits; zero external payment gateways") and unblock fixed-price marketplace purchasing and auction escrow, users need a transparent mechanism to acquire internal credits and review their historical financial transactions without mock data.
+- **Decision**:
+  - Build backend wallet services and endpoints (`POST /api/wallet/top-up`, `GET /api/wallet/balance`, `GET /api/wallet/transactions`) guarded by `authenticateJWT`.
+  - Execute balance additions inside a single interactive Prisma transaction (`prisma.$transaction`) using high-precision Decimal math, updating `wallet.balance` and recording an audit trail in `CreditTransaction` with type `TOP_UP`.
+  - Provide frontend `TopUpCreditsModal.tsx` offering standard preset denominations (250, 500, 1000, 2500 credits) and custom numerical input with live validation, adhering to `DESIGN.md` (Muslin `#FBF9F4` canvas, Terracotta `#86452a` action buttons, and clear educational simulation disclosures).
+  - Provide frontend `TransactionLedgerView.tsx` with paginated credit audit records, transaction type badges (`TOP_UP`, `PURCHASE_DEBIT`, `SALE_CREDIT`, `AUCTION_BID_HOLD`, etc.), dates, and balance summary.
+  - Wire quick top-up triggers directly into the global `Navbar` balance badges (`#navbar-wallet-balance`, `#mobile-wallet-balance`), `AccountSetupPage`, and `DashboardPage` so users can instantly top up from anywhere in the application.
+- **Rationale**:
+  - Strictly fulfills the zero-external-gateway specification while giving buyers and collectors full freedom to simulate platform transactions.
+  - Atomic database transactions ensure balance consistency and prevent financial drift across concurrent operations.
+

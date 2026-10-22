@@ -363,3 +363,25 @@
   - All 51 Playwright end-to-end tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px viewport (`npx playwright test e2e/01_auth_rbac.spec.ts e2e/08_create_artwork.spec.ts e2e/like_artwork.spec.ts e2e/09_artwork_search.spec.ts`).
   - Client production build passed with 0 errors (`npm --prefix client run build`).
   - Server TypeScript compilation passed with 0 errors (`npm --prefix server run build`).
+
+## [2026-10-22 18:15:00 +06:00] Milestone: Phase 2 (Internal Credit Top-Up & Transaction Ledger) Implemented & Verified
+- **Completed**:
+  - **Backend Services & API**:
+    - Created Zod validation schemas in `server/src/utils/wallet.validation.ts` (`topUpSchema` and `transactionQuerySchema`).
+    - Implemented `WalletService` in `server/src/services/wallet.service.ts` handling `topUp`, `getBalance`, and `getTransactions` inside atomic `prisma.$transaction`, persisting credit audit logs in `CreditTransaction` (`type: TOP_UP`).
+    - Created `WalletController` in `server/src/controllers/wallet.controller.ts` and mounted routes in `server/src/routes/wallet.routes.ts`: `POST /api/wallet/top-up`, `GET /api/wallet/balance`, and `GET /api/wallet/transactions` guarded by `authenticateJWT`.
+    - Mounted `/api/wallet` in `server/src/server.ts`.
+    - Added comprehensive acceptance test suite in `server/tests/acceptance/wallet.test.ts` (8 tests).
+  - **Frontend Components & Integration**:
+    - Created TypeScript definitions in `client/src/types/wallet.ts` and API service in `client/src/services/wallet.service.ts`.
+    - Built `client/src/components/wallet/TopUpCreditsModal.tsx` providing preset credit tiers (250, 500, 1000, 2500 credits), custom positive integer top-up input, simulated credit notice, error banner, and responsive scrollable modal dialog.
+    - Built `client/src/components/wallet/TransactionLedgerView.tsx` with wallet summary card, quick top-up trigger, refresh button, transaction type badges (`TOP_UP`, `PURCHASE_DEBIT`, `SALE_CREDIT`, `AUCTION_BID_HOLD`, etc.), and paginated ledger table adhering to `DESIGN.md`.
+    - Connected interactive top-up modal triggers to Navbar wallet balance badges (`#navbar-wallet-balance`, `#mobile-wallet-balance`), `AccountSetupPage` (`#setup-wallet-topup-btn`), `SellerDashboardLayout` (`#seller-topup-btn`), and `DashboardPage` (`#dashboard-topup-btn`).
+  - **End-to-End Automated Verification**:
+    - Unskipped and implemented `e2e/02_credit_transactions.spec.ts` covering preset package top-ups, custom balance accumulation, transaction audit log display in ledger, and client/server validation for zero and negative amounts across Desktop Chrome, Tablet 768px, and Mobile 360px (9 tests).
+- **Verified**:
+  - All 120 Vitest server unit and acceptance tests passed (`npm --prefix server test`).
+  - All 60 Playwright end-to-end tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px (`npx playwright test e2e/01_auth_rbac.spec.ts e2e/02_credit_transactions.spec.ts e2e/08_create_artwork.spec.ts e2e/09_artwork_search.spec.ts e2e/like_artwork.spec.ts`).
+  - Client production build passed with 0 errors (`npm --prefix client run build`).
+  - Server TypeScript compilation passed with 0 errors (`npm --prefix server run build`).
+

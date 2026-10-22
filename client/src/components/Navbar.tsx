@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Menu, X, Wallet, LogOut, LayoutDashboard, Settings } from 'lucide-react';
+import { Menu, X, Wallet, LogOut, LayoutDashboard, Settings, Plus } from 'lucide-react';
+import { TopUpCreditsModal } from './wallet/TopUpCreditsModal';
 
 export const Navbar: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -64,16 +66,22 @@ export const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center gap-4">
             {isAuthenticated && user ? (
               <div className="flex items-center gap-3">
-                {/* Internal Credit Balance Badge */}
-                <div
+                {/* Internal Credit Balance Badge & Top-Up Trigger */}
+                <button
+                  type="button"
                   id="navbar-wallet-balance"
-                  className="flex items-center gap-1.5 px-3 py-1 bg-surface-container rounded-full text-xs font-medium text-on-surface border border-outline/20"
+                  onClick={() => setIsTopUpOpen(true)}
+                  className="flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full text-xs font-medium text-on-surface border border-outline/20 hover:border-primary/50 hover:bg-surface-container-high transition-all cursor-pointer group"
+                  title="Click to top up credits"
                 >
-                  <Wallet className="w-3.5 h-3.5 text-primary" />
+                  <Wallet className="w-3.5 h-3.5 text-primary group-hover:scale-110 transition-transform" />
                   <span>
                     <strong className="font-semibold">{user.walletBalance.toFixed(2)}</strong> Credits
                   </span>
-                </div>
+                  <span className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                    <Plus className="w-2.5 h-2.5" />
+                  </span>
+                </button>
 
                 {/* Role Badge */}
                 <span
@@ -137,10 +145,17 @@ export const Navbar: React.FC = () => {
           {/* Mobile Menu Button */}
           <div className="flex md:hidden items-center gap-2">
             {isAuthenticated && user && (
-              <div className="flex items-center gap-1 px-2.5 py-1 bg-surface-container rounded-full text-[11px] font-medium text-on-surface">
+              <button
+                type="button"
+                id="mobile-wallet-balance"
+                onClick={() => setIsTopUpOpen(true)}
+                className="flex items-center gap-1 px-2.5 py-1 bg-surface-container rounded-full text-[11px] font-medium text-on-surface hover:border-primary/40 border border-transparent transition-colors cursor-pointer"
+                title="Top up credits"
+              >
                 <Wallet className="w-3 h-3 text-primary" />
                 <span>{user.walletBalance.toFixed(0)} C</span>
-              </div>
+                <Plus className="w-2.5 h-2.5 text-primary ml-0.5" />
+              </button>
             )}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -169,9 +184,21 @@ export const Navbar: React.FC = () => {
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 text-xs text-on-surface-variant bg-surface-container p-2.5 rounded">
-                <Wallet className="w-4 h-4 text-primary" />
-                <span>Wallet Balance: <strong className="text-on-surface font-semibold">{user.walletBalance.toFixed(2)} Credits</strong></span>
+              <div className="flex items-center justify-between gap-2 text-xs text-on-surface-variant bg-surface-container p-2.5 rounded">
+                <div className="flex items-center gap-2">
+                  <Wallet className="w-4 h-4 text-primary" />
+                  <span>Wallet: <strong className="text-on-surface font-semibold">{user.walletBalance.toFixed(2)} Credits</strong></span>
+                </div>
+                <button
+                  id="mobile-topup-btn"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setIsTopUpOpen(true);
+                  }}
+                  className="px-2.5 py-1 bg-primary text-on-primary text-[11px] font-semibold rounded hover:bg-surface-tint"
+                >
+                  + Top Up
+                </button>
               </div>
 
               <div className="grid grid-cols-2 gap-2 pt-1">
@@ -255,6 +282,12 @@ export const Navbar: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Internal Credit Top-Up Modal */}
+      <TopUpCreditsModal
+        isOpen={isTopUpOpen}
+        onClose={() => setIsTopUpOpen(false)}
+      />
     </header>
   );
 };
