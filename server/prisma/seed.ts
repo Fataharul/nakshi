@@ -207,6 +207,90 @@ async function main() {
     }
   }
 
+  // Seed demo exhibitions for organizer
+  const organizer = await prisma.user.findUnique({
+    where: { email: 'organizer@nakshi.test' },
+  });
+
+  if (organizer) {
+    const artworks = await prisma.artwork.findMany({ take: 6 });
+    const now = new Date();
+
+    const demoExhibitions = [
+      {
+        title: 'Threads of Bengal: Sacred Folk Tapestries',
+        description: 'An immersive virtual curation celebrating heirloom Nakshi Kantha quilts and hand-spun rural tapestries from Sonargaon and Rajshahi.',
+        bannerUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
+        ticketPrice: 50.0,
+        startTime: new Date(now.getTime() - 86400000 * 2),
+        endTime: new Date(now.getTime() + 86400000 * 14),
+        vipStartTime: new Date(now.getTime() - 86400000 * 2),
+        vipEndTime: new Date(now.getTime() - 86400000),
+        layoutConfig: {
+          curatorNote: 'Walk through the 3 ceremonial halls to experience centuries of indigenous needlework traditions.',
+          walls: ['North Hall: Heirloom Quilts', 'East Hall: Zari Borders', 'South Hall: Contemporary Interpretations'],
+        },
+      },
+      {
+        title: 'Dhaka Terracotta & Glazed Relics 2026',
+        description: 'Exploring archaeological red clay vessels, temple plaques, and wood-fired folk motifs from ancient Bengal dynasties.',
+        bannerUrl: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=1200&q=80',
+        ticketPrice: 35.0,
+        startTime: new Date(now.getTime() + 86400000 * 3),
+        endTime: new Date(now.getTime() + 86400000 * 20),
+        vipStartTime: new Date(now.getTime() + 86400000 * 2),
+        vipEndTime: new Date(now.getTime() + 86400000 * 3),
+        layoutConfig: {
+          curatorNote: 'A tactile virtual walkthrough of ancient riverine clay craftsmanship.',
+          walls: ['Main Gallery: Ancient Plaques', 'West Gallery: Ritual Vessels'],
+        },
+      },
+      {
+        title: 'Royal Muslin & Masterpiece Jamdani Retrospective',
+        description: 'VIP Collector Exclusive exhibition spotlighting 300-count geometric Jamdani sarees and Mughal royal court weaves.',
+        bannerUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=80',
+        ticketPrice: 75.0,
+        startTime: new Date(now.getTime() - 3600000),
+        endTime: new Date(now.getTime() + 86400000 * 7),
+        vipStartTime: new Date(now.getTime() - 3600000),
+        vipEndTime: new Date(now.getTime() + 86400000 * 2),
+        layoutConfig: {
+          curatorNote: 'VIP Collector Preview: Early access to private collection heirlooms.',
+          walls: ['Royal Pavilion: Floral Jaal', 'Weavers Studio: Historical Looms'],
+        },
+      },
+    ];
+
+    for (const exh of demoExhibitions) {
+      const existing = await prisma.exhibition.findFirst({
+        where: { title: exh.title },
+      });
+
+      if (!existing) {
+        const created = await prisma.exhibition.create({
+          data: {
+            ...exh,
+            organizerId: organizer.id,
+          },
+        });
+
+        // Attach artworks
+        for (let i = 0; i < artworks.length; i++) {
+          await prisma.exhibitionArtwork.create({
+            data: {
+              exhibitionId: created.id,
+              artworkId: artworks[i].id,
+              wallPosition: i + 1,
+              posX: (i % 3) * 30 + 15,
+              posY: Math.floor(i / 3) * 40 + 20,
+            },
+          });
+        }
+        console.log(`[Seed] Created demo exhibition: ${exh.title}`);
+      }
+    }
+  }
+
   console.log('[Seed] Seeding completed successfully.');
 }
 

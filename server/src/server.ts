@@ -13,6 +13,7 @@ import auctionRoutes from './routes/auction.routes';
 import walletRoutes from './routes/wallet.routes';
 import orderRoutes from './routes/order.routes';
 import moderationRoutes from './routes/moderation.routes';
+import exhibitionRoutes from './routes/exhibition.routes';
 import { AuctionService } from './services/auction.service';
 import { errorHandler } from './middleware/error.middleware';
 
@@ -92,6 +93,9 @@ app.use('/api/orders', orderRoutes);
 
 // Admin Moderation & Duplicate Detection Routes
 app.use('/api/moderation', moderationRoutes);
+
+// Virtual Exhibitions & Gallery Rooms Routes
+app.use('/api/exhibitions', exhibitionRoutes);
 
 // Centralized error handling
 app.use(errorHandler);
