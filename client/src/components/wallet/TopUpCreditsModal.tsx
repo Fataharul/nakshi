@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Wallet, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
 import { walletApi } from '../../services/wallet.service';
 import { useAuth } from '../../context/AuthContext';
@@ -86,10 +87,10 @@ export const TopUpCreditsModal: React.FC<TopUpCreditsModalProps> = ({
     }
   };
 
-  return (
+  const modalContent = (
     <div
       id="topup-credits-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-surface/50 backdrop-blur-sm animate-fade-in overflow-y-auto"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-on-surface/50 backdrop-blur-sm animate-fade-in overflow-y-auto"
       onClick={onClose}
     >
       <div
@@ -260,4 +261,7 @@ export const TopUpCreditsModal: React.FC<TopUpCreditsModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };
+

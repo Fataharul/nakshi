@@ -22,7 +22,8 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-outline/20">
+    <>
+      <header className="sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-outline/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Brand Wordmark */}
@@ -282,13 +283,14 @@ export const Navbar: React.FC = () => {
           </div>
         </div>
       )}
+      </header>
 
       {/* Internal Credit Top-Up Modal */}
       <TopUpCreditsModal
         isOpen={isTopUpOpen}
         onClose={() => setIsTopUpOpen(false)}
       />
-    </header>
+    </>
   );
 };
 
