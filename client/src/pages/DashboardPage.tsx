@@ -5,6 +5,7 @@ import { Wallet, Settings, ShoppingBag, Palette, Compass, ShieldCheck } from 'lu
 import { CreateArtworkModal } from '../components/marketplace/CreateArtworkModal';
 import { CreateAuctionModal } from '../components/dashboard/CreateAuctionModal';
 import { SellerDashboardLayout } from '../components/dashboard/SellerDashboardLayout';
+import { BuyerDashboardView } from '../components/dashboard/BuyerDashboardView';
 import { TopUpCreditsModal } from '../components/wallet/TopUpCreditsModal';
 import { artworkApi } from '../services/artwork.service';
 import { AuctionService, AuctionResponse } from '../services/auction.service';
@@ -112,6 +113,11 @@ export const DashboardPage: React.FC = () => {
           auctions={auctions}
           isLoadingAuctions={isLoadingAuctions}
           onOpenCreateAuctionModal={() => setIsAuctionModalOpen(true)}
+        />
+      ) : user.role === 'BUYER' ? (
+        <BuyerDashboardView
+          user={user}
+          onOpenTopUp={() => setIsTopUpOpen(true)}
         />
       ) : (
         <>

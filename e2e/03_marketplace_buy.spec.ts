@@ -125,6 +125,25 @@ test.describe('Acceptance Criteria 3.3: Artist & Marketplace', () => {
     await expect(page.locator('#artwork-availability-badge')).toContainText('SOLD');
     await expect(page.locator('#buy-artwork-btn')).toBeDisabled();
     await expect(page.locator('#buy-artwork-btn')).toContainText(/Artwork is SOLD/i);
+
+    // 11. Navigate to Buyer Dashboard and verify purchased artwork appears in collection
+    await page.goto('/dashboard');
+    await expect(page).toHaveURL(/\/dashboard/);
+    await expect(page.locator('#buyer-dashboard-view')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('#dashboard-wallet-balance')).toContainText('250.00');
+
+    // Verify purchased artwork card
+    const purchasedGrid = page.locator('#purchased-artworks-grid');
+    await expect(purchasedGrid).toBeVisible();
+    const purchasedCard = purchasedGrid.locator('article').filter({ hasText: artworkTitle });
+    await expect(purchasedCard).toBeVisible();
+    await expect(purchasedCard).toContainText('250.00');
+    await expect(purchasedCard).toContainText('Acquired');
+
+    // Verify clicking View Piece button navigates to artwork detail page
+    await purchasedCard.locator('button:has-text("View Piece")').click();
+    await expect(page).toHaveURL(/\/artworks\//);
+    await expect(page.locator('#artwork-title')).toContainText(artworkTitle);
   });
 
   test('prevents two buyers from purchasing the same single-edition artwork concurrently', async ({ browser }) => {

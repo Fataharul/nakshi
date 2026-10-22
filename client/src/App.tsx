@@ -96,6 +96,14 @@ export const App: React.FC = () => {
                 }
               />
               <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/dashboard/:role"
                 element={
                   <ProtectedRoute>
