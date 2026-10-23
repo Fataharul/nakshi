@@ -168,7 +168,7 @@ export const artworkQuerySchema = z.object({
   maxPrice: z.coerce.number().positive().optional(),
   sortBy: z.enum(['LATEST', 'PRICE_ASC', 'PRICE_DESC', 'TITLE_ASC']).optional().default('LATEST'),
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
 export type CreateArtworkInput = z.infer<typeof createArtworkSchema>;

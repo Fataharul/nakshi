@@ -3,6 +3,8 @@ import http from 'http';
 import { AddressInfo } from 'net';
 import { app } from '../../src/server';
 import { prisma } from '../../src/config/prisma';
+import { AuthService } from '../../src/services/auth.service';
+import bcrypt from 'bcrypt';
 
 describe('Auction Creation & Seller Management Acceptance Tests', () => {
   let serverInstance: http.Server;
@@ -13,12 +15,21 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
   let unverifiedArtistToken: string;
   let buyerToken: string;
   let buyer2Token: string;
+  let adminToken: string;
   
   let verifiedArtistId: string;
   let secondArtistId: string;
+  let adminId: string;
   
   let myArtworkId: string;
   let theirArtworkId: string;
+
+  const adminUser = {
+    name: `Admin Curator ${uniqueId}`,
+    email: `admin_auction_${uniqueId}_${Math.random().toString(36).substring(2, 7)}@nakshi.test`,
+    password: 'Password123!',
+    role: 'ADMIN',
+  };
 
   const verifiedArtistUser = {
     name: `Verified Artisan ${uniqueId}`,
@@ -113,6 +124,31 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
     const buyer2Id = b2Data.user.id;
     const buyer1Id = bData.user?.id || (await prisma.user.findUnique({ where: { email: buyerUser.email } }))!.id;
 
+    // Set up Admin user
+    let admin = await prisma.user.findFirst({
+      where: { role: 'ADMIN' },
+    });
+
+    if (!admin) {
+      admin = await prisma.user.create({
+        data: {
+          email: `admin_auction_${uniqueId}@nakshi.test`,
+          name: 'Nakshi SuperAdmin',
+          passwordHash: await bcrypt.hash('Password123!', 10),
+          role: 'ADMIN',
+          wallet: { create: { balance: 0.0 } },
+        },
+      });
+    }
+
+    adminToken = AuthService.generateToken({
+      id: admin.id,
+      email: admin.email,
+      role: 'ADMIN',
+      name: admin.name,
+    });
+    adminId = admin.id;
+
     // Add credits to both buyers for bidding
     await prisma.wallet.update({
       where: { userId: buyer1Id },
@@ -186,7 +222,7 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
       expect(res.status).toBe(401);
     });
 
-    it('rejects non-artist users (BUYER)', async () => {
+    it('rejects non-admin users (BUYER)', async () => {
       const res = await fetch(`${baseUrl}/api/auctions`, {
         method: 'POST',
         headers: {
@@ -204,15 +240,15 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
       expect(res.status).toBe(403);
     });
 
-    it('rejects unverified artists', async () => {
+    it('rejects artist users (ARTIST role)', async () => {
       const res = await fetch(`${baseUrl}/api/auctions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${unverifiedArtistToken}`,
+          Authorization: `Bearer ${verifiedArtistToken}`,
         },
         body: JSON.stringify({
-          artworkId: theirArtworkId,
+          artworkId: myArtworkId,
           startingBid: 100,
           minIncrement: 10,
           startTime: new Date(Date.now() + 10000).toISOString(),
@@ -220,8 +256,6 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
         }),
       });
       expect(res.status).toBe(403);
-      const data = await res.json() as any;
-      expect(data.error).toContain('Only verified artists');
     });
 
     it('rejects invalid inputs (negative bid)', async () => {
@@ -229,7 +263,7 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${verifiedArtistToken}`,
+          Authorization: `Bearer ${adminToken}`,
         },
         body: JSON.stringify({
           artworkId: myArtworkId,
@@ -247,7 +281,7 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${verifiedArtistToken}`,
+          Authorization: `Bearer ${adminToken}`,
         },
         body: JSON.stringify({
           artworkId: myArtworkId,
@@ -260,32 +294,14 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
       expect(res.status).toBe(400);
     });
 
-    it('rejects if artist tries to auction someone else\'s artwork', async () => {
-      const res = await fetch(`${baseUrl}/api/auctions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${verifiedArtistToken}`,
-        },
-        body: JSON.stringify({
-          artworkId: theirArtworkId,
-          startingBid: 100,
-          minIncrement: 10,
-          startTime: new Date(Date.now() + 10000).toISOString(),
-          endTime: new Date(Date.now() + 86400000).toISOString(),
-        }),
-      });
-      expect(res.status).toBe(403);
-    });
-
-    it('allows verified artist to create an auction for their own artwork', async () => {
+    it('allows ADMIN to create an auction for an approved artwork', async () => {
       const startTime = new Date(Date.now() + 10000).toISOString();
       const endTime = new Date(Date.now() + 86400000).toISOString();
       const res = await fetch(`${baseUrl}/api/auctions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${verifiedArtistToken}`,
+          Authorization: `Bearer ${adminToken}`,
         },
         body: JSON.stringify({
           artworkId: myArtworkId,
@@ -312,7 +328,7 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${verifiedArtistToken}`,
+          Authorization: `Bearer ${adminToken}`,
         },
         body: JSON.stringify({
           artworkId: myArtworkId, // Already auctioned above
@@ -325,6 +341,26 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
       expect(res.status).toBe(400);
       const data = await res.json() as any;
       expect(data.error).toContain('Artwork is not available for auction');
+    });
+  });
+
+  describe('GET /api/auctions (Public Browse)', () => {
+    it('returns all auctions to public unauthenticated requests', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions`);
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.auctions).toBeInstanceOf(Array);
+      expect(data.auctions.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('filters auctions by status parameter', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions?status=ACTIVE`);
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.auctions).toBeInstanceOf(Array);
+      for (const a of data.auctions) {
+        expect(a.status).toBe('ACTIVE');
+      }
     });
   });
 

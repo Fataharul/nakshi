@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { AuctionService, AuctionResponse } from '../../services/auction.service';
 import { socketService } from '../../services/socket.service';
 import { getStoredToken } from '../../services/auth.service';
+import { getArtworkImageUrl, DEFAULT_ARTWORK_IMAGE } from '../../utils/image.util';
 
 interface LiveAuctionViewProps {
   initialAuction: AuctionResponse;
@@ -10,6 +11,26 @@ interface LiveAuctionViewProps {
 
 export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction }) => {
   const { user } = useAuth();
+  const userRef = React.useRef(user);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  const getEffectiveUserId = (): string | null => {
+    if (userRef.current?.id) return userRef.current.id;
+    if (user?.id) return user.id;
+    const token = getStoredToken();
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.id || null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+
   const [auction, setAuction] = useState<AuctionResponse>(initialAuction);
   const [bidAmount, setBidAmount] = useState<string>('');
   const [isBidding, setIsBidding] = useState(false);
@@ -48,11 +69,7 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
   }, [auction.endTime, auction.status]);
 
   useEffect(() => {
-    // Determine if auction is actually active right now
-    const now = new Date();
-    const startTime = new Date(auction.startTime);
-    const endTime = new Date(auction.endTime);
-    const isActuallyActive = auction.status === 'ACTIVE' && now >= startTime && now <= endTime;
+    const isActuallyActive = auction.status === 'ACTIVE';
 
     if (isActuallyActive) {
       // Connect and join room
@@ -64,25 +81,35 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
         // Someone (or us) placed a new bid
         setAuction(prev => ({
           ...prev,
-          currentHighestBid: data.amount
+          currentHighestBid: Number(data.amount)
         }));
       });
 
       socketService.onOutbid((data: any) => {
-        // We were outbid
-        const amount = data.newHighestBid ?? data.amount;
-        setNotification(`You were outbid! The new highest bid is ${amount} Credits`);
-        setTimeout(() => setNotification(null), 5000);
+        const effectiveUserId = getEffectiveUserId();
+        const matchesOutbidUser = Boolean(
+          effectiveUserId && (
+            data.outbidUserId === effectiveUserId ||
+            data.previousBidderId === effectiveUserId
+          )
+        );
+
+        if (matchesOutbidUser || !data.outbidUserId) {
+          const amount = data.newHighestBid ?? data.amount;
+          setNotification(`You were outbid! The new highest bid is ${amount} Credits`);
+          setTimeout(() => setNotification(null), 10000);
+        }
       });
 
       socketService.onAuctionEnded((data: any) => {
+        const effectiveUserId = getEffectiveUserId();
         setAuction(prev => ({
           ...prev,
           status: 'CLOSED',
           winnerId: data.winnerId
         }));
         setNotification(
-          data.winnerId === user?.id 
+          data.winnerId === effectiveUserId 
             ? 'Congratulations! You won the auction!' 
             : 'Auction has ended.'
         );
@@ -107,7 +134,7 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
       const response = await AuctionService.placeBid(auction.id, Number(bidAmount));
       setAuction(prev => ({
         ...prev,
-        currentHighestBid: response.currentHighestBid
+        currentHighestBid: Number(response.currentHighestBid)
       }));
       setBidAmount('');
     } catch (err: any) {
@@ -117,18 +144,32 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
     }
   };
 
-  const minNextBid = (auction.currentHighestBid || auction.startingBid) + (auction.currentHighestBid ? auction.minIncrement : 0);
+  const currentHighest = auction.currentHighestBid ? Number(auction.currentHighestBid) : null;
+  const startingBid = Number(auction.startingBid);
+  const minIncrement = Number(auction.minIncrement);
+  const minNextBid = (currentHighest ?? startingBid) + (currentHighest !== null ? minIncrement : 0);
   
   const isLive = auction.status === 'ACTIVE';
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 bg-surface">
-      {/* Left: Image */}
-      <div className="rounded-lg overflow-hidden border border-outline/20 bg-surface-container/50">
+      {/* Left: Artwork Presentation Frame */}
+      <div className="rounded-2xl overflow-hidden border border-outline/20 bg-surface-container-high/30 shadow-md flex items-center justify-center min-h-[360px] relative">
         <img
-          src={auction.artwork?.imageUrl || 'https://via.placeholder.com/600'}
-          alt={auction.artwork?.title}
-          className="w-full h-auto object-cover"
+          id="auction-artwork-image"
+          src={getArtworkImageUrl(
+            auction.artwork?.imageUrl ||
+              (auction as any).artwork?.image ||
+              (auction as any).imageUrl
+          )}
+          alt={auction.artwork?.title || 'Artwork'}
+          className="w-full h-auto max-h-[70vh] object-cover transition-transform duration-500 hover:scale-[1.02]"
+          onError={(e) => {
+            const target = e.currentTarget as HTMLImageElement;
+            if (target.src !== DEFAULT_ARTWORK_IMAGE) {
+              target.src = DEFAULT_ARTWORK_IMAGE;
+            }
+          }}
         />
       </div>
 
@@ -190,8 +231,7 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
               <input
                 id="bid-amount-input"
                 type="number"
-                min={minNextBid}
-                step={auction.minIncrement}
+                step="any"
                 placeholder={`Min: ${minNextBid} Credits`}
                 value={bidAmount}
                 onChange={(e) => setBidAmount(e.target.value)}
@@ -202,8 +242,8 @@ export const LiveAuctionView: React.FC<LiveAuctionViewProps> = ({ initialAuction
               <button
                 id="place-bid-btn"
                 type="submit"
-                disabled={isBidding || !user || user.role !== 'BUYER' || Number(bidAmount) < minNextBid}
-                className="bg-primary text-on-primary px-8 py-3 rounded text-sm font-semibold hover:bg-surface-tint disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                disabled={isBidding || !user || user.role !== 'BUYER'}
+                className="bg-primary text-on-primary px-8 py-3 rounded text-sm font-semibold hover:bg-surface-tint disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
                 {isBidding ? 'Placing...' : 'Place Bid'}
               </button>

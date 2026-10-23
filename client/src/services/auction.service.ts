@@ -102,4 +102,12 @@ export const AuctionService = {
     });
     return data.auction;
   },
+
+  getAllAuctions: async (status?: string): Promise<AuctionResponse[]> => {
+    const url = status ? `/api/auctions?status=${encodeURIComponent(status)}` : '/api/auctions';
+    const data = await request<{ auctions: AuctionResponse[] }>(url, {
+      method: 'GET',
+    });
+    return data.auctions;
+  },
 };

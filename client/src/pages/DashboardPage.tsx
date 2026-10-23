@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Wallet, Settings, ShoppingBag, Palette, Compass, ShieldCheck } from 'lucide-react';
+import { Wallet, Settings, ShoppingBag, Palette, Compass, ShieldCheck, Gavel } from 'lucide-react';
 import { CreateArtworkModal } from '../components/marketplace/CreateArtworkModal';
-import { CreateAuctionModal } from '../components/dashboard/CreateAuctionModal';
+import { CreateAuctionAdminModal } from '../components/admin/CreateAuctionAdminModal';
 import { SellerDashboardLayout } from '../components/dashboard/SellerDashboardLayout';
 import { BuyerDashboardView } from '../components/dashboard/BuyerDashboardView';
 import { TopUpCreditsModal } from '../components/wallet/TopUpCreditsModal';
@@ -22,7 +22,7 @@ export const DashboardPage: React.FC = () => {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [isLoadingArtworks, setIsLoadingArtworks] = useState(false);
 
-  const [isAuctionModalOpen, setIsAuctionModalOpen] = useState(false);
+  const [isAdminAuctionModalOpen, setIsAdminAuctionModalOpen] = useState(false);
   const [auctions, setAuctions] = useState<AuctionResponse[]>([]);
   const [isLoadingAuctions, setIsLoadingAuctions] = useState(false);
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
@@ -93,15 +93,6 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
-  const handleCreateAuction = async (data: any) => {
-    const newAuction = await AuctionService.createAuction(data);
-    setAuctions((prev) => [newAuction, ...prev]);
-    // Also update artwork availability to RESERVED in the local state
-    setArtworks((prev) =>
-      prev.map((a) => (a.id === newAuction.artworkId ? { ...a, availability: 'RESERVED' } : a))
-    );
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
       {user.role === 'ARTIST' ? (
@@ -114,7 +105,6 @@ export const DashboardPage: React.FC = () => {
           onDeleteArtwork={handleDeleteArtwork}
           auctions={auctions}
           isLoadingAuctions={isLoadingAuctions}
-          onOpenCreateAuctionModal={() => setIsAuctionModalOpen(true)}
         />
       ) : user.role === 'BUYER' ? (
         <BuyerDashboardView
@@ -149,7 +139,15 @@ export const DashboardPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                id="admin-open-create-auction-btn"
+                onClick={() => setIsAdminAuctionModalOpen(true)}
+                className="flex items-center gap-2 py-2.5 px-4 bg-primary text-on-primary text-xs font-semibold uppercase tracking-wider rounded-lg hover:bg-surface-tint transition-all shadow-xs cursor-pointer"
+              >
+                <Gavel className="w-4 h-4" />
+                <span>Schedule Live Auction</span>
+              </button>
               <Link
                 to="/setup"
                 id="dashboard-edit-profile-btn"
@@ -289,12 +287,13 @@ export const DashboardPage: React.FC = () => {
         artworkToEdit={editingArtwork}
       />
 
-      {user.role === 'ARTIST' && (
-        <CreateAuctionModal
-          isOpen={isAuctionModalOpen}
-          onClose={() => setIsAuctionModalOpen(false)}
-          artworks={artworks}
-          onSubmit={handleCreateAuction}
+      {user.role === 'ADMIN' && (
+        <CreateAuctionAdminModal
+          isOpen={isAdminAuctionModalOpen}
+          onClose={() => setIsAdminAuctionModalOpen(false)}
+          onAuctionCreated={(newAuction) => {
+            setAuctions((prev) => [newAuction, ...prev]);
+          }}
         />
       )}
 
