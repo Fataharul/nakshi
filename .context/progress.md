@@ -429,4 +429,29 @@
   - Verified live in browser with screenshot confirming "Wildflowers Sway" rendered with `SOLD` badge and accurate provenance metadata.
   - Both client and server production builds passed cleanly with 0 errors (`npm run build`).
 
+## [2026-10-23 14:52:00 +06:00] Milestone: Phases 4–6 Pull Requests Evaluated, Verified & Merged to main
+- **Completed**:
+  - **Phase 4 Integration (PR #30)**:
+    - Integrated Sharp 64-bit dHash perceptual duplicate detection pipeline and bitwise Hamming distance computation.
+    - Integrated automatic 80% threshold evaluation, flagging duplicate uploads into `PENDING_REVIEW` and excluding them from public marketplace search.
+    - Added `AdminModerationQueue.tsx` with side-by-side split-screen comparison, perceptual similarity score metrics, and administrator approve/reject workflows.
+    - Added backend `ModerationService`, `ModerationController`, and `/api/moderation` routes protected with RBAC (`ADMIN` only).
+  - **Phase 5 Integration (PR #31)**:
+    - Integrated public live auction exploration view (`AuctionsPage.tsx`) with status filters (`ALL`, `LIVE`, `UPCOMING`, `CLOSED`) and real-time tick-tock countdown timers.
+    - Integrated administrator auction creation modal (`CreateAuctionAdminModal.tsx`) restricted to platform administrators.
+    - Enhanced real-time WebSocket live auction view (`LiveAuctionView.tsx`) with bid increments, outbid socket notification, and automatic credit escrow refund.
+    - Realigned acceptance test suite `tests/acceptance/auction.test.ts` to reflect RBAC permissions and verified full suite passing.
+  - **Phase 6 Integration (PR #32)**:
+    - Integrated public virtual exhibitions catalog (`ExhibitionsPage.tsx`) with dynamic status badges (`Live Hall`, `VIP Preview`, `Upcoming`, `Concluded`).
+    - Integrated interactive multi-hall walkthrough room (`ExhibitionRoomPage.tsx`) supporting multi-wall navigation, curator spotlights, and ambient museum aesthetics.
+    - Integrated credit-based exhibition pass purchasing (`BuyTicketModal.tsx`) with collector wallet deduction and ticket token issuance.
+    - Added backend `ExhibitionService`, `ExhibitionController`, `/api/exhibitions` routes, and database seeding for Bengal folk tapestries, terracotta plaques, and royal Jamdani exhibitions.
+- **Verified**:
+  - **Backend Unit & Acceptance Tests**: 14 test suites, 138 tests passed with 0 failures (`npm --prefix server test`).
+  - **E2E Playwright Tests**:
+    - `e2e/06_duplicate_moderation.spec.ts`: 6/6 tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px.
+    - `e2e/04_live_auction.spec.ts`: 6/6 tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px.
+    - `e2e/05_exhibitions.spec.ts`: 12/12 tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px.
+  - **Production Builds**: Both `client` (`tsc -b && vite build`) and `server` (`tsc`) compiled with 0 errors.
+  - **Repository Synchronization**: Merged PR #30, PR #31, and PR #32 sequentially with 0 merge conflicts and pushed to remote `main` (`155c149`).
 
