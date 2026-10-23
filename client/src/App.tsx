@@ -11,6 +11,8 @@ import { MarketplacePage } from './pages/MarketplacePage';
 import { AuctionPage } from './pages/AuctionPage';
 import { AuctionsPage } from './pages/AuctionsPage';
 import { ArtworkDetailPage } from './pages/ArtworkDetailPage';
+import { ExhibitionsPage } from './pages/ExhibitionsPage';
+import { ExhibitionRoomPage } from './pages/ExhibitionRoomPage';
 
 const HomePage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -34,6 +36,13 @@ const HomePage: React.FC = () => {
           className="px-8 py-3.5 bg-primary text-on-primary font-semibold text-xs uppercase tracking-wider rounded-full hover:bg-surface-tint transition-all shadow-sm"
         >
           Explore Gallery
+        </Link>
+        <Link
+          to="/exhibitions"
+          id="home-explore-exhibitions-btn"
+          className="px-8 py-3.5 border border-outline/40 text-on-surface font-semibold text-xs uppercase tracking-wider rounded-full hover:bg-surface-container transition-all"
+        >
+          Virtual Exhibitions
         </Link>
         {isAuthenticated && user ? (
           <>
@@ -87,6 +96,9 @@ export const App: React.FC = () => {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/auctions" element={<AuctionsPage />} />
               <Route path="/auctions/:id" element={<AuctionPage />} />
+              <Route path="/exhibitions" element={<ExhibitionsPage />} />
+              <Route path="/exhibitions/:id" element={<ExhibitionRoomPage />} />
+              <Route path="/exhibitions/:id/room" element={<ExhibitionRoomPage />} />
 
               {/* Protected User Routes */}
               <Route
