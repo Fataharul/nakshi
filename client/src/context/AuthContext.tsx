@@ -36,11 +36,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const currentUser = await authApi.getMe();
       setUser(currentUser);
       setToken(currentToken);
-    } catch (err) {
-      console.warn('[AuthContext] Session expired or invalid token:', err);
-      clearStoredToken();
-      setUser(null);
-      setToken(null);
+    } catch (err: any) {
+      if (err?.status === 401 || err?.status === 403) {
+        console.warn('[AuthContext] Session expired or invalid token:', err);
+        clearStoredToken();
+        setUser(null);
+        setToken(null);
+      } else {
+        console.warn('[AuthContext] Backend server temporarily unreachable during session validation:', err);
+      }
     } finally {
       setIsLoading(false);
     }

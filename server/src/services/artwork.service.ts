@@ -1,6 +1,14 @@
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
 import { prisma } from '../config/prisma';
 import { CreateArtworkInput, UpdateArtworkInput, ArtworkQueryInput } from '../utils/artwork.validation';
 import { Role } from '@prisma/client';
+import {
+  generateDHash,
+  calculateSimilarityScore,
+  DEFAULT_SIMILARITY_THRESHOLD,
+} from '../utils/similarity.util';
 
 export class AppError extends Error {
   statusCode: number;
@@ -15,6 +23,71 @@ const DEFAULT_ARTWORK_IMAGE =
   'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=800&q=80';
 
 export class ArtworkService {
+  /**
+   * Resolves an image URL or local path to a Buffer for Sharp processing
+   */
+  private static async resolveImageBuffer(imageUrl: string): Promise<Buffer | null> {
+    if (!imageUrl || !imageUrl.trim()) return null;
+    const trimmed = imageUrl.trim();
+
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      try {
+        const res = await fetch(trimmed, { signal: AbortSignal.timeout(6000) });
+        if (res.ok) {
+          const arrayBuffer = await res.arrayBuffer();
+          return Buffer.from(arrayBuffer);
+        }
+      } catch {
+        // remote image fetch failed or timed out
+      }
+    }
+
+    if (trimmed.startsWith('/uploads/')) {
+      const relative = trimmed.replace(/^\/uploads\/?/, '');
+      const candidates = [
+        path.resolve(process.env.UPLOAD_DIR || './uploads', relative),
+        path.resolve('./server/uploads', relative),
+        path.resolve('.' + trimmed),
+        path.resolve('./server' + trimmed),
+        path.resolve(__dirname, '../../uploads', relative),
+        path.resolve(__dirname, '../../../uploads', relative),
+      ];
+      for (const candidate of candidates) {
+        if (fs.existsSync(candidate)) {
+          return fs.readFileSync(candidate);
+        }
+      }
+    }
+
+    if (fs.existsSync(trimmed)) {
+      return fs.readFileSync(trimmed);
+    }
+
+    return null;
+  }
+
+  /**
+   * Computes a 16-character hexadecimal dHash string from the image buffer,
+   * falling back to a deterministic 16-character hex hash if the image cannot be read.
+   */
+  private static async computeArtworkHash(imageUrl: string, precalculatedHash?: string | null): Promise<string> {
+    if (precalculatedHash && /^[0-9a-f]{16}$/i.test(precalculatedHash)) {
+      return precalculatedHash.toLowerCase();
+    }
+
+    try {
+      const buffer = await this.resolveImageBuffer(imageUrl);
+      if (buffer) {
+        return await generateDHash(buffer);
+      }
+    } catch (err) {
+      console.warn('[ArtworkService] generateDHash failed on image buffer:', err);
+    }
+
+    // Deterministic 16-hex fallback hash based on URL string so identical URLs match 100%
+    return crypto.createHash('md5').update(imageUrl || 'default-image').digest('hex').substring(0, 16);
+  }
+
   /**
    * Format Prisma Artwork record into standard JSON response object
    */
@@ -67,6 +140,7 @@ export class ArtworkService {
 
   /**
    * Creates a new artwork record for an authenticated ARTIST user.
+   * Performs perceptual duplicate detection using 64-bit dHash and Hamming distance.
    */
   public static async createArtwork(artistId: string, input: CreateArtworkInput) {
     // Verify artist exists and possesses ARTIST role
@@ -84,6 +158,56 @@ export class ArtworkService {
 
     const imageUrl = input.imageUrl && input.imageUrl.trim().length > 0 ? input.imageUrl.trim() : DEFAULT_ARTWORK_IMAGE;
 
+    // 1. Compute perceptual dHash for new artwork
+    const newHash = await this.computeArtworkHash(imageUrl, input.imageHash);
+
+    // 2. Query existing artworks with an imageHash to evaluate similarity
+    const existingArtworks = await prisma.artwork.findMany({
+      where: {
+        imageHash: { not: null },
+        moderationStatus: { not: 'REJECTED' },
+      },
+      select: {
+        id: true,
+        title: true,
+        imageUrl: true,
+        imageHash: true,
+      },
+    });
+
+    let maxSimilarity = 0;
+    let suspectedMatchId: string | null = null;
+
+    // Do not compare if user is using the default placeholder image
+    const isUsingPlaceholder = !input.imageUrl || input.imageUrl.trim() === DEFAULT_ARTWORK_IMAGE;
+
+    if (!isUsingPlaceholder) {
+      for (const existing of existingArtworks) {
+        // Do not match against listings that use the system default placeholder
+        if (existing.imageUrl === DEFAULT_ARTWORK_IMAGE) continue;
+
+        if (existing.imageHash && existing.imageHash.length === 16) {
+          try {
+            const score = calculateSimilarityScore(newHash, existing.imageHash);
+            if (score > maxSimilarity) {
+              maxSimilarity = score;
+              suspectedMatchId = existing.id;
+            }
+          } catch {
+            // skip invalid hash
+          }
+        }
+      }
+    }
+
+    // 3. Evaluate against 80% threshold
+    const threshold = process.env.SIMILARITY_THRESHOLD
+      ? parseFloat(process.env.SIMILARITY_THRESHOLD)
+      : DEFAULT_SIMILARITY_THRESHOLD;
+
+    const isDuplicate = !isUsingPlaceholder && maxSimilarity > threshold;
+    const moderationStatus = isDuplicate ? 'FLAGGED' : 'APPROVED';
+
     const artwork = await prisma.artwork.create({
       data: {
         artistId,
@@ -99,8 +223,9 @@ export class ArtworkService {
         weightUnit: input.weightUnit || 'kg',
         price: input.price,
         imageUrl,
+        imageHash: newHash,
         availability: input.availability || 'AVAILABLE',
-        moderationStatus: 'APPROVED',
+        moderationStatus,
       },
       include: {
         artist: {
@@ -115,18 +240,38 @@ export class ArtworkService {
       },
     });
 
+    // 4. If flagged as duplicate (> 80%), create ModerationReview record for Admin Review Queue
+    if (isDuplicate) {
+      await prisma.moderationReview.create({
+        data: {
+          sourceArtworkId: artwork.id,
+          suspectedMatchId,
+          similarityScore: maxSimilarity,
+          actionTaken: null,
+        },
+      });
+    }
+
     return this.formatArtwork(artwork);
   }
 
   /**
    * Retrieves all artworks filtered by optional query params: medium, style, search, minPrice, maxPrice, availability, pagination.
+   * By default, excludes unapproved / flagged / rejected listings from public browsing.
    */
   public static async getArtworks(query: ArtworkQueryInput) {
     const where: any = {};
 
+    if (!query.moderationStatus || query.moderationStatus === 'APPROVED') {
+      where.moderationStatus = 'APPROVED';
+    } else if (query.moderationStatus !== 'ALL') {
+      where.moderationStatus = query.moderationStatus;
+    }
+
     if (query.availability && query.availability !== 'ALL') {
       where.availability = query.availability;
     }
+
 
     if (query.medium && query.medium.trim() && query.medium !== 'ALL') {
       where.medium = {

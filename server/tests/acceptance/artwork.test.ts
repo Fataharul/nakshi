@@ -148,7 +148,7 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026 & T-038)', () =>
           weight: 1.25,
           weightUnit: 'kg',
           price: 850.0,
-          imageUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119',
+          imageUrl: 'https://images.unsplash.com/photo-1584905066893-7d5c142ba4e1',
           availability: 'AVAILABLE',
         }),
       });
@@ -564,6 +564,30 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026 & T-038)', () =>
   });
 
   afterAll(async () => {
+    try {
+      await prisma.moderationReview.deleteMany({
+        where: {
+          sourceArtwork: {
+            artist: {
+              email: { in: [artistUser.email, secondArtistUser.email, buyerUser.email] },
+            },
+          },
+        },
+      });
+      await prisma.artwork.deleteMany({
+        where: {
+          artist: {
+            email: { in: [artistUser.email, secondArtistUser.email, buyerUser.email] },
+          },
+        },
+      });
+      await prisma.user.deleteMany({
+        where: {
+          email: { in: [artistUser.email, secondArtistUser.email, buyerUser.email] },
+        },
+      });
+    } catch {}
+
     if (serverInstance) {
       await new Promise<void>((resolve) => {
         serverInstance.close(() => resolve());

@@ -62,6 +62,7 @@ export interface CreateArtworkPayload {
   weightUnit?: string;
   price: number;
   imageUrl?: string;
+  imageHash?: string;
   availability?: ArtworkAvailability;
 }
 
@@ -78,6 +79,7 @@ export interface UpdateArtworkPayload {
   weightUnit?: string;
   price?: number;
   imageUrl?: string;
+  imageHash?: string;
   availability?: ArtworkAvailability;
 }
 

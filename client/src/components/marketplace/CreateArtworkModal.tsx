@@ -199,12 +199,14 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
       }
 
       let finalImageUrl = imageUrl.trim();
+      let finalImageHash: string | undefined = undefined;
 
       // If artist selected a local file, upload it directly to Supabase S3 Storage
       if (selectedFile) {
         setUploadStatusText('Uploading image to Supabase Storage...');
         const uploadResult = await artworkApi.uploadImage(selectedFile);
         finalImageUrl = uploadResult.imageUrl;
+        finalImageHash = uploadResult.imageHash;
       }
 
       setUploadStatusText(artworkToEdit ? 'Updating artwork details...' : 'Saving artwork listing...');
@@ -223,6 +225,7 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
           weightUnit: weightUnit.trim() || 'kg',
           price: numericPrice,
           imageUrl: finalImageUrl || undefined,
+          imageHash: finalImageHash,
         };
 
         const updated = await artworkApi.updateArtwork(artworkToEdit.id, updatePayload);
@@ -246,11 +249,16 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
           weightUnit: weightUnit.trim() || 'kg',
           price: numericPrice,
           imageUrl: finalImageUrl || undefined,
+          imageHash: finalImageHash,
           availability: 'AVAILABLE',
         };
 
         const created = await artworkApi.createArtwork(createPayload);
-        setSuccess('Artwork record successfully published to your storefront!');
+        if (created.moderationStatus === 'FLAGGED') {
+          setSuccess('Artwork submitted. Note: Flagged for duplicate review (>80% similarity).');
+        } else {
+          setSuccess('Artwork record successfully published to your storefront!');
+        }
         onArtworkCreated?.(created);
       }
 
