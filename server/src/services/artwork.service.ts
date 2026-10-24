@@ -152,8 +152,8 @@ export class ArtworkService {
       throw new AppError('Artist user not found', 404);
     }
 
-    if (artist.role !== Role.ARTIST) {
-      throw new AppError('Only users with the ARTIST role are authorized to create artwork listings', 403);
+    if (artist.role !== Role.ARTIST && artist.role !== Role.ORGANIZER && artist.role !== Role.ADMIN) {
+      throw new AppError('Only users with the ARTIST or ORGANIZER role are authorized to create artwork listings', 403);
     }
 
     const imageUrl = input.imageUrl && input.imageUrl.trim().length > 0 ? input.imageUrl.trim() : DEFAULT_ARTWORK_IMAGE;

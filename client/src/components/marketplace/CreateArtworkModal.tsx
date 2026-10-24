@@ -69,10 +69,10 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
   const [success, setSuccess] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // Authorization checks: Must be an authenticated ARTIST and, if editing, must own the artwork listing
-  const isArtist = user?.role === 'ARTIST';
+  // Authorization checks: Must be an authenticated ARTIST, ORGANIZER, or ADMIN and, if editing, must own the artwork listing
+  const isAuthorizedRole = user?.role === 'ARTIST' || user?.role === 'ORGANIZER' || user?.role === 'ADMIN';
   const isOwner = artworkToEdit ? user?.id === artworkToEdit.artistId : true;
-  const isAuthorized = !!user && isArtist && isOwner;
+  const isAuthorized = !!user && isAuthorizedRole && isOwner;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -330,7 +330,7 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
           <div id="unauthorized-artwork-modal-banner" className="mb-4 p-3.5 bg-error-container/60 border border-error/20 text-error rounded text-xs flex items-center gap-2 font-medium">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>
-              403 Forbidden: Only the authentic storefront owner (verified artist) is permitted to add or edit artworks.
+              403 Forbidden: Only verified artists, organizers, or authentic owners are permitted to add or edit artworks.
             </span>
           </div>
         )}

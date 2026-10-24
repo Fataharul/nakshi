@@ -49,8 +49,14 @@ export class ExhibitionService {
   /**
    * Get all exhibitions for public browsing with dynamic status
    */
-  public static async getAll(filter?: { status?: string }) {
+  public static async getAll(filter?: { status?: string; organizerId?: string }) {
+    const where: any = {};
+    if (filter?.organizerId) {
+      where.organizerId = filter.organizerId;
+    }
+
     const exhibitions = await prisma.exhibition.findMany({
+      where,
       include: {
         organizer: {
           select: {
@@ -247,6 +253,22 @@ export class ExhibitionService {
       });
 
       if (input.artworkIds && input.artworkIds.length > 0) {
+        // Enforce that organizers can only showcase their own uploaded artworks
+        const ownedArtworks = await tx.artwork.findMany({
+          where: {
+            id: { in: input.artworkIds },
+            artistId: organizerId,
+          },
+          select: { id: true },
+        });
+
+        const ownedIds = new Set(ownedArtworks.map((a) => a.id));
+        const unownedIds = input.artworkIds.filter((id) => !ownedIds.has(id));
+
+        if (unownedIds.length > 0) {
+          throw new AppError('Organizers can only showcase their own uploaded artworks in their exhibitions', 400);
+        }
+
         for (let i = 0; i < input.artworkIds.length; i++) {
           await tx.exhibitionArtwork.create({
             data: {

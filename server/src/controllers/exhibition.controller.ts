@@ -5,7 +5,8 @@ export class ExhibitionController {
   public static async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const status = req.query.status as string | undefined;
-      const exhibitions = await ExhibitionService.getAll({ status });
+      const organizerId = req.query.organizerId as string | undefined;
+      const exhibitions = await ExhibitionService.getAll({ status, organizerId });
       res.status(200).json({ exhibitions });
     } catch (error) {
       next(error);
