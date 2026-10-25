@@ -6,6 +6,8 @@ import { CreateArtworkModal } from '../components/marketplace/CreateArtworkModal
 import { CreateAuctionAdminModal } from '../components/admin/CreateAuctionAdminModal';
 import { SellerDashboardLayout } from '../components/dashboard/SellerDashboardLayout';
 import { BuyerDashboardView } from '../components/dashboard/BuyerDashboardView';
+import { OrganizerDashboardView } from '../components/dashboard/OrganizerDashboardView';
+import { CreateExhibitionModal } from '../components/exhibition/CreateExhibitionModal';
 import { TopUpCreditsModal } from '../components/wallet/TopUpCreditsModal';
 import { AdminModerationQueue } from '../components/admin/AdminModerationQueue';
 import { artworkApi } from '../services/artwork.service';
@@ -25,23 +27,26 @@ export const DashboardPage: React.FC = () => {
   const [isAdminAuctionModalOpen, setIsAdminAuctionModalOpen] = useState(false);
   const [auctions, setAuctions] = useState<AuctionResponse[]>([]);
   const [isLoadingAuctions, setIsLoadingAuctions] = useState(false);
+  const [isExhibitionModalOpen, setIsExhibitionModalOpen] = useState(false);
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
 
   useEffect(() => {
-    if (user && user.role === 'ARTIST') {
+    if (user && (user.role === 'ARTIST' || user.role === 'ORGANIZER')) {
       setIsLoadingArtworks(true);
       artworkApi
         .getMyArtworks()
         .then((data) => setArtworks(data))
-        .catch((err) => console.error('Failed to load artist artworks:', err))
+        .catch((err) => console.error('Failed to load artworks:', err))
         .finally(() => setIsLoadingArtworks(false));
 
-      setIsLoadingAuctions(true);
-      AuctionService
-        .getMyAuctions()
-        .then((data) => setAuctions(data))
-        .catch((err) => console.error('Failed to load artist auctions:', err))
-        .finally(() => setIsLoadingAuctions(false));
+      if (user.role === 'ARTIST') {
+        setIsLoadingAuctions(true);
+        AuctionService
+          .getMyAuctions()
+          .then((data) => setAuctions(data))
+          .catch((err) => console.error('Failed to load artist auctions:', err))
+          .finally(() => setIsLoadingAuctions(false));
+      }
     }
   }, [user]);
 
@@ -105,6 +110,16 @@ export const DashboardPage: React.FC = () => {
           onDeleteArtwork={handleDeleteArtwork}
           auctions={auctions}
           isLoadingAuctions={isLoadingAuctions}
+        />
+      ) : user.role === 'ORGANIZER' ? (
+        <OrganizerDashboardView
+          user={user}
+          artworks={artworks}
+          isLoadingArtworks={isLoadingArtworks}
+          onOpenAddModal={handleOpenAddModal}
+          onOpenEditModal={handleOpenEditModal}
+          onDeleteArtwork={handleDeleteArtwork}
+          onOpenCreateExhibitionModal={() => setIsExhibitionModalOpen(true)}
         />
       ) : user.role === 'BUYER' ? (
         <BuyerDashboardView
@@ -247,7 +262,7 @@ export const DashboardPage: React.FC = () => {
                   Active Session
                 </span>
                 <h2 className="font-serif text-xl font-bold text-on-surface mb-2">
-                  Welcome to your {role || user.role.toLowerCase()} dashboard
+                  Welcome to your {role || (user.role as any)?.toLowerCase()} dashboard
                 </h2>
                 <p className="text-xs text-on-surface-variant leading-relaxed mb-6">
                   Your account is successfully authenticated with full Role-Based Access Control privileges. Browse available gallery pieces, participate in auctions, and manage your account seamlessly.
@@ -293,6 +308,20 @@ export const DashboardPage: React.FC = () => {
           onClose={() => setIsAdminAuctionModalOpen(false)}
           onAuctionCreated={(newAuction) => {
             setAuctions((prev) => [newAuction, ...prev]);
+          }}
+        />
+      )}
+
+      {user.role === 'ORGANIZER' && (
+        <CreateExhibitionModal
+          isOpen={isExhibitionModalOpen}
+          onClose={() => setIsExhibitionModalOpen(false)}
+          onExhibitionCreated={() => {
+            window.location.reload();
+          }}
+          onOpenUploadArtwork={() => {
+            setIsExhibitionModalOpen(false);
+            handleOpenAddModal();
           }}
         />
       )}

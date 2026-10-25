@@ -130,8 +130,12 @@ export interface ExhibitionRoomData {
 }
 
 export const ExhibitionService = {
-  getExhibitions: async (status?: string): Promise<Exhibition[]> => {
-    const url = status && status !== 'ALL' ? `/api/exhibitions?status=${encodeURIComponent(status)}` : '/api/exhibitions';
+  getExhibitions: async (status?: string, organizerId?: string): Promise<Exhibition[]> => {
+    const params = new URLSearchParams();
+    if (status && status !== 'ALL') params.append('status', status);
+    if (organizerId) params.append('organizerId', organizerId);
+    const qs = params.toString();
+    const url = qs ? `/api/exhibitions?${qs}` : '/api/exhibitions';
     const data = await request<{ exhibitions: Exhibition[] }>(url, {
       method: 'GET',
     });

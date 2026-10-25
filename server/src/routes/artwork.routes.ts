@@ -6,13 +6,13 @@ import { uploadSingleImage } from '../middleware/upload.middleware';
 
 const router = Router();
 
-// Protected Artist routes (require authentication + ARTIST role)
-router.post('/upload', authenticateJWT, requireRoles(Role.ARTIST), uploadSingleImage.single('image'), ArtworkController.uploadImage);
-router.post('/', authenticateJWT, requireRoles(Role.ARTIST), ArtworkController.create);
-router.put('/:id', authenticateJWT, requireRoles(Role.ARTIST), ArtworkController.update);
-router.patch('/:id', authenticateJWT, requireRoles(Role.ARTIST), ArtworkController.update);
-router.delete('/:id', authenticateJWT, requireRoles(Role.ARTIST), ArtworkController.delete);
-router.get('/my-artworks', authenticateJWT, requireRoles(Role.ARTIST), ArtworkController.getMyArtworks);
+// Protected creator routes (require authentication + ARTIST, ORGANIZER, or ADMIN role)
+router.post('/upload', authenticateJWT, requireRoles(Role.ARTIST, Role.ORGANIZER, Role.ADMIN), uploadSingleImage.single('image'), ArtworkController.uploadImage);
+router.post('/', authenticateJWT, requireRoles(Role.ARTIST, Role.ORGANIZER, Role.ADMIN), ArtworkController.create);
+router.put('/:id', authenticateJWT, requireRoles(Role.ARTIST, Role.ORGANIZER, Role.ADMIN), ArtworkController.update);
+router.patch('/:id', authenticateJWT, requireRoles(Role.ARTIST, Role.ORGANIZER, Role.ADMIN), ArtworkController.update);
+router.delete('/:id', authenticateJWT, requireRoles(Role.ARTIST, Role.ORGANIZER, Role.ADMIN), ArtworkController.delete);
+router.get('/my-artworks', authenticateJWT, requireRoles(Role.ARTIST, Role.ORGANIZER, Role.ADMIN), ArtworkController.getMyArtworks);
 
 // Public / general artwork routes
 router.get('/', ArtworkController.getAll);

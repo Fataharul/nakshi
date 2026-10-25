@@ -213,7 +213,57 @@ async function main() {
   });
 
   if (organizer) {
-    const artworks = await prisma.artwork.findMany({ take: 6 });
+    // Seed organizer-owned artworks so exhibitions feature the organizer's own collection
+    const organizerHeritageArtworks = [
+      {
+        title: 'Sonargaon Heirloom Nakshi Kantha Quilt',
+        medium: 'Nakshi Kantha',
+        style: 'Traditional Folk',
+        description: 'Multi-layered antique quilt embroidered with traditional lotus mandala and rural folklore narratives.',
+        price: 550.0,
+        imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+        availability: 'AVAILABLE' as const,
+        moderationStatus: 'APPROVED' as const,
+      },
+      {
+        title: 'Ancient Mahasthangarh Red Silt Plaque',
+        medium: 'Terracotta Clay',
+        style: 'Sculptural & Relic',
+        description: 'Hand-carved temple architectural motif depicting tree of life in natural kiln-fired clay.',
+        price: 420.0,
+        imageUrl: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=800&q=80',
+        availability: 'AVAILABLE' as const,
+        moderationStatus: 'APPROVED' as const,
+      },
+      {
+        title: 'Imperial Jamdani Nilambari Drape',
+        medium: 'Handloom Jamdani',
+        style: 'Royal Heritage',
+        description: 'Indigo-dyed fine muslin hand-loomed with silver-gilt floral jaldar designs from Rupganj.',
+        price: 1100.0,
+        imageUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=800&q=80',
+        availability: 'AVAILABLE' as const,
+        moderationStatus: 'APPROVED' as const,
+      },
+    ];
+
+    for (const art of organizerHeritageArtworks) {
+      const existingArt = await prisma.artwork.findFirst({
+        where: { title: art.title },
+      });
+      if (!existingArt) {
+        await prisma.artwork.create({
+          data: {
+            ...art,
+            artistId: organizer.id,
+          },
+        });
+      }
+    }
+
+    const artworks = await prisma.artwork.findMany({
+      where: { artistId: organizer.id },
+    });
     const now = new Date();
 
     const demoExhibitions = [
@@ -287,6 +337,36 @@ async function main() {
           });
         }
         console.log(`[Seed] Created demo exhibition: ${exh.title}`);
+      } else {
+        // Refresh timing windows so demo/e2e states remain valid
+        await prisma.exhibition.update({
+          where: { id: existing.id },
+          data: {
+            startTime: exh.startTime,
+            endTime: exh.endTime,
+            vipStartTime: exh.vipStartTime,
+            vipEndTime: exh.vipEndTime,
+          },
+        });
+
+        // Ensure organizer-owned artworks are attached
+        const existingExhArtworks = await prisma.exhibitionArtwork.findMany({
+          where: { exhibitionId: existing.id },
+        });
+        if (existingExhArtworks.length === 0 && artworks.length > 0) {
+          for (let i = 0; i < artworks.length; i++) {
+            await prisma.exhibitionArtwork.create({
+              data: {
+                exhibitionId: existing.id,
+                artworkId: artworks[i].id,
+                wallPosition: i + 1,
+                posX: (i % 3) * 30 + 15,
+                posY: Math.floor(i / 3) * 40 + 20,
+              },
+            });
+          }
+        }
+        console.log(`[Seed] Refreshed demo exhibition: ${exh.title}`);
       }
     }
   }
