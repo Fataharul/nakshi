@@ -452,6 +452,16 @@
     - `e2e/06_duplicate_moderation.spec.ts`: 6/6 tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px.
     - `e2e/04_live_auction.spec.ts`: 6/6 tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px.
     - `e2e/05_exhibitions.spec.ts`: 12/12 tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px.
-  - **Production Builds**: Both `client` (`tsc -b && vite build`) and `server` (`tsc`) compiled with 0 errors.
-  - **Repository Synchronization**: Merged PR #30, PR #31, and PR #32 sequentially with 0 merge conflicts and pushed to remote `main` (`155c149`).
 
+## [2026-10-26 01:36:00 +06:00] Milestone: Remote Pull Requests Evaluated; PR #33 Integrated into main
+- **Completed**:
+  - Evaluated remote pull requests on `fataharul/nakshi`:
+    - **PR #29** (`Feature/t 049 bid submission`): Evaluated and identified as unmergeable due to merge conflicts and full obsolescence (superseded by Phase 5 live auctions already in `main`).
+    - **PR #33** (`enable organizer artwork upload and exhibition creation` by `@sadiyaseba`): Verified clean mergeability, valid role-based exhibition validation, and complete test suite coverage.
+  - Merged PR #33 into `main` (`Merge pull request #33 from fataharul/phase-6-exhibitions-part-works`).
+  - Added `OrganizerDashboardView.tsx` and `CreateExhibitionModal.tsx` for organizer-curated exhibitions.
+  - Allowed `ORGANIZER` role to upload artworks and verified validation preventing inclusion of unowned artworks in exhibitions.
+- **Verified**:
+  - `server`: 15 test suites, 142 unit & acceptance tests passed (`npm --prefix server test`).
+  - `client`: Production bundle build succeeded cleanly (`npm run --prefix client build`).
+  - `server`: TypeScript compilation passed cleanly (`npm run --prefix server build`).
