@@ -475,3 +475,12 @@
     - `GET /api/exhibitions/:id/analytics` (owner ORGANIZER or ADMIN only).
   - Ticket revenue is derived from persisted `EXHIBITION_TICKET` credit transactions, not fabricated values.
 - **Pending**: Client-side visit heartbeat in `ExhibitionRoomPage.tsx` (T-081) and report UI (T-083).
+
+## [2026-10-29 HH:MM:00 +06:00] Milestone: Ticket T-083 — Exhibition Analytics Report Interface Implemented
+- **Completed**:
+  - Added `ExhibitionAnalyticsReport` component showing visitor traffic, average viewing time, tickets sold and ticket revenue.
+  - Added protected page `/dashboard/organizer/exhibitions/:id/analytics` (ORGANIZER and ADMIN only).
+  - Added `getExhibitionAnalytics` client method and `formatDuration` helper.
+  - Added "Analytics" button on organizer exhibition cards.
+  - Report shows an empty-state note instead of fabricated values when no visits are recorded.
+- **Verified**: Playwright `e2e/10_exhibition_analytics.spec.ts`, client production build.
