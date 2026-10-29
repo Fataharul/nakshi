@@ -1,4 +1,5 @@
 import { getStoredToken } from './auth.service';
+import { ExhibitionAnalytics } from '../types/exhibitionAnalytics';
 
 const API_BASE_URL = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:5000';
 
@@ -171,5 +172,12 @@ export const ExhibitionService = {
       body: JSON.stringify(payload),
     });
     return data.exhibition;
+  },
+    getExhibitionAnalytics: async (exhibitionId: string): Promise<ExhibitionAnalytics> => {
+    const data = await request<{ analytics: ExhibitionAnalytics }>(
+      `/api/exhibitions/${exhibitionId}/analytics`,
+      { method: 'GET' }
+    );
+    return data.analytics;
   },
 };
