@@ -3,6 +3,7 @@ import { ExhibitionController } from '../controllers/exhibition.controller';
 import { authenticateJWT, requireRoles } from '../middleware/auth.middleware';
 import { Role } from '@prisma/client';
 import { AuthService } from '../services/auth.service';
+import { ExhibitionAnalyticsController } from '../controllers/exhibition-analytics.controller';
 
 const router = Router();
 
@@ -39,5 +40,17 @@ router.post('/:id/ticket', authenticateJWT, ExhibitionController.purchaseTicket)
 
 // Enter Exhibition Virtual Room
 router.get('/:id/room', optionalJWT, ExhibitionController.getRoom);
+
+// Exhibition visit tracking (T-081 foundation for viewing time)
+router.post('/:id/visits', optionalJWT, ExhibitionAnalyticsController.startVisit);
+router.post('/:id/visits/:visitId/heartbeat', optionalJWT, ExhibitionAnalyticsController.heartbeat);
+
+// Exhibition analytics: average viewing time and ticket revenue (T-082)
+router.get(
+  '/:id/analytics',
+  authenticateJWT,
+  requireRoles(Role.ORGANIZER, Role.ADMIN),
+  ExhibitionAnalyticsController.getAnalytics
+);
 
 export default router;
