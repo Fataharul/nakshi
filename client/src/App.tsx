@@ -13,6 +13,7 @@ import { AuctionsPage } from './pages/AuctionsPage';
 import { ArtworkDetailPage } from './pages/ArtworkDetailPage';
 import { ExhibitionsPage } from './pages/ExhibitionsPage';
 import { ExhibitionRoomPage } from './pages/ExhibitionRoomPage';
+import { ExhibitionAnalyticsPage } from './pages/ExhibitionAnalyticsPage';
 
 const HomePage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -122,6 +123,14 @@ export const App: React.FC = () => {
                 element={
                   <ProtectedRoute>
                     <DashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/organizer/exhibitions/:id/analytics"
+                element={
+                  <ProtectedRoute allowedRoles={['ORGANIZER', 'ADMIN']}>
+                    <ExhibitionAnalyticsPage />
                   </ProtectedRoute>
                 }
               />
