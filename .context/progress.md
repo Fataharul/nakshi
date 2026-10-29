@@ -465,3 +465,22 @@
   - `server`: 15 test suites, 142 unit & acceptance tests passed (`npm --prefix server test`).
   - `client`: Production bundle build succeeded cleanly (`npm run --prefix client build`).
   - `server`: TypeScript compilation passed cleanly (`npm run --prefix server build`).
+
+  ## [2026-10-29 HH:MM:00 +06:00] Milestone: Ticket T-082 — Exhibition Average Viewing Time & Ticket Revenue Calculation Implemented
+- **Completed**:
+  - Added `ExhibitionVisit` Prisma model to record per-visit viewing time (foundation for T-081).
+  - Added `exhibition-analytics.util.ts` helpers: `calculateAverageViewingTime` and `calculateTicketRevenue` (cent-based sums).
+  - Added `ExhibitionAnalyticsService`, controller and routes:
+    - `POST /api/exhibitions/:id/visits` and `POST /api/exhibitions/:id/visits/:visitId/heartbeat` (idle gaps capped at 90s).
+    - `GET /api/exhibitions/:id/analytics` (owner ORGANIZER or ADMIN only).
+  - Ticket revenue is derived from persisted `EXHIBITION_TICKET` credit transactions, not fabricated values.
+- **Pending**: Client-side visit heartbeat in `ExhibitionRoomPage.tsx` (T-081) and report UI (T-083).
+
+## [2026-10-29 HH:MM:00 +06:00] Milestone: Ticket T-083 — Exhibition Analytics Report Interface Implemented
+- **Completed**:
+  - Added `ExhibitionAnalyticsReport` component showing visitor traffic, average viewing time, tickets sold and ticket revenue.
+  - Added protected page `/dashboard/organizer/exhibitions/:id/analytics` (ORGANIZER and ADMIN only).
+  - Added `getExhibitionAnalytics` client method and `formatDuration` helper.
+  - Added "Analytics" button on organizer exhibition cards.
+  - Report shows an empty-state note instead of fabricated values when no visits are recorded.
+- **Verified**: Playwright `e2e/10_exhibition_analytics.spec.ts`, client production build.
