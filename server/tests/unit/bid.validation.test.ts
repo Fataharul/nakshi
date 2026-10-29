@@ -12,3 +12,4 @@ describe('T-049 Bid Submission — boundary values', () => {
     expect(!min.inclusive && amount > min.amount).toBe(false);
   });
 });
+
