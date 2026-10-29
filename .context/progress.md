@@ -465,3 +465,13 @@
   - `server`: 15 test suites, 142 unit & acceptance tests passed (`npm --prefix server test`).
   - `client`: Production bundle build succeeded cleanly (`npm run --prefix client build`).
   - `server`: TypeScript compilation passed cleanly (`npm run --prefix server build`).
+
+  ## [2026-10-29 HH:MM:00 +06:00] Milestone: Ticket T-082 — Exhibition Average Viewing Time & Ticket Revenue Calculation Implemented
+- **Completed**:
+  - Added `ExhibitionVisit` Prisma model to record per-visit viewing time (foundation for T-081).
+  - Added `exhibition-analytics.util.ts` helpers: `calculateAverageViewingTime` and `calculateTicketRevenue` (cent-based sums).
+  - Added `ExhibitionAnalyticsService`, controller and routes:
+    - `POST /api/exhibitions/:id/visits` and `POST /api/exhibitions/:id/visits/:visitId/heartbeat` (idle gaps capped at 90s).
+    - `GET /api/exhibitions/:id/analytics` (owner ORGANIZER or ADMIN only).
+  - Ticket revenue is derived from persisted `EXHIBITION_TICKET` credit transactions, not fabricated values.
+- **Pending**: Client-side visit heartbeat in `ExhibitionRoomPage.tsx` (T-081) and report UI (T-083).
