@@ -12,6 +12,7 @@ import {
   ArrowRight,
   Sparkles,
   Crown,
+  BarChart3,
 } from 'lucide-react';
 import { User } from '../../types/auth';
 import { Artwork } from '../../types/artwork';
@@ -366,18 +367,29 @@ export const OrganizerDashboardView: React.FC<OrganizerDashboardViewProps> = ({
                         </div>
                       </div>
 
-                      <div className="pt-3 border-t border-outline/10 flex items-center justify-between">
+                      <div className="pt-3 border-t border-outline/10 flex items-center justify-between gap-2 flex-wrap">
                         <span className="text-[11px] text-on-surface-variant">
                           {new Date(exh.startTime).toLocaleDateString()}
                         </span>
 
-                        <Link
-                          to={`/exhibitions/${exh.id}`}
-                          className="px-4 py-2 rounded-lg bg-primary text-on-primary text-xs font-semibold uppercase tracking-wider hover:bg-surface-tint transition-all shadow-xs flex items-center gap-1"
-                        >
-                          <span>Enter Hall</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </Link>
+                                                <div className="flex items-center gap-2">
+                          <Link
+                            to={`/dashboard/organizer/exhibitions/${exh.id}/analytics`}
+                            id={`exhibition-analytics-btn-${exh.id}`}
+                            className="px-3 py-2 rounded-lg border border-outline/30 text-on-surface text-xs font-semibold uppercase tracking-wider hover:bg-surface-container transition-all flex items-center gap-1"
+                          >
+                            <BarChart3 className="w-3.5 h-3.5" />
+                            <span>Analytics</span>
+                          </Link>
+
+                          <Link
+                            to={`/exhibitions/${exh.id}`}
+                            className="px-4 py-2 rounded-lg bg-primary text-on-primary text-xs font-semibold uppercase tracking-wider hover:bg-surface-tint transition-all shadow-xs flex items-center gap-1"
+                          >
+                            <span>Enter Hall</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>
