@@ -484,3 +484,15 @@
   - Added "Analytics" button on organizer exhibition cards.
   - Report shows an empty-state note instead of fabricated values when no visits are recorded.
 - **Verified**: Playwright `e2e/10_exhibition_analytics.spec.ts`, client production build.
+
+## [2026-11-02 20:15:00 +06:00] Milestone: PR #34 & PR #35 Integrated into main; Conflicted PR #29 Closed
+- **Completed**:
+  - Evaluated unmerged pull requests on remote repository `fataharul/nakshi`:
+    - **PR #29** (`feature/T-049-bid-submission`): Evaluated and identified as unmergeable due to extensive conflicts in auction routes, controllers, and services with Phase 5 live auctions. Remote head branch deleted to close PR #29 as superseded.
+    - **PR #34** (`feature/t-082-exhibition-analytics`): Cleanly integrated into `main`. Implemented exhibition visit tracking, capped heartbeats, and average viewing time & ticket revenue calculation.
+    - **PR #35** (`feature/t-083-exhibition-analytics-report`): Cleanly integrated into `main`. Added frontend `ExhibitionAnalyticsReport.tsx` component, protected `/dashboard/organizer/exhibitions/:id/analytics` route, analytics navigation trigger on exhibition cards, and Playwright E2E coverage.
+  - Safely synchronized database schema in Supabase PostgreSQL by provisioning the `ExhibitionVisit` table, indexes, and cascade foreign key constraints.
+- **Verified**:
+  - **Server Test Suite**: All 18 Vitest test suites (156 unit and acceptance tests) passed with 0 failures (`npm --prefix server test`).
+  - **Server Production Build**: TypeScript compiled cleanly with 0 errors (`npm --prefix server run build`).
+  - **Client Production Build**: Vite bundle compiled cleanly with 0 errors (`npm --prefix client run build`).
