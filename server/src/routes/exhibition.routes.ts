@@ -41,6 +41,9 @@ router.post('/:id/ticket', authenticateJWT, ExhibitionController.purchaseTicket)
 // Enter Exhibition Virtual Room
 router.get('/:id/room', optionalJWT, ExhibitionController.getRoom);
 
+// Validate Ticket Token
+router.post('/:id/validate-ticket', optionalJWT, ExhibitionController.validateTicket);
+
 // Exhibition visit tracking (T-081 foundation for viewing time)
 router.post('/:id/visits', optionalJWT, ExhibitionAnalyticsController.startVisit);
 router.post('/:id/visits/:visitId/heartbeat', optionalJWT, ExhibitionAnalyticsController.heartbeat);

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import {
   ExhibitionService,
   ExhibitionDetail,
   ExhibitionArtworkDetail,
+  ExhibitionTicket,
 } from '../services/exhibition.service';
 import { getArtworkImageUrl, DEFAULT_ARTWORK_IMAGE } from '../utils/image.util';
 import { BuyTicketModal } from '../components/exhibition/BuyTicketModal';
@@ -24,6 +25,7 @@ import {
 
 export const ExhibitionRoomPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
 
   const [exhibition, setExhibition] = useState<ExhibitionDetail | null>(null);
@@ -33,6 +35,12 @@ export const ExhibitionRoomPage: React.FC = () => {
   const [isTicketModalOpen, setIsTicketModalOpen] = useState<boolean>(false);
   const [spotlightArtwork, setSpotlightArtwork] = useState<ExhibitionArtworkDetail | null>(null);
   const [now, setNow] = useState<Date>(new Date());
+
+  const [tokenInput, setTokenInput] = useState<string>('');
+  const [isValidatingToken, setIsValidatingToken] = useState<boolean>(false);
+  const [tokenError, setTokenError] = useState<string | null>(null);
+  const [tokenSuccess, setTokenSuccess] = useState<string | null>(null);
+  const [validatedTicket, setValidatedTicket] = useState<ExhibitionTicket | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -57,6 +65,40 @@ export const ExhibitionRoomPage: React.FC = () => {
   useEffect(() => {
     loadExhibition();
   }, [id, user?.id]);
+
+  const handleValidateToken = async (overrideToken?: string) => {
+    const token = (overrideToken ?? tokenInput).trim();
+    if (!token || !id) {
+      setTokenError('Please enter a ticket token to validate.');
+      return;
+    }
+    try {
+      setIsValidatingToken(true);
+      setTokenError(null);
+      setTokenSuccess(null);
+      const res = await ExhibitionService.validateTicket(id, token);
+      setValidatedTicket({
+        id: res.ticket.id,
+        ticketToken: res.ticket.ticketToken,
+        isVip: res.ticket.isVip,
+        purchasedAt: res.ticket.purchasedAt,
+      });
+      setTokenSuccess('Ticket pass verified! Access to virtual gallery hall granted.');
+    } catch (err: any) {
+      setTokenError(err.message || 'Invalid or mismatched ticket token.');
+    } finally {
+      setIsValidatingToken(false);
+    }
+  };
+
+  // Auto-validate ticket if passed in query string ?token=...
+  useEffect(() => {
+    const urlToken = searchParams.get('token');
+    if (urlToken && id && !validatedTicket && !exhibition?.userTicket) {
+      setTokenInput(urlToken);
+      handleValidateToken(urlToken);
+    }
+  }, [searchParams, id, exhibition?.userTicket]);
 
   if (loading) {
     return (
@@ -88,10 +130,11 @@ export const ExhibitionRoomPage: React.FC = () => {
   }
 
   // Check access permissions
+  const activeTicket = exhibition.userTicket || validatedTicket;
   const isOrganizer = user?.id === exhibition.organizer.id || user?.role === 'ADMIN';
   const isFree = Number(exhibition.ticketPrice) === 0;
-  const hasTicket = Boolean(exhibition.userTicket) || isOrganizer || isFree;
-  const isTicketVip = exhibition.userTicket?.isVip || isOrganizer;
+  const hasTicket = Boolean(activeTicket) || isOrganizer || isFree;
+  const isTicketVip = activeTicket?.isVip || isOrganizer;
 
   // Check VIP window
   const isVipWindowActive = Boolean(
@@ -154,7 +197,7 @@ export const ExhibitionRoomPage: React.FC = () => {
                 ) : (
                   <>
                     <CheckCircle2 className="w-3.5 h-3.5 text-status-valid" />
-                    <span>Pass: {exhibition.userTicket?.ticketToken || 'Complimentary'}</span>
+                    <span>Pass: {activeTicket?.ticketToken || 'Complimentary'}</span>
                   </>
                 )}
               </div>
@@ -237,23 +280,82 @@ export const ExhibitionRoomPage: React.FC = () => {
               </div>
 
               {/* Admission Pass Trigger Card */}
-              <div className="md:col-span-5 bg-surface-container-low p-6 rounded-2xl border border-outline/20 text-center">
-                <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3">
-                  <Ticket className="w-6 h-6" />
-                </div>
-                <h4 className="font-serif font-bold text-lg text-on-surface mb-1">Reserve Your Access</h4>
-                <p className="text-xs text-on-surface-variant mb-6">
-                  Unlock the virtual 3D gallery walls, inspect high-res artisan textiles, and examine provenance.
-                </p>
+              <div className="md:col-span-5 bg-surface-container-low p-6 rounded-2xl border border-outline/20 text-center flex flex-col justify-between">
+                <div>
+                  <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3">
+                    <Ticket className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-serif font-bold text-lg text-on-surface mb-1">Reserve Your Access</h4>
+                  <p className="text-xs text-on-surface-variant mb-6">
+                    Unlock the virtual 3D gallery walls, inspect high-res artisan textiles, and examine provenance.
+                  </p>
 
-                <button
-                  id="unlock-exhibition-ticket-btn"
-                  onClick={() => setIsTicketModalOpen(true)}
-                  className="w-full py-3.5 bg-primary text-on-primary font-semibold text-xs uppercase tracking-wider rounded-xl hover:bg-surface-tint transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Ticket className="w-4 h-4" />
-                  <span>Get Exhibition Pass</span>
-                </button>
+                  <button
+                    id="unlock-exhibition-ticket-btn"
+                    onClick={() => setIsTicketModalOpen(true)}
+                    className="w-full py-3.5 bg-primary text-on-primary font-semibold text-xs uppercase tracking-wider rounded-xl hover:bg-surface-tint transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Ticket className="w-4 h-4" />
+                    <span>Get Exhibition Pass</span>
+                  </button>
+                </div>
+
+                {/* Ticket Token Validation Gate */}
+                <div id="enter-ticket-token-section" className="mt-6 pt-6 border-t border-outline/15 text-left">
+                  <label htmlFor="ticket-token-input" className="block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-1.5">
+                    Already have a Ticket Token?
+                  </label>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      id="ticket-token-input"
+                      type="text"
+                      placeholder="e.g. NK-EXH-2026-..."
+                      value={tokenInput}
+                      onChange={(e) => {
+                        setTokenInput(e.target.value);
+                        if (tokenError) setTokenError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleValidateToken();
+                        }
+                      }}
+                      className="flex-1 px-3.5 py-2.5 rounded-xl border border-outline/30 bg-surface text-on-surface text-xs font-mono placeholder:text-on-surface-variant/50 focus:outline-hidden focus:border-primary focus:ring-1 focus:ring-primary"
+                    />
+                    <button
+                      id="validate-ticket-token-btn"
+                      type="button"
+                      disabled={isValidatingToken || !tokenInput.trim()}
+                      onClick={() => handleValidateToken()}
+                      className="px-4 py-2.5 bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-xs font-semibold uppercase tracking-wider rounded-xl border border-outline/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+                    >
+                      {isValidatingToken ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                          <span>Verifying...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                          <span>Verify Token</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  {tokenError && (
+                    <div id="ticket-validation-error" className="mt-2.5 p-2.5 rounded-lg bg-error/10 border border-error/20 text-error text-xs flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{tokenError}</span>
+                    </div>
+                  )}
+                  {tokenSuccess && (
+                    <div id="ticket-validation-success" className="mt-2.5 p-2.5 rounded-lg bg-status-valid/10 border border-status-valid/20 text-status-valid text-xs flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      <span>{tokenSuccess}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -466,6 +568,7 @@ export const ExhibitionRoomPage: React.FC = () => {
         exhibition={exhibition}
         onTicketPurchased={(ticket) => {
           setExhibition((prev) => (prev ? { ...prev, userTicket: ticket } : prev));
+          setValidatedTicket(ticket);
         }}
       />
     </div>

@@ -297,5 +297,24 @@
 - **Rationale**:
   - Provides administrators with deep provenance inspection to distinguish authentic folk variations from fraudulent duplicates.
   - Maintains a complete, verifiable audit trail of every moderation decision taken.
-
-
+## 25. Exhibition Ticket Token Validation & Entry Gate Hardening Architecture
+- **Timestamp**: 2026-11-02 22:15:00 +06:00
+- **Context**: Virtual exhibitions require robust admission control preventing ticket forgery, token cross-reuse, unauthorized viewing prior to schedule opening, or VIP bypass during restricted collector previews (Requirements 2.6, 3.6).
+- **Decision**:
+  - Implement dedicated backend ticket validation endpoint `POST /api/exhibitions/:id/validate-ticket` accepting `{ ticketToken: string }`:
+    - Strict exhibition hall matching (`ticket.exhibitionId === exhibitionId`), preventing tokens generated for Exhibition A from unlocking Exhibition B with 400 Bad Request.
+    - Schedule opening check (`now < exhibition.startTime`), blocking visitor entry before the exhibition viewing period opens with 403 Forbidden (with curator bypass allowing organizers to inspect halls prior to opening).
+    - Schedule conclusion check (`now > exhibition.endTime`), returning 400 Bad Request once viewing periods end.
+    - VIP viewing window enforcement (`now >= vipStartTime && now <= vipEndTime`), requiring VIP tier tickets and rejecting general admission tickets with 403 Forbidden until the VIP preview concludes.
+  - Harden `ExhibitionService.getRoom` against cross-exhibition token injection, replacing unconstrained token search with strict `findUnique` matching and schedule start validation.
+  - Enhance `ExhibitionRoomPage.tsx` Foyer Reception with:
+    - Dedicated ticket token verification section (`#enter-ticket-token-section`, `#ticket-token-input`, `#validate-ticket-token-btn`).
+    - Inline error banner (`#ticket-validation-error`) and success banner (`#ticket-validation-success`).
+    - Seamless auto-validation via URL query parameter `?token=...` allowing immediate hall unlock on direct invite links.
+    - State synchronization between purchase modal and foyer pass resolver.
+  - Add comprehensive test suites:
+    - 9 backend acceptance tests in `server/tests/acceptance/exhibition_ticket_validation.test.ts`.
+    - 6 responsive E2E tests in `e2e/05_exhibition_tickets.spec.ts` (Desktop Chrome, Tablet 768px, and Mobile 360px).
+- **Rationale**:
+  - Enforces mathematical security and access integrity for ticketed cultural exhibitions.
+  - Guarantees seamless guest entry via token input or direct pass links without compromising VIP exclusivity or exhibition schedules.

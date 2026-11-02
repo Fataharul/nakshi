@@ -556,5 +556,31 @@
   - **Server Production Build**: TypeScript compiled cleanly with 0 errors (`npm --prefix server run build`).
   - **Client Production Build**: Vite production bundle compiled cleanly with 0 errors (`npm --prefix client run build`).
   - **Playwright E2E Suite**: 6/6 tests passed in `e2e/06_duplicate_moderation.spec.ts` across Desktop Chrome, Tablet 768px, and Mobile 360px viewports.
-
-
+## [2026-11-02 22:20:00 +06:00] Milestone: Exhibition Ticket Token Validation & Entry Gate Hardening Implemented & Verified
+- **Completed**:
+  - **Backend Ticket Token Validation Endpoint**:
+    - Added `POST /api/exhibitions/:id/validate-ticket` endpoint in `server/src/routes/exhibition.routes.ts` and `ExhibitionController.validateTicket`.
+    - Implemented `ExhibitionService.validateTicket`:
+      - Strict exhibition matching (`ticket.exhibitionId === exhibitionId`), preventing cross-exhibition token reuse.
+      - Schedule start window check (`now < exhibition.startTime`), blocking visitor entry before the exhibition viewing period opens with 403 Forbidden (with curator bypass allowing organizers to inspect halls prior to opening).
+      - Schedule conclusion check (`now > exhibition.endTime`), returning 400 Bad Request once viewing periods end.
+      - VIP viewing window enforcement (`now >= vipStartTime && now <= vipEndTime`), requiring VIP tier tickets and rejecting general admission tickets with 403 Forbidden until the VIP preview concludes.
+  - **Hardened Virtual Room Entry**:
+    - Updated `ExhibitionService.getRoom` to reject cross-exhibition tokens and enforce schedule opening checks.
+  - **Frontend Foyer Ticket Token Verification Gate**:
+    - Updated `client/src/pages/ExhibitionRoomPage.tsx` Foyer Reception with:
+      - Ticket token verification section (`#enter-ticket-token-section`, `#ticket-token-input`, `#validate-ticket-token-btn`).
+      - Inline error banner (`#ticket-validation-error`) and success banner (`#ticket-validation-success`).
+      - URL query parameter auto-validation (`?token=...`), immediately unlocking the virtual hall on direct ticket token invite links.
+      - Refined `BuyTicketModal.tsx` lifecycle with `useRef` to guarantee clean state transitions for subsequent pass upgrades.
+  - **Client API Service Integration**:
+    - Added `ExhibitionService.validateTicket` and `TicketValidationResponse` in `client/src/services/exhibition.service.ts`.
+  - **Acceptance & E2E Test Suites**:
+    - Created `server/tests/acceptance/exhibition_ticket_validation.test.ts` with 9 automated tests covering valid tokens, missing tokens, malformed tokens, cross-exhibition reuse, pre-opening restrictions, concluded schedules, and VIP window enforcement.
+    - Implemented `e2e/05_exhibition_tickets.spec.ts` testing ticket token purchase, copying, incognito session verification, inline error reporting on invalid token, guest unlocking via token input, direct query parameter auto-unlock, and VIP window access upgrade.
+- **Verified**:
+  - **Server Full Test Suite**: 20 test files, 186 unit and acceptance tests passed with 0 failures (`npm --prefix server test`).
+  - **Server Production Build**: TypeScript compiled cleanly with 0 errors (`npm --prefix server run build`).
+  - **Client Production Build**: Vite production bundle compiled cleanly with 0 errors (`npm --prefix client run build`).
+  - **Playwright E2E Ticket Validation Suite**: 6/6 tests passed in `e2e/05_exhibition_tickets.spec.ts` across Desktop Chrome, Tablet 768px, and Mobile 360px viewports.
+  - **Playwright E2E Regression Suite**: 12/12 tests passed in `e2e/05_exhibitions.spec.ts` across all responsive viewports.

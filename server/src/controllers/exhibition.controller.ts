@@ -57,4 +57,16 @@ export class ExhibitionController {
       next(error);
     }
   }
+
+  public static async validateTicket(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const exhibitionId = req.params.id as string;
+      const ticketToken = (req.body.ticketToken || req.query.token || req.headers['x-ticket-token']) as string;
+      const currentUserId = (req as any).user?.id;
+      const result = await ExhibitionService.validateTicket(exhibitionId, ticketToken, currentUserId);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

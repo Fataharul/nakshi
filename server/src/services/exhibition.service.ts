@@ -456,6 +456,7 @@ export class ExhibitionService {
     }
 
     const now = new Date();
+    const start = new Date(exhibition.startTime);
     const end = new Date(exhibition.endTime);
 
     // If exhibition has closed
@@ -481,9 +482,22 @@ export class ExhibitionService {
     }
 
     if (!isOrganizer && !ticket && ticketToken) {
-      ticket = await prisma.exhibitionTicket.findUnique({
-        where: { ticketToken },
+      const cleanToken = ticketToken.trim();
+      const foundTicket = await prisma.exhibitionTicket.findUnique({
+        where: { ticketToken: cleanToken },
       });
+      if (!foundTicket) {
+        throw new AppError('Invalid exhibition ticket token.', 403);
+      }
+      if (foundTicket.exhibitionId !== exhibitionId) {
+        throw new AppError('Ticket is not valid for this exhibition hall.', 403);
+      }
+      ticket = foundTicket;
+    }
+
+    // Check exhibition opening schedule (organizers may preview before opening)
+    if (now < start && !isOrganizer) {
+      throw new AppError('This exhibition has not opened yet', 403);
     }
 
     // Free exhibition allows all users without a ticket
@@ -532,6 +546,111 @@ export class ExhibitionService {
         : isOrganizer
         ? { ticketToken: 'CURATOR-ACCESS', isVip: true, purchasedAt: new Date() }
         : { ticketToken: 'COMPLIMENTARY-PASS', isVip: false, purchasedAt: new Date() },
+    };
+  }
+
+  /**
+   * Validate a ticket token for exhibition entry
+   */
+  public static async validateTicket(exhibitionId: string, ticketToken: string, currentUserId?: string) {
+    if (!ticketToken || typeof ticketToken !== 'string' || !ticketToken.trim()) {
+      throw new AppError('Ticket token is required', 400);
+    }
+
+    const trimmedToken = ticketToken.trim();
+
+    const exhibition = await prisma.exhibition.findUnique({
+      where: { id: exhibitionId },
+      include: {
+        organizer: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+
+    if (!exhibition) {
+      throw new AppError('Exhibition not found', 404);
+    }
+
+    let isOrganizer = false;
+    if (currentUserId) {
+      const user = await prisma.user.findUnique({ where: { id: currentUserId } });
+      if (user && (user.id === exhibition.organizerId || user.role === Role.ADMIN)) {
+        isOrganizer = true;
+      }
+    }
+
+    const ticket = await prisma.exhibitionTicket.findUnique({
+      where: { ticketToken: trimmedToken },
+      include: {
+        buyer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!ticket) {
+      throw new AppError('Invalid exhibition ticket token. Please verify your token and try again.', 404);
+    }
+
+    // Strict exhibition mismatch check
+    if (ticket.exhibitionId !== exhibitionId) {
+      throw new AppError('Ticket is not valid for this exhibition hall. Cross-exhibition pass reuse is strictly disallowed.', 400);
+    }
+
+    const now = new Date();
+    const start = new Date(exhibition.startTime);
+    const end = new Date(exhibition.endTime);
+
+    // Schedule window checks
+    if (now < start && !isOrganizer) {
+      throw new AppError(`Exhibition has not opened yet. Viewing schedule opens at ${start.toISOString()}.`, 403);
+    }
+
+    if (now > end && !isOrganizer) {
+      throw new AppError('This exhibition has concluded its viewing schedule.', 400);
+    }
+
+    // VIP window check
+    let isVipActive = false;
+    if (exhibition.vipStartTime && exhibition.vipEndTime) {
+      const vipStart = new Date(exhibition.vipStartTime);
+      const vipEnd = new Date(exhibition.vipEndTime);
+
+      if (now >= vipStart && now <= vipEnd) {
+        isVipActive = true;
+        if (!isOrganizer && !ticket.isVip) {
+          throw new AppError('The hall is currently reserved for VIP Collectors Pass holders. General admission opens following the VIP window.', 403);
+        }
+      }
+    }
+
+    return {
+      valid: true,
+      accessGranted: true,
+      ticket: {
+        id: ticket.id,
+        ticketToken: ticket.ticketToken,
+        isVip: ticket.isVip,
+        purchasedAt: ticket.purchasedAt,
+        buyer: {
+          id: ticket.buyer.id,
+          name: ticket.buyer.name,
+        },
+      },
+      exhibition: {
+        id: exhibition.id,
+        title: exhibition.title,
+        isVipActive,
+      },
     };
   }
 }

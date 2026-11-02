@@ -130,6 +130,26 @@ export interface ExhibitionRoomData {
   };
 }
 
+export interface TicketValidationResponse {
+  valid: boolean;
+  accessGranted: boolean;
+  ticket: {
+    id: string;
+    ticketToken: string;
+    isVip: boolean;
+    purchasedAt: string;
+    buyer?: {
+      id: string;
+      name: string;
+    };
+  };
+  exhibition: {
+    id: string;
+    title: string;
+    isVipActive: boolean;
+  };
+}
+
 export const ExhibitionService = {
   getExhibitions: async (status?: string, organizerId?: string): Promise<Exhibition[]> => {
     const params = new URLSearchParams();
@@ -157,6 +177,13 @@ export const ExhibitionService = {
     });
   },
 
+  validateTicket: async (exhibitionId: string, ticketToken: string): Promise<TicketValidationResponse> => {
+    return request<TicketValidationResponse>(`/api/exhibitions/${exhibitionId}/validate-ticket`, {
+      method: 'POST',
+      body: JSON.stringify({ ticketToken }),
+    });
+  },
+
   getExhibitionRoom: async (exhibitionId: string, ticketToken?: string): Promise<ExhibitionRoomData> => {
     const url = ticketToken
       ? `/api/exhibitions/${exhibitionId}/room?token=${encodeURIComponent(ticketToken)}`
@@ -173,7 +200,7 @@ export const ExhibitionService = {
     });
     return data.exhibition;
   },
-    getExhibitionAnalytics: async (exhibitionId: string): Promise<ExhibitionAnalytics> => {
+  getExhibitionAnalytics: async (exhibitionId: string): Promise<ExhibitionAnalytics> => {
     const data = await request<{ analytics: ExhibitionAnalytics }>(
       `/api/exhibitions/${exhibitionId}/analytics`,
       { method: 'GET' }

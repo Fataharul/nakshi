@@ -168,6 +168,14 @@ npm run dev
   - `GET /api/moderation/queue` — Retrieve all flagged artwork listings in the moderation review queue with comparative analysis (`ADMIN` role).
   - `POST /api/moderation/:id/review` — Administratively approve or reject a flagged artwork listing (`ADMIN` role).
   - `POST /api/moderation/:id/flag` — Explicitly flag a listing and route it to the administrator review queue with notes (`ADMIN` role).
+- **Virtual Exhibitions (`/api/exhibitions`)**:
+  - `GET /api/exhibitions` — Public browse of virtual exhibitions with dynamic status filtering (`ACTIVE`, `VIP_EXCLUSIVE`, `UPCOMING`, `CLOSED`).
+  - `POST /api/exhibitions` — Create new virtual curation with custom walls, schedule, and owned artworks (`ORGANIZER` / `ADMIN` role).
+  - `GET /api/exhibitions/:id` — Exhibition curation details, schedule windows, and user admission pass status.
+  - `POST /api/exhibitions/:id/ticket` — Reserve and purchase an exhibition pass (General or VIP) using internal credits.
+  - `POST /api/exhibitions/:id/validate-ticket` — Validate ticket token against exhibition schedule, VIP preview window, and strict hall matching.
+  - `GET /api/exhibitions/:id/room` — Enter interactive 3D virtual walkthrough hall with ticket token or complimentary pass.
+  - `GET /api/exhibitions/:id/analytics` — Engagement metrics, average viewing time, and ticket revenue (`ORGANIZER` / `ADMIN` role).
 
 ---
 
