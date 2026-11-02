@@ -27,8 +27,8 @@ export class OrderService {
         throw new AppError('Artwork not found', 404);
       }
 
-      if (artwork.moderationStatus === 'REJECTED') {
-        throw new AppError('This artwork has been rejected by moderation and cannot be purchased', 400);
+      if (artwork.moderationStatus !== 'APPROVED') {
+        throw new AppError('This artwork is not approved for purchase', 400);
       }
 
       if (artwork.availability !== 'AVAILABLE') {

@@ -252,7 +252,7 @@
 
 
 
-## 21. Exhibition Viewing Time Tracking & Real-Time Heartbeat Architecture
+## 22. Exhibition Viewing Time Tracking & Real-Time Heartbeat Architecture
 - **Timestamp**: 2026-11-02 20:15:00 +06:00
 - **Context**: Ticket T-082 (BL-025) and T-083 require computing and displaying exhibition engagement metrics (average viewing time, visitor count, tickets sold, and ticket revenue) without inflated figures or floating-point financial drift.
 - **Decision**:
@@ -263,3 +263,20 @@
 - **Rationale**:
   - Ensures accurate, tamper-resistant virtual exhibition performance analytics for organizers.
   - Aligns with the platform's internal credit ledger consistency model.
+
+## 23. Strict Artwork Purchase Guard & Automated Moderation Verification Suite
+- **Timestamp**: 2026-11-02 20:35:00 +06:00
+- **Context**: In addition to public search filtering, platform transactions (order checkout and auction creation) must strictly disallow listings in `FLAGGED` or `REJECTED` states. Verification tests must exercise the 80% similarity threshold boundary, dynamic thresholds, failure-safe fallback, multi-module listing visibility, and review queue lifecycles.
+- **Decision**:
+  - Update `OrderService.checkout` to reject any artwork where `moderationStatus !== 'APPROVED'` (blocking both `FLAGGED` and `REJECTED` artworks with 400 Bad Request).
+  - Implement acceptance test suite `server/tests/acceptance/threshold_visibility_queue.test.ts` with 14 automated tests covering:
+    - Exact 80% boundary math (<=80% similarity approved, >80% flagged).
+    - Dynamic similarity threshold (`SIMILARITY_THRESHOLD`) override.
+    - Failure-safe handling: corrupt or broken image uploads fail safely into `FLAGGED` status and review queue rather than silent approval.
+    - Listing visibility across marketplace browse, full-text search, and craft medium filters.
+    - Purchase checkout and auction creation blocking for flagged listings.
+    - Full admin review lifecycle: approval restoring public browse & purchase eligibility, rejection permanently preventing purchase, and manual routing (`POST /api/moderation/:id/flag`).
+- **Rationale**:
+  - Guarantees complete end-to-end integrity between moderation status and transaction workflows.
+  - Prevents race conditions or direct API calls from acquiring unmoderated or flagged listings.
+

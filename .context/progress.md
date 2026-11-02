@@ -515,3 +515,20 @@
   - **Backend Acceptance Tests**: 15 test suites, 146 unit & acceptance tests passed with 0 failures (`npm --prefix server test`).
   - **E2E Playwright Tests**: 6/6 tests passed in `e2e/06_duplicate_moderation.spec.ts` across Desktop Chrome, Tablet 768px, and Mobile 360px viewports.
   - **Production Builds**: `npm --prefix server run build` and `npm --prefix client run build` both succeeded with 0 errors.
+
+## [2026-11-02 20:40:00 +06:00] Milestone: Threshold Handling, Listing Visibility, and Queue Routing Acceptance Tests Verified
+- **Completed**:
+  - **Purchase Guard Hardening**:
+    - Updated `OrderService.checkout` in `server/src/services/order.service.ts` to strictly require `artwork.moderationStatus === 'APPROVED'`. Any purchase attempts on `FLAGGED` or `REJECTED` listings are immediately rejected with HTTP 400 (`Artwork is not approved for purchase`).
+  - **Comprehensive Acceptance Test Suite**:
+    - Created `server/tests/acceptance/threshold_visibility_queue.test.ts` (14 automated acceptance tests):
+      1. *Threshold Boundary & Dynamic Configuration*: Tests boundary conditions (<=80% similarity marked `APPROVED`, >80% marked `FLAGGED`), dynamically configured thresholds (`SIMILARITY_THRESHOLD`), and failure-safe image processing (invalid or broken image payloads fail gracefully into `FLAGGED` status and review queue rather than silent bypass).
+      2. *Listing Visibility Across Marketplace*: Verifies `FLAGGED` and `REJECTED` listings are excluded from public gallery browsing (`GET /api/artworks`), keyword search (`GET /api/artworks?search=...`), and craft medium/style filters (`GET /api/artworks?medium=...`).
+      3. *Purchase & Auction Guarding*: Validates that fixed-price checkout (`POST /api/orders/checkout`) and auction creation (`POST /api/auctions`) return HTTP 400 for unapproved listings.
+      4. *Admin Queue Routing & Decision Lifecycle*: Verifies `GET /api/moderation/queue` RBAC and split-screen comparison metadata, administrative approval restoring marketplace visibility and purchase eligibility, administrative rejection permanently preventing purchase, and manual listing routing (`POST /api/moderation/:id/flag`).
+- **Verified**:
+  - **Server Full Test Suite**: 19 test files, 174 unit and acceptance tests passed with 0 failures (`npm --prefix server test`).
+  - **Server Production Build**: TypeScript compiled cleanly with 0 errors (`npm --prefix server run build`).
+  - **Client Production Build**: Vite bundle compiled cleanly with 0 errors (`npm --prefix client run build`).
+  - **Playwright E2E Suite**: 6/6 tests passed in `e2e/06_duplicate_moderation.spec.ts` across Desktop Chrome, Tablet 768px, and Mobile 360px viewports.
+
