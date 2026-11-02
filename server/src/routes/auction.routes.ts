@@ -1,17 +1,35 @@
 import { Router } from 'express';
-import { Role } from '@prisma/client';
 import { AuctionController } from '../controllers/auction.controller';
 import { authenticateJWT, requireRoles } from '../middleware/auth.middleware';
+import { Role } from '@prisma/client';
 
 const router = Router();
 
-// Place a bid on an auction (Authenticated BUYER only)
-router.post('/:id/bid', authenticateJWT, requireRoles(Role.BUYER), AuctionController.placeBid);
+// Artist routes for managing their own auctions
+router.post(
+  '/',
+  authenticateJWT,
+  requireRoles(Role.ARTIST),
+  AuctionController.create
+);
 
-// Create an auction (ADMIN only)
-router.post('/', authenticateJWT, requireRoles(Role.ADMIN), AuctionController.create);
+router.get(
+  '/my',
+  authenticateJWT,
+  requireRoles(Role.ARTIST),
+  AuctionController.getMyAuctions
+);
 
-// Get auction details and bids
-router.get('/:id', AuctionController.getById);
+// Bidding route (authenticated users can bid)
+router.post(
+  '/:id/bid',
+  authenticateJWT,
+  AuctionController.placeBid
+);
+
+router.get(
+  '/:id',
+  AuctionController.getById
+);
 
 export default router;

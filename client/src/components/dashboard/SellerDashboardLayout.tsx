@@ -1,27 +1,33 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AuctionResponse } from '../../services/auction.service';
 import {
   Palette,
   Wallet,
   Settings,
   Plus,
+  Edit,
+  Trash2,
   Package,
-  TrendingUp,
-  ShoppingBag,
-  DollarSign,
-  PackageCheck,
   CheckCircle2,
   Sparkles,
   Layers,
+  Gavel,
 } from 'lucide-react';
 import { User } from '../../types/auth';
 import { Artwork } from '../../types/artwork';
+import { SellerMetricsView } from './SellerMetricsView';
 
 interface SellerDashboardLayoutProps {
   user: User;
   artworks: Artwork[];
   isLoadingArtworks: boolean;
   onOpenAddModal: () => void;
+  onOpenEditModal?: (artwork: Artwork) => void;
+  onDeleteArtwork?: (id: string) => void;
+  auctions?: AuctionResponse[];
+  isLoadingAuctions?: boolean;
+  onOpenCreateAuctionModal?: () => void;
 }
 
 export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
@@ -29,6 +35,11 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
   artworks,
   isLoadingArtworks,
   onOpenAddModal,
+  onOpenEditModal,
+  onDeleteArtwork,
+  auctions = [],
+  isLoadingAuctions = false,
+  onOpenCreateAuctionModal,
 }) => {
   const [selectedFilter, setSelectedFilter] = useState<string>('ALL');
 
@@ -37,9 +48,6 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
     if (selectedFilter === 'ALL') return true;
     return artwork.availability === selectedFilter;
   });
-
-  const availableCount = artworks.filter((a) => a.availability === 'AVAILABLE').length;
-  const soldCount = artworks.filter((a) => a.availability === 'SOLD').length;
 
   return (
     <div id="seller-dashboard-container" className="space-y-8">
@@ -101,6 +109,18 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
               </div>
             </div>
 
+            {/* Create Auction Button */}
+            {user.isVerified && onOpenCreateAuctionModal && (
+              <button
+                id="create-auction-btn"
+                onClick={onOpenCreateAuctionModal}
+                className="px-5 py-3 bg-surface-container hover:bg-surface-container-high text-on-surface font-semibold text-xs uppercase tracking-wider rounded-full border border-outline/20 transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer shrink-0"
+              >
+                <Gavel className="w-4 h-4 text-primary" />
+                <span>Create Auction</span>
+              </button>
+            )}
+
             {/* Add Artwork Button */}
             <button
               id="add-artwork-btn"
@@ -115,99 +135,7 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
       </div>
 
       {/* 2. Sales & Performance Metrics Layout */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="font-serif text-xl font-bold text-on-surface flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              <span>Studio Performance & Sales Overview</span>
-            </h2>
-            <p className="text-xs text-on-surface-variant mt-0.5">
-              Key indicators for your digital storefront and craft revenue.
-            </p>
-          </div>
-          <span className="text-[11px] uppercase tracking-wider font-medium text-on-surface-variant bg-surface-container px-3 py-1 rounded-full border border-outline/20">
-            Real-time Metrics
-          </span>
-        </div>
-
-        {/* 4 KPI Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Metric 1: Total Revenue */}
-          <div className="bg-surface-container-lowest p-5 rounded-xl border border-outline/20 ambient-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs uppercase tracking-wider font-semibold text-on-surface-variant">
-                Total Revenue
-              </span>
-              <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                <TrendingUp className="w-4 h-4" />
-              </div>
-            </div>
-            <div id="metric-total-revenue" className="font-serif font-bold text-2xl text-on-surface">
-              0.00 <span className="text-xs font-sans font-normal text-on-surface-variant">Credits</span>
-            </div>
-            <p className="text-[11px] text-on-surface-variant/80 mt-1">
-              Gross credits earned from completed sales
-            </p>
-          </div>
-
-          {/* Metric 2: Total Orders */}
-          <div className="bg-surface-container-lowest p-5 rounded-xl border border-outline/20 ambient-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs uppercase tracking-wider font-semibold text-on-surface-variant">
-                Total Orders
-              </span>
-              <div className="p-2 rounded-lg bg-secondary/10 text-secondary">
-                <ShoppingBag className="w-4 h-4 text-primary" />
-              </div>
-            </div>
-            <div id="metric-total-orders" className="font-serif font-bold text-2xl text-on-surface">
-              0
-            </div>
-            <p className="text-[11px] text-on-surface-variant/80 mt-1">
-              Successful customer orders completed
-            </p>
-          </div>
-
-          {/* Metric 3: Average Order Value */}
-          <div className="bg-surface-container-lowest p-5 rounded-xl border border-outline/20 ambient-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs uppercase tracking-wider font-semibold text-on-surface-variant">
-                Avg. Order Value
-              </span>
-              <div className="p-2 rounded-lg bg-tertiary/10 text-tertiary">
-                <DollarSign className="w-4 h-4 text-primary" />
-              </div>
-            </div>
-            <div id="metric-avg-order-value" className="font-serif font-bold text-2xl text-on-surface">
-              0.00 <span className="text-xs font-sans font-normal text-on-surface-variant">Credits</span>
-            </div>
-            <p className="text-[11px] text-on-surface-variant/80 mt-1">
-              Average revenue per artwork purchase
-            </p>
-          </div>
-
-          {/* Metric 4: Active Inventory */}
-          <div className="bg-surface-container-lowest p-5 rounded-xl border border-outline/20 ambient-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs uppercase tracking-wider font-semibold text-on-surface-variant">
-                Active Inventory
-              </span>
-              <div className="p-2 rounded-lg bg-surface-container text-on-surface-variant">
-                <PackageCheck className="w-4 h-4" />
-              </div>
-            </div>
-            <div id="metric-active-listings" className="font-serif font-bold text-2xl text-on-surface">
-              {artworks.length} <span className="text-xs font-sans font-normal text-on-surface-variant">Listings</span>
-            </div>
-            <div className="flex items-center gap-2 text-[11px] text-on-surface-variant/80 mt-1">
-              <span>{availableCount} Available</span>
-              <span>•</span>
-              <span>{soldCount} Sold</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <SellerMetricsView />
 
       {/* 3. Main Studio Grid: Storefront & Studio Information Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -321,12 +249,38 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
                       </div>
 
                       <div className="flex items-center justify-between border-t border-outline/10 pt-3 mt-auto">
-                        <span className="text-[11px] text-on-surface-variant uppercase tracking-wider font-medium">
-                          Listing Price
-                        </span>
-                        <span className="font-serif font-bold text-sm text-primary">
-                          {artwork.price.toFixed(2)} Credits
-                        </span>
+                        <div>
+                          <span className="text-[10px] text-on-surface-variant uppercase tracking-wider block font-medium">
+                            Listing Price
+                          </span>
+                          <span className="font-serif font-bold text-sm text-primary">
+                            {artwork.price.toFixed(2)} Credits
+                          </span>
+                        </div>
+                        {user.role === 'ARTIST' && user.id === artwork.artistId && (
+                          <div className="flex items-center gap-2">
+                            {onOpenEditModal && (
+                              <button
+                                id={`edit-artwork-btn-${artwork.id}`}
+                                onClick={() => onOpenEditModal(artwork)}
+                                className="px-3 py-1.5 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-medium rounded border border-outline/20 flex items-center gap-1.5 transition-colors cursor-pointer"
+                              >
+                                <Edit className="w-3.5 h-3.5 text-primary" />
+                                <span>Edit Listing</span>
+                              </button>
+                            )}
+                            {onDeleteArtwork && (
+                              <button
+                                id={`delete-artwork-btn-${artwork.id}`}
+                                onClick={() => onDeleteArtwork(artwork.id)}
+                                className="px-2 py-1.5 bg-error-container/20 hover:bg-error-container/40 text-error text-xs font-medium rounded border border-error/20 flex items-center gap-1.5 transition-colors cursor-pointer"
+                                title="Delete Listing"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -396,6 +350,121 @@ export const SellerDashboardLayout: React.FC<SellerDashboardLayoutProps> = ({
             </ul>
           </div>
         </div>
+      </div>
+
+      {/* 4. My Auctions Section */}
+      <div className="bg-surface-container-lowest rounded-xl ambient-shadow p-6 sm:p-8 border border-outline/20 mt-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-outline/10">
+          <div>
+            <span className="text-[11px] uppercase tracking-widest font-semibold text-primary block mb-1">
+              Auction Management
+            </span>
+            <h2 className="font-serif text-xl sm:text-2xl font-bold text-on-surface flex items-center gap-2">
+              <Gavel className="w-5 h-5 text-primary" />
+              <span>My Auctions</span>
+              <span className="text-xs font-sans font-normal text-on-surface-variant px-2.5 py-0.5 rounded-full bg-surface-container">
+                {auctions.length}
+              </span>
+            </h2>
+          </div>
+        </div>
+
+        {isLoadingAuctions ? (
+          <div className="text-center py-12 text-xs text-on-surface-variant flex flex-col items-center justify-center gap-2">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span>Loading your auctions...</span>
+          </div>
+        ) : auctions.length === 0 ? (
+          <div
+            id="no-auctions-banner"
+            className="text-center py-12 px-6 bg-surface-container-low rounded-lg border border-dashed border-outline/30"
+          >
+            <Gavel className="w-10 h-10 text-on-surface-variant mx-auto mb-3 opacity-50" />
+            <h3 className="font-serif text-lg font-bold text-on-surface mb-1">
+              No Auctions Scheduled
+            </h3>
+            <p className="text-xs text-on-surface-variant max-w-md mx-auto mb-5 leading-relaxed">
+              Verified artisans can schedule exclusive live bidding events for eligible available artworks.
+            </p>
+            {user.isVerified && onOpenCreateAuctionModal && (
+              <button
+                onClick={onOpenCreateAuctionModal}
+                className="px-5 py-2.5 bg-primary text-on-primary font-semibold text-xs uppercase tracking-wider rounded-full hover:bg-surface-tint transition-all inline-flex items-center gap-2 shadow-sm cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Create First Auction</span>
+              </button>
+            )}
+          </div>
+        ) : (
+          <div id="auctions-list" className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-outline/10 text-xs uppercase tracking-wider text-on-surface-variant">
+                  <th className="py-3 px-4 font-semibold">Artwork</th>
+                  <th className="py-3 px-4 font-semibold">Status</th>
+                  <th className="py-3 px-4 font-semibold">Starting Bid</th>
+                  <th className="py-3 px-4 font-semibold">Current Bid</th>
+                  <th className="py-3 px-4 font-semibold">Schedule</th>
+                  <th className="py-3 px-4"></th>
+                </tr>
+              </thead>
+              <tbody className="text-sm">
+                {auctions.map((auction) => (
+                  <tr key={auction.id} className="border-b border-outline/10 hover:bg-surface-container/30 transition-colors">
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        {auction.artwork?.imageUrl && (
+                          <div className="w-10 h-10 rounded overflow-hidden shrink-0 bg-surface-container-high">
+                            <img src={auction.artwork.imageUrl} alt={auction.artwork.title} className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-serif font-bold text-on-surface">{auction.artwork?.title || 'Unknown'}</p>
+                          <p className="text-xs text-on-surface-variant">{auction.artwork?.medium || ''}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase ${
+                          auction.status === 'UPCOMING'
+                            ? 'bg-primary-container/20 text-primary border border-primary/20'
+                            : auction.status === 'ACTIVE'
+                            ? 'bg-status-valid/10 text-status-valid border border-status-valid/20'
+                            : 'bg-surface-container-high text-on-surface-variant border border-outline/20'
+                        }`}
+                      >
+                        {auction.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 font-serif font-semibold text-primary">
+                      {auction.startingBid.toFixed(2)} ৳
+                    </td>
+                    <td className="py-3 px-4 font-serif font-semibold text-primary">
+                      {auction.currentHighestBid ? `${auction.currentHighestBid.toFixed(2)} ৳` : '-'}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="text-xs text-on-surface-variant space-y-0.5">
+                        <p><span className="font-medium text-on-surface">Start:</span> {new Date(auction.startTime).toLocaleString()}</p>
+                        <p><span className="font-medium text-on-surface">End:</span> {new Date(auction.endTime).toLocaleString()}</p>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <Link 
+                        id={`view-live-auction-btn-${auction.id}`}
+                        to={`/auctions/${auction.id}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-on-primary text-[10px] font-semibold uppercase tracking-wider rounded border border-primary hover:bg-surface-tint transition-colors"
+                      >
+                        View Live
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

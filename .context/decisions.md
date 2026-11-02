@@ -140,3 +140,50 @@
 
 
 
+
+
+## 13. Authenticated Google Account Linking
+- **Timestamp**: 2026-09-30 21:35:00 +06:00
+- **Context**: Users originally logging in with an email/password needed the ability to manually link a Google account for subsequent seamless logins, without creating parallel duplicate accounts.
+- **Decision**: 
+  - Expose a specialized `POST /api/auth/link-google` endpoint requiring active JWT (`authenticateJWT`).
+  - Introduce a UI component in `AccountSetupPage.tsx` that leverages `@react-oauth/google` merely to produce an `idToken`, avoiding the standard sign-in flow.
+  - Explicitly fail the link operation (HTTP 409 Conflict) if the provided Google ID is already tied to a distinct user record.
+- **Rationale**: 
+  - Prevents credential hopping between accounts while granting users the flexibility to transition to single-sign-on (SSO) securely.
+
+## 14. Auction Creation & Management for Verified Artists
+- **Timestamp**: 2026-10-02 14:45:00 +06:00
+- **Context**: Allowing verified artisans to list exclusive live bidding events for eligible artworks, avoiding complex frontend polling by strictly enforcing auction integrity through backend Prisma validations.
+- **Decision**:
+  - Introduce an `Auction` Prisma model tracking status (`UPCOMING`, `ACTIVE`, `ENDED`, `CANCELLED`), starting/highest bids, and time constraints.
+  - Enforce atomic transaction safety in the backend: Creating an auction reserves the artwork (`availability = RESERVED`) mitigating race conditions around concurrent sales.
+  - UI logic explicitly evaluates `isVerified` from the backend to ensure RBAC is strictly applied.
+  - Centralize logic in `AuctionService` and integrate directly into the `SellerDashboardLayout` alongside static artworks for a consolidated inventory view.
+- **Rationale**:
+  - Satisfies verified-only creation business rules cleanly using RBAC.
+  - Database acts as the single source of truth for auction timelines and eligibility constraints, preventing timezone or clock manipulation exploits.
+
+## 15. Transactional Auction Bid Submission & Wallet Logic
+- **Timestamp**: 2026-10-07 17:00:00 +06:00
+- **Context**: Need a robust backend system to securely process live auction bids, deduct credits from the current bidder, and accurately refund the previous highest bidder, all while ensuring no race conditions affect credit ledgers.
+- **Decision**:
+  - Implemented `placeBid` in `AuctionService` executing entirely within a `prisma.$transaction`.
+  - Atomically verifies bidder wallet balance, deducts the bid as an `AUCTION_BID_HOLD`, creates the new `AuctionBid`, and updates `currentHighestBid` on the `Auction`.
+  - Automatically identifies the previous highest bidder (if any) and increments their wallet balance back by the previous bid amount, logging an `AUCTION_BID_REFUND`.
+  - Uses `Socket.IO` instance to immediately broadcast `auction:new_bid` to the room and a private `user:outbid` message to the displaced highest bidder.
+- **Rationale**:
+  - Strongly protects financial constraints defined in requirements.md (no negative balances, atomic operations).
+  - Guarantees immediate real-time updates for connected participants.
+
+## 16. Modular Artwork Card Component & RESTful Artwork Like Action
+- **Timestamp**: 2026-10-15 07:50:00 +06:00
+- **Context**: Need a consistent, reusable card presentation across marketplace search and dashboards with interactive actions (such as likes) without cluttering monolithic search views.
+- **Decision**:
+  - Extracted `<ArtworkCard />` component into `client/src/components/marketplace/ArtworkCard.tsx` isolating image presentation, status badges, typography, and interactive buttons.
+  - Implemented optimistic UI updates for the Like button with automatic state reversion on network errors.
+  - Established standard REST action endpoint `POST /api/artworks/:id/like` updating database `like` counter with atomic increment.
+  - Created `.context/guidelines.md` as the unified full-stack developer guide for feature additions and Playwright E2E workflows.
+- **Rationale**:
+  - Eliminates 100+ lines of duplicate card markup from `ArtworkSearchInterface.tsx`.
+  - Ensures clean separation of concerns and reliable, isolated Playwright E2E testability.

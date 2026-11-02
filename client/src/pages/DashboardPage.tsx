@@ -3,8 +3,10 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Wallet, Settings, ShoppingBag, Palette, Compass, ShieldCheck } from 'lucide-react';
 import { CreateArtworkModal } from '../components/marketplace/CreateArtworkModal';
+import { CreateAuctionModal } from '../components/dashboard/CreateAuctionModal';
 import { SellerDashboardLayout } from '../components/dashboard/SellerDashboardLayout';
 import { artworkApi } from '../services/artwork.service';
+import { AuctionService, AuctionResponse } from '../services/auction.service';
 import { Artwork } from '../types/artwork';
 
 export const DashboardPage: React.FC = () => {
@@ -12,8 +14,13 @@ export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [isLoadingArtworks, setIsLoadingArtworks] = useState(false);
+
+  const [isAuctionModalOpen, setIsAuctionModalOpen] = useState(false);
+  const [auctions, setAuctions] = useState<AuctionResponse[]>([]);
+  const [isLoadingAuctions, setIsLoadingAuctions] = useState(false);
 
   useEffect(() => {
     if (user && user.role === 'ARTIST') {
@@ -23,6 +30,13 @@ export const DashboardPage: React.FC = () => {
         .then((data) => setArtworks(data))
         .catch((err) => console.error('Failed to load artist artworks:', err))
         .finally(() => setIsLoadingArtworks(false));
+
+      setIsLoadingAuctions(true);
+      AuctionService
+        .getMyAuctions()
+        .then((data) => setAuctions(data))
+        .catch((err) => console.error('Failed to load artist auctions:', err))
+        .finally(() => setIsLoadingAuctions(false));
     }
   }, [user]);
 
@@ -49,6 +63,40 @@ export const DashboardPage: React.FC = () => {
     setArtworks((prev) => [newArtwork, ...prev]);
   };
 
+  const handleArtworkUpdated = (updatedArtwork: Artwork) => {
+    setArtworks((prev) => prev.map((item) => (item.id === updatedArtwork.id ? updatedArtwork : item)));
+  };
+
+  const handleOpenAddModal = () => {
+    setEditingArtwork(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (artwork: Artwork) => {
+    setEditingArtwork(artwork);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteArtwork = async (id: string) => {
+    if (window.confirm('Are you sure you want to permanently delete this artwork from your storefront?')) {
+      try {
+        await artworkApi.deleteArtwork(id);
+        setArtworks((prev) => prev.filter((a) => a.id !== id));
+      } catch (err: any) {
+        alert(err.message || 'Failed to delete artwork');
+      }
+    }
+  };
+
+  const handleCreateAuction = async (data: any) => {
+    const newAuction = await AuctionService.createAuction(data);
+    setAuctions((prev) => [newAuction, ...prev]);
+    // Also update artwork availability to RESERVED in the local state
+    setArtworks((prev) =>
+      prev.map((a) => (a.id === newAuction.artworkId ? { ...a, availability: 'RESERVED' } : a))
+    );
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
       {user.role === 'ARTIST' ? (
@@ -56,7 +104,12 @@ export const DashboardPage: React.FC = () => {
           user={user}
           artworks={artworks}
           isLoadingArtworks={isLoadingArtworks}
-          onOpenAddModal={() => setIsModalOpen(true)}
+          onOpenAddModal={handleOpenAddModal}
+          onOpenEditModal={handleOpenEditModal}
+          onDeleteArtwork={handleDeleteArtwork}
+          auctions={auctions}
+          isLoadingAuctions={isLoadingAuctions}
+          onOpenCreateAuctionModal={() => setIsAuctionModalOpen(true)}
         />
       ) : (
         <>
@@ -161,12 +214,26 @@ export const DashboardPage: React.FC = () => {
         </>
       )}
 
-      {/* Create Artwork Modal */}
+      {/* Create / Edit Artwork Modal */}
       <CreateArtworkModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingArtwork(null);
+        }}
         onArtworkCreated={handleArtworkCreated}
+        onArtworkUpdated={handleArtworkUpdated}
+        artworkToEdit={editingArtwork}
       />
+
+      {user.role === 'ARTIST' && (
+        <CreateAuctionModal
+          isOpen={isAuctionModalOpen}
+          onClose={() => setIsAuctionModalOpen(false)}
+          artworks={artworks}
+          onSubmit={handleCreateAuction}
+        />
+      )}
     </div>
   );
 };

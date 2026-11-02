@@ -14,6 +14,7 @@ export interface Artwork {
   title: string;
   description: string;
   medium: string;
+  style?: string | null;
   dimensions?: string | null;
   height?: number | null;
   width?: number | null;
@@ -26,6 +27,7 @@ export interface Artwork {
   availability: ArtworkAvailability;
   moderationStatus: ModerationStatus;
   artistId: string;
+  like?: number;
   artist?: ArtworkArtist;
   createdAt: string;
   updatedAt: string;
@@ -35,6 +37,7 @@ export interface CreateArtworkPayload {
   title: string;
   description: string;
   medium: string;
+  style?: string;
   dimensions?: string;
   height?: number;
   width?: number;
@@ -50,6 +53,7 @@ export interface UpdateArtworkPayload {
   title?: string;
   description?: string;
   medium?: string;
+  style?: string;
   dimensions?: string;
   height?: number;
   width?: number;
@@ -59,6 +63,18 @@ export interface UpdateArtworkPayload {
   price?: number;
   imageUrl?: string;
   availability?: ArtworkAvailability;
+}
+
+export interface ArtworkFilterParams {
+  medium?: string;
+  style?: string;
+  search?: string;
+  creatorName?: string;
+  availability?: ArtworkAvailability | 'ALL';
+  minPrice?: number;
+  maxPrice?: number;
+  page?: number;
+  limit?: number;
 }
 
 export interface StorefrontStats {

@@ -41,6 +41,17 @@ export class AuthController {
     }
   }
 
+  public static async linkGoogle(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user!.id;
+      const validatedData = googleAuthSchema.parse(req.body);
+      const user = await AuthService.linkGoogle(userId, validatedData.idToken);
+      res.status(200).json({ user });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   public static async getMe(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = req.user!.id;

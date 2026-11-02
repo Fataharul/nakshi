@@ -4,11 +4,12 @@ import { AddressInfo } from 'net';
 import { app } from '../../src/server';
 import { prisma } from '../../src/config/prisma';
 
-describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
+describe('Artwork Creation & Storefront Acceptance Tests (T-026 & T-038)', () => {
   let serverInstance: http.Server;
   let baseUrl: string;
   const uniqueId = Date.now();
   let artistToken: string;
+  let secondArtistToken: string;
   let buyerToken: string;
   let createdArtworkId: string;
 
@@ -18,6 +19,14 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
     password: 'Password123!',
     role: 'ARTIST',
     bio: 'Master weaver of Sonargaon heritage Jamdani sarees.',
+  };
+
+  const secondArtistUser = {
+    name: `Second Artisan ${uniqueId}`,
+    email: `artist2_artwork_${uniqueId}_${Math.random().toString(36).substring(2, 7)}@nakshi.test`,
+    password: 'Password123!',
+    role: 'ARTIST',
+    bio: 'Potter from Panchagarh.',
   };
 
   const buyerUser = {
@@ -46,7 +55,16 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
     const artistData = (await artistReg.json()) as any;
     artistToken = artistData.token;
 
-    // 2. Register Buyer user
+    // 2. Register Second Artist user
+    const secondArtistReg = await fetch(`${baseUrl}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(secondArtistUser),
+    });
+    const secondArtistData = (await secondArtistReg.json()) as any;
+    secondArtistToken = secondArtistData.token;
+
+    // 3. Register Buyer user
     const buyerReg = await fetch(`${baseUrl}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -156,6 +174,82 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
     });
   });
 
+  describe('PUT /api/artworks/:id (Edit Artwork - T-038 Access Restrictions)', () => {
+    it('rejects unauthenticated edit request with 401 Unauthorized', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/${createdArtworkId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'Unauthenticated Update Attempt',
+          price: 999,
+        }),
+      });
+
+      expect(res.status).toBe(401);
+    });
+
+    it('rejects non-artist user (BUYER role) edit request with 403 Forbidden', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/${createdArtworkId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${buyerToken}`,
+        },
+        body: JSON.stringify({
+          title: 'Buyer Update Attempt',
+          price: 999,
+        }),
+      });
+
+      expect(res.status).toBe(403);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('Forbidden');
+    });
+
+    it('rejects an artist attempting to edit another artist\'s artwork listing with 403 Forbidden', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/${createdArtworkId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${secondArtistToken}`,
+        },
+        body: JSON.stringify({
+          title: 'Unauthorized Cross-Artist Edit Attempt',
+          price: 1500,
+        }),
+      });
+
+      expect(res.status).toBe(403);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('You are not authorized to edit an artwork owned by another artist');
+    });
+
+    it('allows authentic storefront owner to successfully update their artwork listing with 200 OK', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/${createdArtworkId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${artistToken}`,
+        },
+        body: JSON.stringify({
+          title: 'Updated Sonargaon Royal Jamdani Saree',
+          price: 950.0,
+          description: 'Updated description detailing imperial gold thread needlework.',
+          availability: 'RESERVED',
+        }),
+      });
+
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.artwork).toBeDefined();
+      expect(data.artwork.id).toBe(createdArtworkId);
+      expect(data.artwork.title).toBe('Updated Sonargaon Royal Jamdani Saree');
+      expect(data.artwork.price).toBe(950);
+      expect(data.artwork.description).toBe('Updated description detailing imperial gold thread needlework.');
+      expect(data.artwork.availability).toBe('RESERVED');
+    });
+  });
+
   describe('GET /api/artworks/my-artworks', () => {
     it('returns published artworks for authenticated ARTIST', async () => {
       const res = await fetch(`${baseUrl}/api/artworks/my-artworks`, {
@@ -169,7 +263,7 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
 
       const found = data.artworks.find((a: any) => a.id === createdArtworkId);
       expect(found).toBeDefined();
-      expect(found.title).toBe('Sonargaon Heritage Jamdani Saree');
+      expect(found.title).toBe('Updated Sonargaon Royal Jamdani Saree');
     });
   });
 
@@ -261,6 +355,214 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
     });
   });
 
+  describe('GET /api/artworks (Medium & Style Filtering - T-042)', () => {
+    let kanthaArtworkId: string;
+    let terracottaArtworkId: string;
+
+    beforeAll(async () => {
+      // Create Artwork 1: Nakshi Kantha with Traditional Folk style
+      const kanthaRes = await fetch(`${baseUrl}/api/artworks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${artistToken}`,
+        },
+        body: JSON.stringify({
+          title: `Filter Test Kantha ${uniqueId}`,
+          description: 'Traditional folk handcrafted quilt from Jessore.',
+          medium: 'Nakshi Kantha',
+          style: 'Traditional Folk',
+          price: 600,
+        }),
+      });
+      const kanthaData = (await kanthaRes.json()) as any;
+      kanthaArtworkId = kanthaData.artwork.id;
+
+      // Create Artwork 2: Terracotta Clay with Sculptural & Relic style
+      const terracottaRes = await fetch(`${baseUrl}/api/artworks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${artistToken}`,
+        },
+        body: JSON.stringify({
+          title: `Filter Test Terracotta ${uniqueId}`,
+          description: 'Sculptural terracotta ancient horse relic figurine.',
+          medium: 'Terracotta Clay',
+          style: 'Sculptural & Relic',
+          price: 400,
+        }),
+      });
+      const terracottaData = (await terracottaRes.json()) as any;
+      terracottaArtworkId = terracottaData.artwork.id;
+    });
+
+    it('returns all artworks when no filter parameters are supplied', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks`);
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(Array.isArray(data.artworks)).toBe(true);
+      expect(data.pagination).toBeDefined();
+      expect(data.artworks.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('filters artworks strictly by medium', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks?medium=Nakshi%20Kantha`);
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.artworks.length).toBeGreaterThanOrEqual(1);
+      data.artworks.forEach((art: any) => {
+        expect(art.medium.toLowerCase()).toBe('nakshi kantha');
+      });
+      const found = data.artworks.find((art: any) => art.id === kanthaArtworkId);
+      expect(found).toBeDefined();
+    });
+
+    it('filters artworks strictly by style', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks?style=Sculptural%20%26%20Relic`);
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.artworks.length).toBeGreaterThanOrEqual(1);
+      data.artworks.forEach((art: any) => {
+        expect(art.style?.toLowerCase()).toBe('sculptural & relic');
+      });
+      const found = data.artworks.find((art: any) => art.id === terracottaArtworkId);
+      expect(found).toBeDefined();
+    });
+
+    it('filters artworks by combining both medium and style criteria', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks?medium=Terracotta%20Clay&style=Sculptural%20%26%20Relic`);
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.artworks.length).toBeGreaterThanOrEqual(1);
+      data.artworks.forEach((art: any) => {
+        expect(art.medium.toLowerCase()).toBe('terracotta clay');
+        expect(art.style?.toLowerCase()).toBe('sculptural & relic');
+      });
+
+      const found = data.artworks.find((art: any) => art.id === terracottaArtworkId);
+      expect(found).toBeDefined();
+    });
+
+    it('returns empty array when no artworks match combined medium and style filter', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks?medium=Handloom%20Jamdani&style=Sculptural%20%26%20Relic`);
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.artworks.length).toBe(0);
+    });
+
+    it('filters artworks by creatorName (T-046)', async () => {
+      const searchKeyword = artistUser.name.split(' ')[0];
+      const res = await fetch(`${baseUrl}/api/artworks?creatorName=${searchKeyword}`);
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.artworks.length).toBeGreaterThanOrEqual(1);
+      data.artworks.forEach((art: any) => {
+        expect(art.artist.name.toLowerCase()).toContain(searchKeyword.toLowerCase());
+      });
+    });
+
+    it('returns empty array when creatorName does not match any artist', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks?creatorName=NonExistentCreatorXYZ999`);
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.artworks.length).toBe(0);
+    });
+  });
+
+  describe('DELETE /api/artworks/:id (Storefront Deletion - T-045)', () => {
+    let artworkToDeleteId: string;
+
+    beforeAll(async () => {
+      // Create an artwork specifically for delete testing
+      const res = await fetch(`${baseUrl}/api/artworks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${artistToken}`,
+        },
+        body: JSON.stringify({
+          title: 'Artwork To Delete Test',
+          description: 'Temporary listing created to verify delete endpoint authorization.',
+          medium: 'Clay Pottery',
+          price: 250.0,
+          imageUrl: 'https://example.com/test-delete.jpg',
+        }),
+      });
+      const data = (await res.json()) as any;
+      artworkToDeleteId = data.artwork.id;
+    });
+
+    it('rejects unauthenticated delete request with 401 Unauthorized', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/${artworkToDeleteId}`, {
+        method: 'DELETE',
+      });
+      expect(res.status).toBe(401);
+    });
+
+    it('rejects non-artist user (BUYER role) with 403 Forbidden', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/${artworkToDeleteId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${buyerToken}` },
+      });
+      expect(res.status).toBe(403);
+    });
+
+    it('rejects an artist attempting to delete another artist\'s artwork with 403 Forbidden', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/${artworkToDeleteId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${secondArtistToken}` },
+      });
+      expect(res.status).toBe(403);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('You are not authorized to delete an artwork owned by another artist');
+    });
+
+    it('rejects deleting an artwork that is marked SOLD with 400 Bad Request', async () => {
+      // Update availability to SOLD in DB
+      await prisma.artwork.update({
+        where: { id: artworkToDeleteId },
+        data: { availability: 'SOLD' },
+      });
+
+      const res = await fetch(`${baseUrl}/api/artworks/${artworkToDeleteId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${artistToken}` },
+      });
+      expect(res.status).toBe(400);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('Cannot delete an artwork that has already been purchased');
+
+      // Restore to AVAILABLE
+      await prisma.artwork.update({
+        where: { id: artworkToDeleteId },
+        data: { availability: 'AVAILABLE' },
+      });
+    });
+
+    it('allows authentic storefront owner to successfully delete their artwork listing with 200 OK', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/${artworkToDeleteId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${artistToken}` },
+      });
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.message).toBe('Artwork deleted successfully');
+
+      // Verify it no longer exists
+      const verifyRes = await fetch(`${baseUrl}/api/artworks/${artworkToDeleteId}`);
+      expect(verifyRes.status).toBe(404);
+    });
+
+    it('returns 404 when attempting to delete a non-existent artwork', async () => {
+      const res = await fetch(`${baseUrl}/api/artworks/00000000-0000-0000-0000-000000000000`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${artistToken}` },
+      });
+      expect(res.status).toBe(404);
+    });
+  });
+
   afterAll(async () => {
     if (serverInstance) {
       await new Promise<void>((resolve) => {
@@ -269,4 +571,5 @@ describe('Artwork Creation & Storefront Acceptance Tests (T-026)', () => {
     }
   });
 });
+
 

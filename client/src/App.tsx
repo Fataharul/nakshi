@@ -8,6 +8,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { AccountSetupPage } from './pages/AccountSetupPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { MarketplacePage } from './pages/MarketplacePage';
+import { AuctionPage } from './pages/AuctionPage';
 
 const HomePage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -79,6 +80,7 @@ export const App: React.FC = () => {
               <Route path="/search" element={<MarketplacePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/auctions/:id" element={<AuctionPage />} />
 
               {/* Protected User Routes */}
               <Route

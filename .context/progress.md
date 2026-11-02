@@ -227,3 +227,131 @@
   - Implement async queue worker for Sharp dHash duplicate detection.
 
 
+## [2026-09-29 23:42:00 +06:00] Milestone: Ticket T-038 — Restrict Artwork Creation & Editing to Storefront Owner Implemented
+- **Completed**:
+  - Updated server artwork service [`server/src/services/artwork.service.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/services/artwork.service.ts) with `updateArtwork` method verifying that `existing.artistId === req.user.id`, returning 403 Forbidden for unauthorized edit attempts.
+  - Updated server artwork controller [`server/src/controllers/artwork.controller.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/controllers/artwork.controller.ts) with `update` method validating request bodies using `updateArtworkSchema`.
+  - Updated server artwork routes [`server/src/routes/artwork.routes.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/routes/artwork.routes.ts) adding `PUT /:id` and `PATCH /:id` routes guarded by `authenticateJWT` and `requireRoles(Role.ARTIST)`.
+  - Refactored server error middleware [`server/src/middleware/error.middleware.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/middleware/error.middleware.ts) to correctly handle `statusCode` on application error instances.
+  - Updated client artwork service [`client/src/services/artwork.service.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/client/src/services/artwork.service.ts) with `updateArtwork` method.
+  - Updated `CreateArtworkModal.tsx` to handle both artwork creation and editing, inspecting `useAuth()` to check role (`ARTIST`) and storefront ownership (`user.id === artworkToEdit.artistId`), displaying 403/401 user-friendly error banners and disabling submit triggers when unauthorized.
+  - Updated `SellerDashboardLayout.tsx` and `DashboardPage.tsx` to display edit artwork triggers (`#edit-artwork-btn-${artwork.id}`) strictly for authenticated storefront owners.
+  - Added unit test coverage in [`server/tests/unit/artwork.service.test.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/tests/unit/artwork.service.test.ts) for `updateArtworkSchema`.
+  - Added acceptance integration test suite in [`server/tests/acceptance/artwork.test.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/tests/acceptance/artwork.test.ts) testing 401 Unauthorized for unauthenticated requests, 403 Forbidden for non-artists (BUYER role) attempting edit, 403 Forbidden for cross-artist edit attempts, and 200 OK for authentic storefront owner updates.
+- **Verified**:
+  - All 8 Vitest server unit and acceptance test suites (75 tests) passed cleanly (`npm --prefix server run test`).
+  - Client Vite production build and TypeScript check passed with 0 errors (`npm --prefix client run build`).
+
+## [2026-09-30 00:24:00 +06:00] Milestone: Ticket T-042 — Filtering by Artwork Medium & Style Implemented
+- **Completed**:
+  - Added optional `style` field and `medium`/`style` database indexes to `Artwork` model in [`server/prisma/schema.prisma`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/prisma/schema.prisma) and synchronized schema via `npx prisma db push`.
+  - Updated validation schemas in [`server/src/utils/artwork.validation.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/utils/artwork.validation.ts) with `CRAFT_STYLES` constants and optional `style` support in `createArtworkSchema`, `updateArtworkSchema`, and `artworkQuerySchema`.
+  - Updated [`server/src/services/artwork.service.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/services/artwork.service.ts) `getArtworks` query method with case-insensitive `medium` and `style` filtering combined with text search, price limits, and pagination.
+  - Added `getAll` controller handler in [`server/src/controllers/artwork.controller.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/controllers/artwork.controller.ts) and exposed `GET /api/artworks` in [`server/src/routes/artwork.routes.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/src/routes/artwork.routes.ts).
+  - Updated client types in [`client/src/types/artwork.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/client/src/types/artwork.ts) and added `getArtworks(params)` API query method in [`client/src/services/artwork.service.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/client/src/services/artwork.service.ts).
+  - Enhanced [`client/src/components/marketplace/ArtworkSearchInterface.tsx`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/client/src/components/marketplace/ArtworkSearchInterface.tsx) with interactive Craft Style dropdown filter controls (`#artwork-style-filter`), medium pill filters, live API query integration, and style metadata badges on artwork cards.
+  - Updated [`client/src/components/marketplace/CreateArtworkModal.tsx`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/client/src/components/marketplace/CreateArtworkModal.tsx) to allow artists to select Craft Style when listing or editing artworks.
+  - Added unit tests in [`server/tests/unit/artwork.service.test.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/tests/unit/artwork.service.test.ts) for `artworkQuerySchema` style parsing.
+  - Added acceptance integration test suite in [`server/tests/acceptance/artwork.test.ts`](file:///c:/Users/User/OneDrive/Desktop/Nakshi/nakshi/server/tests/acceptance/artwork.test.ts) verifying filtering by medium, filtering by style, combined medium & style filtering, and unfiltered query behavior.
+- **Verified**:
+  - All 8 Vitest server unit and acceptance test suites (81 tests) passed cleanly (`npm --prefix server run test`).
+  - Client Vite production build and TypeScript check passed with 0 errors (`npm --prefix client run build`).
+
+
+
+
+
+## [2026-09-30 22:40:00 +06:00] Milestone: Ticket T-043 - Linked Google Accounts Authentication Implemented
+- **Completed**:
+  - Added POST /api/auth/link-google endpoint in backend to securely link Google accounts to existing authenticated users.
+  - Updated AuthService.googleAuth to support lookup by googleId or email, enabling seamless Google Sign-In for accounts linked to different Google email addresses.
+  - Updated SanitizedUser and User interface to include hasGoogleLinked flag.
+  - Upgraded frontend AccountSetupPage.tsx with Linked Accounts section rendering Google Login button.
+  - Added backend acceptance tests for linking Google accounts.
+- **Verified**:
+  - Clean TypeScript compilation for both frontend and backend.
+  - All Vitest acceptance and unit tests passed.
+
+## [2026-10-02 14:45:00 +06:00] Milestone: Auction Creation & Seller Auction Management for Verified Artists
+- **Completed**:
+  - Backend `Auction` model, validation schemas, `AuctionService`, and `AuctionController` implemented ensuring atomic reserving of artworks and RBAC checks.
+  - Frontend `AuctionService` integrated with React Dashboard.
+  - Added `CreateAuctionModal.tsx` for validated frontend scheduling.
+  - Added `My Auctions` tabular view in `SellerDashboardLayout.tsx` for verified artists.
+  - Acceptance tests added verifying 403 Forbidden for non-verified or non-artist roles, and 400 Bad Request for overlapping auctions.
+- **Verified**:
+  - Clean TypeScript compilation for both frontend and backend (`npm --prefix server run build` and `npm --prefix client run build`).
+  - All 9 Vitest test suites (99 tests) passed cleanly.
+
+## [2026-10-07 17:00:00 +06:00] Milestone: Live Auction Bid Submission & Transaction Logic
+- **Completed**:
+  - Implemented `placeBid` in `server/src/services/auction.service.ts` with strict increment checks, starting bid validation, and owner restriction rules.
+  - Developed atomic wallet deductions (`AUCTION_BID_HOLD`) and outbid refund logic (`AUCTION_BID_REFUND`) inside a single `prisma.$transaction`.
+  - Added Socket.IO emission logic to broadcast `auction:new_bid` and `user:outbid` events in real-time.
+  - Exposed `POST /api/auctions/:id/bid` in `server/src/routes/auction.routes.ts` connected via `server/src/controllers/auction.controller.ts`.
+  - Added `placeBid` method to `client/src/services/auction.service.ts` for frontend integration.
+  - Added comprehensive bidding tests to `server/tests/acceptance/auction.test.ts`.
+- **Verified**:
+  - Clean TypeScript compilation for both frontend and backend.
+  - Unit and acceptance logic successfully covers bid submission behavior.
+
+## [2026-10-07 18:28:00 +06:00] Milestone: Live Auction Frontend Interface with WebSocket Real-time Sync
+- **Completed**:
+  - Implemented `LiveAuctionView.tsx` component designed in alignment with `DESIGN.md` (Playfair Display headlines, minimalist styling, Terracotta pulsing live badge).
+  - Integrated `socket.service.ts` connecting buyers directly to active auction rooms on mount.
+  - State dynamically listens for `auction:new_bid` and `auction:outbid` events, allowing instant re-renders of the current highest bid without page refresh.
+  - Implemented `AuctionPage.tsx` to handle routing (`/auctions/:id`), data fetching via new `GET /api/auctions/:id` backend endpoint, and loading state.
+  - Handled the bid submission form utilizing `placeBid` with optimistic visual feedback.
+- **Verified**:
+  - Clean TypeScript compilation for frontend and backend (`npm --prefix client run build`, `npm --prefix server run build`).
+  - Merged dependencies from prior WebSocket foundation and bid logic branches effectively.
+
+## [2026-10-07 18:48:00 +06:00] Milestone: Auction Expiration & Automated Settlement Worker
+- **Completed**:
+  - Implemented `AuctionService.processEndedAuctions()` background job that identifies expired `ACTIVE` auctions, marks them as `ENDED`, processes escrow payouts to artist wallets via `CreditTransaction`, and updates artwork `availability` to `SOLD` (if won) or `AVAILABLE` (if no bids).
+  - Integrated `node` `setInterval` daemon in `server.ts` to poll expired auctions automatically.
+  - Implemented client-side visual countdown timer in `LiveAuctionView.tsx` with optimistic UI transition on expiration.
+  - Implemented client WebSocket subscriber (`auction:ended`) for instant synchronized resolution.
+- **Verified**:
+  - Client & Server TypeScript build succeeded (`npm --prefix client run build`, `npm --prefix server run build`).
+  - `tx.creditTransaction.create` model casing resolved.
+
+## [2026-10-07 19:25:00 +06:00] Milestone: Auction Status Updated to CLOSED
+- **Completed**:
+  - Changed `ENDED` status to `CLOSED` in `prisma.schema` enum for `AuctionStatus`.
+  - Executed raw Prisma query to update existing database rows to `CLOSED`.
+  - Applied schema migration successfully.
+  - Replaced all usages of `ENDED` with `CLOSED` across the backend (`auction.service.ts`) and frontend (`LiveAuctionView.tsx`).
+- **Verified**:
+  - Codebase is fully migrated to use `CLOSED`.
+
+## [2026-10-07 19:46:00 +06:00] Milestone: Outbid Notification Delivery Fix
+- **Completed**:
+  - Identified bug where socket connection lacked authentication token, preventing user from joining their private notification room.
+  - Updated `LiveAuctionView.tsx` to retrieve auth token and pass it to WebSocket server.
+  - Verified `auction:outbid` events are now correctly delivered to the participant.
+
+## [2026-10-07 20:40:00 +06:00] Milestone: Live Auctions Consolidation, UI Polish & Branch Harmonization
+- **Completed**:
+  - Consolidated full-stack live auction implementation into dedicated task branch `feature/integrate-live-auctions`.
+  - Added unique interactive element IDs (`#live-auction-container`, `#auction-timer`, `#place-bid-btn`, `#bid-amount-input`) and credit wallet formatting to `LiveAuctionView.tsx` adhering to `DESIGN.md`.
+  - Cleaned up temporary migration and scratch files (`server/update_enum.ts`, `artifacts/progress_update.md`).
+  - Updated API and WebSocket documentation in `README.md`.
+- **Verified**:
+  - Both client and server production builds succeed with 0 errors (`npm run build`).
+  - All 9 Vitest server unit and acceptance test suites (105 tests) pass against live Supabase PostgreSQL database (`npm test`).
+
+## [2026-10-15 07:50:00 +06:00] Milestone: Modular Artwork Card Component, Like Feature & Developer Guidelines
+- **Completed**:
+  - Implemented backend artwork like feature (`POST /api/artworks/:id/like`) with Prisma `Artwork.like` counter increment in `ArtworkService` and `ArtworkController`.
+  - Added unit test suite `server/tests/unit/artwork_like.test.ts`.
+  - Updated client `Artwork` type and `artworkApi.likeArtwork` in `client/src/services/artwork.service.ts`.
+  - Created modular `client/src/components/marketplace/ArtworkCard.tsx` encapsulating artwork presentation, metadata badges, test IDs, and an optimistic UI Like button.
+  - Refactored `ArtworkSearchInterface.tsx` to use `<ArtworkCard />` and prioritize live backend data over demo mock items.
+  - Added Playwright end-to-end test suite `e2e/like_artwork.spec.ts`.
+  - Authored comprehensive developer instructions in `.context/guidelines.md`.
+- **Verified**:
+  - All 37 server unit tests passed (`npx --prefix server vitest run tests/unit`).
+  - Playwright E2E test `e2e/like_artwork.spec.ts` passed across Desktop Chrome, Tablet 768px, and Mobile 360px (`npx playwright test e2e/like_artwork.spec.ts`).
+  - Client Vite production build compiled with 0 errors (`npm --prefix client run build`).
+  - Server TypeScript build compiled with 0 errors (`npm --prefix server run build`).

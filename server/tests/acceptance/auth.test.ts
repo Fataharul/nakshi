@@ -188,6 +188,15 @@ describe('Auth & RBAC Acceptance Tests', () => {
             }),
           } as any;
         }
+        if (options.idToken === 'valid-google-id-token-link') {
+          return {
+            getPayload: () => ({
+              email: `linked_${mockGoogleEmail}`,
+              name: 'Google Linked User',
+              sub: `sub_link_${mockGoogleSub}`,
+            }),
+          } as any;
+        }
         throw new Error('Google token invalid');
       });
     });
@@ -306,6 +315,50 @@ describe('Auth & RBAC Acceptance Tests', () => {
       expect(res.status).toBe(400);
       const data = (await res.json()) as any;
       expect(data.error).toBe('Validation failed');
+    });
+
+    it('POST /api/auth/link-google links Google account to authenticated user and allows subsequent Google sign-in', async () => {
+      // 1. Unauthenticated request rejected with 401
+      const unauthRes = await fetch(`${baseUrl}/api/auth/link-google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: 'valid-google-id-token-link' }),
+      });
+      expect(unauthRes.status).toBe(401);
+
+      // 2. Authenticated user links Google account
+      const loginRes = await fetch(`${baseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: testBuyer.email,
+          password: testBuyer.password,
+        }),
+      });
+      const loginData = (await loginRes.json()) as any;
+      const userToken = loginData.token;
+
+      const linkRes = await fetch(`${baseUrl}/api/auth/link-google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userToken}`,
+        },
+        body: JSON.stringify({ idToken: 'valid-google-id-token-link' }),
+      });
+      expect(linkRes.status).toBe(200);
+      const linkData = (await linkRes.json()) as any;
+      expect(linkData.user.hasGoogleLinked).toBe(true);
+
+      // 3. User can now also sign in with Google
+      const googleSignRes = await fetch(`${baseUrl}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: 'valid-google-id-token-link' }),
+      });
+      expect(googleSignRes.status).toBe(200);
+      const googleSignData = (await googleSignRes.json()) as any;
+      expect(googleSignData.user.id).toBe(loginData.user.id);
     });
   });
 

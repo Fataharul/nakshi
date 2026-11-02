@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma';
-import { CreateArtworkInput, UpdateArtworkInput } from '../utils/artwork.validation';
+import { CreateArtworkInput, UpdateArtworkInput, ArtworkQueryInput } from '../utils/artwork.validation';
 import { Role } from '@prisma/client';
 
 export class AppError extends Error {
@@ -24,6 +24,7 @@ export class ArtworkService {
       title: artwork.title,
       description: artwork.description,
       medium: artwork.medium,
+      style: artwork.style ?? null,
       dimensions: artwork.dimensions ?? null,
       height: artwork.height ?? null,
       width: artwork.width ?? null,
@@ -35,15 +36,16 @@ export class ArtworkService {
       imageHash: artwork.imageHash ?? null,
       availability: artwork.availability,
       moderationStatus: artwork.moderationStatus,
+      like: artwork.like ?? 0,
       artistId: artwork.artistId,
       artist: artwork.artist
         ? {
-            id: artwork.artist.id,
-            name: artwork.artist.name,
-            email: artwork.artist.email,
-            avatarUrl: artwork.artist.avatarUrl ?? null,
-            bio: artwork.artist.bio ?? null,
-          }
+          id: artwork.artist.id,
+          name: artwork.artist.name,
+          email: artwork.artist.email,
+          avatarUrl: artwork.artist.avatarUrl ?? null,
+          bio: artwork.artist.bio ?? null,
+        }
         : undefined,
       createdAt: artwork.createdAt,
       updatedAt: artwork.updatedAt,
@@ -75,6 +77,7 @@ export class ArtworkService {
         title: input.title,
         description: input.description,
         medium: input.medium,
+        style: input.style || null,
         dimensions: input.dimensions || null,
         height: input.height ?? null,
         width: input.width ?? null,
@@ -100,6 +103,96 @@ export class ArtworkService {
     });
 
     return this.formatArtwork(artwork);
+  }
+
+  /**
+   * Retrieves all artworks filtered by optional query params: medium, style, search, minPrice, maxPrice, availability, pagination.
+   */
+  public static async getArtworks(query: ArtworkQueryInput) {
+    const where: any = {};
+
+    if (query.availability && query.availability !== 'ALL') {
+      where.availability = query.availability;
+    }
+
+    if (query.medium && query.medium.trim() && query.medium !== 'ALL') {
+      where.medium = {
+        equals: query.medium.trim(),
+        mode: 'insensitive',
+      };
+    }
+
+    if (query.style && query.style.trim() && query.style !== 'ALL') {
+      where.style = {
+        equals: query.style.trim(),
+        mode: 'insensitive',
+      };
+    }
+
+    if (query.minPrice !== undefined || query.maxPrice !== undefined) {
+      where.price = {};
+      if (query.minPrice !== undefined) {
+        where.price.gte = query.minPrice;
+      }
+      if (query.maxPrice !== undefined) {
+        where.price.lte = query.maxPrice;
+      }
+    }
+
+    if (query.creatorName && query.creatorName.trim()) {
+      where.artist = {
+        name: {
+          contains: query.creatorName.trim(),
+          mode: 'insensitive',
+        },
+      };
+    }
+
+    if (query.search && query.search.trim()) {
+      const searchTerm = query.search.trim();
+      where.OR = [
+        { title: { contains: searchTerm, mode: 'insensitive' } },
+        { description: { contains: searchTerm, mode: 'insensitive' } },
+        { medium: { contains: searchTerm, mode: 'insensitive' } },
+        { style: { contains: searchTerm, mode: 'insensitive' } },
+        { artist: { name: { contains: searchTerm, mode: 'insensitive' } } },
+      ];
+    }
+
+    const page = query.page || 1;
+    const limit = query.limit || 20;
+    const skip = (page - 1) * limit;
+
+    const [total, artworks] = await Promise.all([
+      prisma.artwork.count({ where }),
+      prisma.artwork.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          artist: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatarUrl: true,
+              bio: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      artworks: artworks.map((item) => this.formatArtwork(item)),
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   /**
@@ -187,5 +280,117 @@ export class ArtworkService {
       artworks,
       stats,
     };
+  }
+
+  /**
+   * Updates an existing artwork record. Restricted strictly to the artwork owner (artistId).
+   */
+  public static async updateArtwork(id: string, artistId: string, input: UpdateArtworkInput) {
+    const existing = await prisma.artwork.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new AppError('Artwork record not found', 404);
+    }
+
+    if (existing.artistId !== artistId) {
+      throw new AppError('Forbidden: You are not authorized to edit an artwork owned by another artist', 403);
+    }
+
+    const updated = await prisma.artwork.update({
+      where: { id },
+      data: {
+        ...(input.title !== undefined && { title: input.title }),
+        ...(input.description !== undefined && { description: input.description }),
+        ...(input.medium !== undefined && { medium: input.medium }),
+        ...(input.style !== undefined && { style: input.style || null }),
+        ...(input.dimensions !== undefined && { dimensions: input.dimensions }),
+        ...(input.height !== undefined && { height: input.height }),
+        ...(input.width !== undefined && { width: input.width }),
+        ...(input.depth !== undefined && { depth: input.depth }),
+        ...(input.weight !== undefined && { weight: input.weight }),
+        ...(input.weightUnit !== undefined && { weightUnit: input.weightUnit }),
+        ...(input.price !== undefined && { price: input.price }),
+        ...(input.imageUrl !== undefined && input.imageUrl.trim().length > 0 && { imageUrl: input.imageUrl.trim() }),
+        ...(input.availability !== undefined && { availability: input.availability }),
+      },
+      include: {
+        artist: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+            bio: true,
+          },
+        },
+      },
+    });
+
+    return this.formatArtwork(updated);
+  }
+
+  /**
+   * Deletes an artwork record. Restricted strictly to the artwork owner (artistId).
+   */
+  public static async deleteArtwork(id: string, artistId: string) {
+    const existing = await prisma.artwork.findUnique({
+      where: { id },
+      include: {
+        orders: { select: { id: true } },
+        auctionItems: { select: { id: true, status: true } },
+      },
+    });
+
+    if (!existing) {
+      throw new AppError('Artwork record not found', 404);
+    }
+
+    if (existing.artistId !== artistId) {
+      throw new AppError('Forbidden: You are not authorized to delete an artwork owned by another artist', 403);
+    }
+
+    if (existing.availability === 'SOLD' || existing.orders.length > 0) {
+      throw new AppError('Bad Request: Cannot delete an artwork that has already been purchased or has order records', 400);
+    }
+
+    if (existing.auctionItems.some((a) => a.status === 'ACTIVE' || a.status === 'UPCOMING')) {
+      throw new AppError('Bad Request: Cannot delete an artwork that is currently scheduled or active in an auction', 400);
+    }
+
+    await prisma.artwork.delete({
+      where: { id },
+    });
+
+    return true;
+  }
+  // like
+  public static async likeArtwork(id: string) {
+    const existing = await prisma.artwork.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new AppError('Artwork record not found', 404);
+    }
+
+    const artwork = await prisma.artwork.update({
+      where: { id },
+      data: { like: { increment: 1 } },
+      include: {
+        artist: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+            bio: true,
+          },
+        },
+      },
+    });
+
+    return this.formatArtwork(artwork);
   }
 }

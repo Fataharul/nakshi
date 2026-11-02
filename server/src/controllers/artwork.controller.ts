@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ArtworkService } from '../services/artwork.service';
 import { StorageService } from '../services/storage.service';
-import { createArtworkSchema, artworkQuerySchema } from '../utils/artwork.validation';
+import { createArtworkSchema, updateArtworkSchema, artworkQuerySchema } from '../utils/artwork.validation';
 
 export class ArtworkController {
   public static async uploadImage(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -29,6 +29,29 @@ export class ArtworkController {
     }
   }
 
+  public static async update(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = req.params.id as string;
+      const validatedData = updateArtworkSchema.parse(req.body);
+      const artistId = req.user!.id;
+      const artwork = await ArtworkService.updateArtwork(id, artistId, validatedData);
+      res.status(200).json({ artwork });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public static async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = req.params.id as string;
+      const artistId = req.user!.id;
+      await ArtworkService.deleteArtwork(id, artistId);
+      res.status(200).json({ message: 'Artwork deleted successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   public static async getMyArtworks(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const artistId = req.user!.id;
@@ -49,11 +72,31 @@ export class ArtworkController {
     }
   }
 
+  public static async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const validatedQuery = artworkQuerySchema.parse(req.query);
+      const result = await ArtworkService.getArtworks(validatedQuery);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   public static async getStorefront(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const artistId = req.params.artistId as string;
       const storefront = await ArtworkService.getArtistStorefront(artistId);
       res.status(200).json(storefront);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public static async likeArtwork(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = req.params.id as string;
+      const artwork = await ArtworkService.likeArtwork(id);
+      res.status(200).json({ artwork });
     } catch (error) {
       next(error);
     }

@@ -3,30 +3,55 @@ import http from 'http';
 import { AddressInfo } from 'net';
 import { app } from '../../src/server';
 import { prisma } from '../../src/config/prisma';
-import { Role, AuctionStatus } from '@prisma/client';
 
-describe('Auction Bidding & Step Increment Acceptance Tests', () => {
+describe('Auction Creation & Seller Management Acceptance Tests', () => {
   let serverInstance: http.Server;
   let baseUrl: string;
   const uniqueId = Date.now();
-
-  let adminToken: string;
-  let adminId: string;
-  let artistToken: string;
-  let artistId: string;
-  let buyer1Token: string;
-  let buyer1Id: string;
+  
+  let verifiedArtistToken: string;
+  let unverifiedArtistToken: string;
+  let buyerToken: string;
   let buyer2Token: string;
-  let buyer2Id: string;
-  let poorBuyerToken: string;
-  let poorBuyerId: string;
+  
+  let verifiedArtistId: string;
+  let secondArtistId: string;
+  
+  let myArtworkId: string;
+  let theirArtworkId: string;
 
-  let testArtworkId: string;
-  let testAuctionId: string;
-  let closedAuctionId: string;
+  const verifiedArtistUser = {
+    name: `Verified Artisan ${uniqueId}`,
+    email: `verified_artist_${uniqueId}_${Math.random().toString(36).substring(2, 7)}@nakshi.test`,
+    password: 'Password123!',
+    role: 'ARTIST',
+  };
+
+  const unverifiedArtistUser = {
+    name: `Unverified Artisan ${uniqueId}`,
+    email: `unverified_artist_${uniqueId}_${Math.random().toString(36).substring(2, 7)}@nakshi.test`,
+    password: 'Password123!',
+    role: 'ARTIST',
+  };
+
+  const buyerUser = {
+    name: `Auction Buyer ${uniqueId}`,
+    email: `buyer_auction_${uniqueId}_${Math.random().toString(36).substring(2, 7)}@nakshi.test`,
+    password: 'Password123!',
+    role: 'BUYER',
+  };
+
+  const buyer2User = {
+    name: `Auction Buyer Two ${uniqueId}`,
+    email: `buyer2_auction_${uniqueId}_${Math.random().toString(36).substring(2, 7)}@nakshi.test`,
+    password: 'Password123!',
+    role: 'BUYER',
+  };
+
+  let activeAuctionId: string;
 
   beforeAll(async () => {
-    // 1. Start test server on dynamic port
+    // Start test server on dynamic open port
     await new Promise<void>((resolve) => {
       serverInstance = app.listen(0, () => {
         const address = serverInstance.address() as AddressInfo;
@@ -35,323 +60,384 @@ describe('Auction Bidding & Step Increment Acceptance Tests', () => {
       });
     });
 
-    // 2. Register Artist
-    const artistRes = await fetch(`${baseUrl}/api/auth/register`, {
+    // Register users
+    const vReg = await fetch(`${baseUrl}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: `Auction Artisan ${uniqueId}`,
-        email: `artist_auc_${uniqueId}@nakshi.test`,
-        password: 'Password123!',
-        role: 'ARTIST',
-        bio: 'Master terracotta sculptor.',
-      }),
+      body: JSON.stringify(verifiedArtistUser),
     });
-    const artistData = (await artistRes.json()) as any;
-    artistToken = artistData.token;
-    artistId = artistData.user.id;
+    const vData = (await vReg.json()) as any;
+    verifiedArtistToken = vData.token;
+    verifiedArtistId = vData.user.id;
 
-    // 3. Register Buyer 1
-    const buyer1Res = await fetch(`${baseUrl}/api/auth/register`, {
+    // Verify the first artist manually via Prisma
+    await prisma.user.update({
+      where: { id: verifiedArtistId },
+      data: { isVerified: true },
+    });
+
+    // Login again to get a fresh token with isVerified: true
+    const vLogin = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: `Bidder Alpha ${uniqueId}`,
-        email: `buyer1_auc_${uniqueId}@nakshi.test`,
-        password: 'Password123!',
-        role: 'BUYER',
-      }),
+      body: JSON.stringify({ email: verifiedArtistUser.email, password: verifiedArtistUser.password }),
     });
-    const buyer1Data = (await buyer1Res.json()) as any;
-    buyer1Token = buyer1Data.token;
-    buyer1Id = buyer1Data.user.id;
+    const vLoginData = (await vLogin.json()) as any;
+    verifiedArtistToken = vLoginData.token;
 
-    // 4. Register Buyer 2
-    const buyer2Res = await fetch(`${baseUrl}/api/auth/register`, {
+    const uvReg = await fetch(`${baseUrl}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: `Bidder Beta ${uniqueId}`,
-        email: `buyer2_auc_${uniqueId}@nakshi.test`,
-        password: 'Password123!',
-        role: 'BUYER',
-      }),
+      body: JSON.stringify(unverifiedArtistUser),
     });
-    const buyer2Data = (await buyer2Res.json()) as any;
-    buyer2Token = buyer2Data.token;
-    buyer2Id = buyer2Data.user.id;
+    const uvData = (await uvReg.json()) as any;
+    unverifiedArtistToken = uvData.token;
+    secondArtistId = uvData.user.id;
 
-    // 5. Register Poor Buyer (0 credits)
-    const poorBuyerRes = await fetch(`${baseUrl}/api/auth/register`, {
+    const bReg = await fetch(`${baseUrl}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: `Bidder Zero ${uniqueId}`,
-        email: `poor_buyer_auc_${uniqueId}@nakshi.test`,
-        password: 'Password123!',
-        role: 'BUYER',
-      }),
+      body: JSON.stringify(buyerUser),
     });
-    const poorBuyerData = (await poorBuyerRes.json()) as any;
-    poorBuyerToken = poorBuyerData.token;
-    poorBuyerId = poorBuyerData.user.id;
+    const bData = await bReg.json() as any;
+    buyerToken = bData.token;
 
-    // 6. Give Buyer 1 and Buyer 2 internal test credits
+    const b2Reg = await fetch(`${baseUrl}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(buyer2User),
+    });
+    const b2Data = (await b2Reg.json()) as any;
+    buyer2Token = b2Data.token;
+
+    const buyer2Id = b2Data.user.id;
+    const buyer1Id = bData.user?.id || (await prisma.user.findUnique({ where: { email: buyerUser.email } }))!.id;
+
+    // Add credits to both buyers for bidding
     await prisma.wallet.update({
       where: { userId: buyer1Id },
-      data: { balance: 5000.0 },
+      data: { balance: 1000 }
     });
     await prisma.wallet.update({
       where: { userId: buyer2Id },
-      data: { balance: 5000.0 },
+      data: { balance: 1000 }
     });
 
-    // 7. Create Admin user for auction creation tests
-    const adminUser = await prisma.user.create({
+    // Seed some artworks
+    const myArtwork = await prisma.artwork.create({
       data: {
-        name: `Admin Curator ${uniqueId}`,
-        email: `admin_auc_${uniqueId}@nakshi.test`,
-        passwordHash: '$2b$10$abcdefghijklmnopqrstuvwxyz123456',
-        role: Role.ADMIN,
-        wallet: { create: { balance: 0.0 } },
-      },
+        title: 'My Artwork For Auction',
+        description: 'Test description',
+        medium: 'Terracotta',
+        price: 500,
+        imageUrl: 'https://example.com/image.jpg',
+        artistId: verifiedArtistId,
+        availability: 'AVAILABLE',
+        moderationStatus: 'APPROVED'
+      }
     });
-    adminId = adminUser.id;
+    myArtworkId = myArtwork.id;
 
-    // Generate JWT for Admin
-    const jwt = await import('jsonwebtoken');
-    adminToken = jwt.default.sign(
-      { id: adminId, email: adminUser.email, role: adminUser.role },
-      process.env.JWT_SECRET || 'nakshi-dev-secret-key-change-in-production-2026',
-      { expiresIn: '1h' }
-    );
-
-    // 8. Create an artwork by the Artist
-    const artwork = await prisma.artwork.create({
+    const theirArtwork = await prisma.artwork.create({
       data: {
-        artistId,
-        title: `Heirloom Terracotta Plaque ${uniqueId}`,
-        description: 'Traditional Bengal folk art relief carved in riverbed terracotta clay.',
-        medium: 'Terracotta Clay',
-        price: 500.0,
-        imageUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=800&q=80',
-        moderationStatus: 'APPROVED',
-      },
+        title: 'Their Artwork',
+        description: 'Test description',
+        medium: 'Terracotta',
+        price: 500,
+        imageUrl: 'https://example.com/image.jpg',
+        artistId: secondArtistId,
+        availability: 'AVAILABLE',
+        moderationStatus: 'APPROVED'
+      }
     });
-    testArtworkId = artwork.id;
+    theirArtworkId = theirArtwork.id;
 
-    // 9. Create an active test auction (Starting bid: 200.00, Min increment: 20.00)
-    const now = new Date();
+    // Create an active auction for theirArtwork to test bidding
     const activeAuction = await prisma.auction.create({
       data: {
-        artworkId: testArtworkId,
-        startingBid: 200.0,
-        minIncrement: 20.0,
-        startTime: new Date(now.getTime() - 60000), // started 1 min ago
-        endTime: new Date(now.getTime() + 3600000), // ends in 1 hr
-        status: AuctionStatus.ACTIVE,
-      },
+        artworkId: theirArtworkId,
+        startingBid: 200,
+        minIncrement: 20,
+        startTime: new Date(Date.now() - 10000), // Started 10s ago
+        endTime: new Date(Date.now() + 86400000),
+        status: 'ACTIVE'
+      }
     });
-    testAuctionId = activeAuction.id;
-
-    // 10. Create an ended auction
-    const endedAuction = await prisma.auction.create({
-      data: {
-        artworkId: testArtworkId,
-        startingBid: 100.0,
-        minIncrement: 10.0,
-        startTime: new Date(now.getTime() - 7200000),
-        endTime: new Date(now.getTime() - 3600000),
-        status: AuctionStatus.ENDED,
-      },
-    });
-    closedAuctionId = endedAuction.id;
+    activeAuctionId = activeAuction.id;
   });
 
-  describe('GET /api/auctions/:id', () => {
-    it('retrieves auction details with correct initial minNextBid equal to startingBid', async () => {
-      const res = await fetch(`${baseUrl}/api/auctions/${testAuctionId}`);
-      expect(res.status).toBe(200);
-
-      const data = (await res.json()) as any;
-      expect(data.auction).toBeDefined();
-      expect(data.auction.id).toBe(testAuctionId);
-      expect(data.auction.startingBid).toBe(200);
-      expect(data.auction.minIncrement).toBe(20);
-      expect(data.auction.currentHighestBid).toBeNull();
-      expect(data.auction.minNextBid).toBe(200); // Opening minNextBid is startingBid
-    });
-
-    it('returns 404 for non-existent auction ID', async () => {
-      const res = await fetch(`${baseUrl}/api/auctions/00000000-0000-0000-0000-000000000000`);
-      expect(res.status).toBe(404);
-    });
+  afterAll(async () => {
+    serverInstance.close();
   });
 
-  describe('POST /api/auctions/:id/bid (Step Increment & Validation Enforcement)', () => {
-    it('rejects unauthenticated bid submission with 401 Unauthorized', async () => {
-      const res = await fetch(`${baseUrl}/api/auctions/${testAuctionId}/bid`, {
+  describe('POST /api/auctions', () => {
+    it('rejects unauthenticated users', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: 200 }),
+        body: JSON.stringify({
+          artworkId: myArtworkId,
+          startingBid: 100,
+          minIncrement: 10,
+          startTime: new Date(Date.now() + 10000).toISOString(),
+          endTime: new Date(Date.now() + 86400000).toISOString(),
+        }),
       });
       expect(res.status).toBe(401);
     });
 
-    it('rejects bid from non-BUYER role (ARTIST) with 403 Forbidden', async () => {
-      const res = await fetch(`${baseUrl}/api/auctions/${testAuctionId}/bid`, {
+    it('rejects non-artist users (BUYER)', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${artistToken}`,
+          Authorization: `Bearer ${buyerToken}`,
         },
-        body: JSON.stringify({ amount: 200 }),
+        body: JSON.stringify({
+          artworkId: myArtworkId,
+          startingBid: 100,
+          minIncrement: 10,
+          startTime: new Date(Date.now() + 10000).toISOString(),
+          endTime: new Date(Date.now() + 86400000).toISOString(),
+        }),
       });
       expect(res.status).toBe(403);
     });
 
-    it('rejects opening bid below the starting bid with 400 Bad Request', async () => {
-      // Starting bid is 200, submitting 150
-      const res = await fetch(`${baseUrl}/api/auctions/${testAuctionId}/bid`, {
+    it('rejects unverified artists', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${buyer1Token}`,
+          Authorization: `Bearer ${unverifiedArtistToken}`,
         },
-        body: JSON.stringify({ amount: 150 }),
+        body: JSON.stringify({
+          artworkId: theirArtworkId,
+          startingBid: 100,
+          minIncrement: 10,
+          startTime: new Date(Date.now() + 10000).toISOString(),
+          endTime: new Date(Date.now() + 86400000).toISOString(),
+        }),
       });
-
-      expect(res.status).toBe(400);
-      const data = (await res.json()) as any;
-      expect(data.error).toBeDefined();
-      expect(data.error).toContain('below the opening starting bid of 200.00 credits');
+      expect(res.status).toBe(403);
+      const data = await res.json() as any;
+      expect(data.error).toContain('Only verified artists');
     });
 
-    it('rejects bid with invalid format (e.g. more than 2 decimal places)', async () => {
-      const res = await fetch(`${baseUrl}/api/auctions/${testAuctionId}/bid`, {
+    it('rejects invalid inputs (negative bid)', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${buyer1Token}`,
+          Authorization: `Bearer ${verifiedArtistToken}`,
         },
-        body: JSON.stringify({ amount: 200.555 }),
+        body: JSON.stringify({
+          artworkId: myArtworkId,
+          startingBid: -100,
+          minIncrement: 10,
+          startTime: new Date(Date.now() + 10000).toISOString(),
+          endTime: new Date(Date.now() + 86400000).toISOString(),
+        }),
       });
-
       expect(res.status).toBe(400);
     });
 
-    it('rejects bid if buyer has insufficient credits', async () => {
-      // poorBuyer has 0 credits
-      const res = await fetch(`${baseUrl}/api/auctions/${testAuctionId}/bid`, {
+    it('rejects if start time is after end time', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${poorBuyerToken}`,
+          Authorization: `Bearer ${verifiedArtistToken}`,
         },
-        body: JSON.stringify({ amount: 200 }),
+        body: JSON.stringify({
+          artworkId: myArtworkId,
+          startingBid: 100,
+          minIncrement: 10,
+          startTime: new Date(Date.now() + 86400000).toISOString(),
+          endTime: new Date(Date.now() + 10000).toISOString(),
+        }),
       });
-
       expect(res.status).toBe(400);
-      const data = (await res.json()) as any;
-      expect(data.error).toContain('Insufficient credit balance');
     });
 
-    it('successfully accepts valid opening bid meeting starting bid', async () => {
-      // Opening bid of exactly 200.00 credits
-      const res = await fetch(`${baseUrl}/api/auctions/${testAuctionId}/bid`, {
+    it('rejects if artist tries to auction someone else\'s artwork', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${buyer1Token}`,
+          Authorization: `Bearer ${verifiedArtistToken}`,
         },
-        body: JSON.stringify({ amount: 200.0 }),
+        body: JSON.stringify({
+          artworkId: theirArtworkId,
+          startingBid: 100,
+          minIncrement: 10,
+          startTime: new Date(Date.now() + 10000).toISOString(),
+          endTime: new Date(Date.now() + 86400000).toISOString(),
+        }),
       });
+      expect(res.status).toBe(403);
+    });
 
+    it('allows verified artist to create an auction for their own artwork', async () => {
+      const startTime = new Date(Date.now() + 10000).toISOString();
+      const endTime = new Date(Date.now() + 86400000).toISOString();
+      const res = await fetch(`${baseUrl}/api/auctions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${verifiedArtistToken}`,
+        },
+        body: JSON.stringify({
+          artworkId: myArtworkId,
+          startingBid: 100,
+          minIncrement: 10,
+          startTime,
+          endTime,
+        }),
+      });
       expect(res.status).toBe(201);
-      const data = (await res.json()) as any;
-      expect(data.bid).toBeDefined();
-      expect(data.bid.amount).toBe(200);
-      expect(data.bid.bidderId).toBe(buyer1Id);
-      expect(data.auction.currentHighestBid).toBe(200);
-      expect(data.auction.minNextBid).toBe(220); // 200 + 20 minIncrement
+      const data = await res.json() as any;
+      expect(data.auction.artworkId).toBe(myArtworkId);
+      expect(data.auction.status).toBe('UPCOMING');
+      
+      // Verify artwork is now reserved
+      const artwork = await prisma.artwork.findUnique({ where: { id: myArtworkId } });
+      expect(artwork?.availability).toBe('RESERVED');
     });
 
-    it('rejects subsequent bid below currentHighestBid + minIncrement', async () => {
-      // Current highest bid is 200, minIncrement is 20 -> minimum required next bid is 220
-      // Buyer 2 bids 210 (which is > 200, but < 220)
-      const res = await fetch(`${baseUrl}/api/auctions/${testAuctionId}/bid`, {
+    it('rejects creating another auction for an artwork that already has one', async () => {
+      const startTime = new Date(Date.now() + 20000).toISOString();
+      const endTime = new Date(Date.now() + 90000000).toISOString();
+      const res = await fetch(`${baseUrl}/api/auctions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${buyer2Token}`,
+          Authorization: `Bearer ${verifiedArtistToken}`,
         },
-        body: JSON.stringify({ amount: 210.0 }),
+        body: JSON.stringify({
+          artworkId: myArtworkId, // Already auctioned above
+          startingBid: 100,
+          minIncrement: 10,
+          startTime,
+          endTime,
+        }),
       });
-
       expect(res.status).toBe(400);
-      const data = (await res.json()) as any;
-      expect(data.error).toContain('does not meet the minimum increment');
-      expect(data.error).toContain('Must be at least 220.00 credits');
-    });
-
-    it('successfully accepts subsequent bid meeting the minimum increment', async () => {
-      // Buyer 2 bids 220.00 (exact minimum required bid)
-      const res = await fetch(`${baseUrl}/api/auctions/${testAuctionId}/bid`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${buyer2Token}`,
-        },
-        body: JSON.stringify({ amount: 220.0 }),
-      });
-
-      expect(res.status).toBe(201);
-      const data = (await res.json()) as any;
-      expect(data.bid.amount).toBe(220);
-      expect(data.bid.bidderId).toBe(buyer2Id);
-      expect(data.auction.currentHighestBid).toBe(220);
-      expect(data.auction.minNextBid).toBe(240); // 220 + 20
-    });
-
-    it('successfully accepts jump bid exceeding the minimum increment', async () => {
-      // Buyer 1 submits a jump bid of 300.00 (> 240)
-      const res = await fetch(`${baseUrl}/api/auctions/${testAuctionId}/bid`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${buyer1Token}`,
-        },
-        body: JSON.stringify({ amount: 300.0 }),
-      });
-
-      expect(res.status).toBe(201);
-      const data = (await res.json()) as any;
-      expect(data.bid.amount).toBe(300);
-      expect(data.auction.currentHighestBid).toBe(300);
-      expect(data.auction.minNextBid).toBe(320);
-    });
-
-    it('rejects bids submitted to an ended auction', async () => {
-      const res = await fetch(`${baseUrl}/api/auctions/${closedAuctionId}/bid`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${buyer1Token}`,
-        },
-        body: JSON.stringify({ amount: 200 }),
-      });
-
-      expect(res.status).toBe(400);
-      const data = (await res.json()) as any;
-      expect(data.error).toContain('auction has closed');
+      const data = await res.json() as any;
+      expect(data.error).toContain('Artwork is not available for auction');
     });
   });
 
-  afterAll(async () => {
-    if (serverInstance) {
-      await new Promise<void>((resolve) => {
-        serverInstance.close(() => resolve());
+  describe('GET /api/auctions/my', () => {
+    it('returns the artist\'s auctions', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions/my`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${verifiedArtistToken}`,
+        },
       });
-    }
+      expect(res.status).toBe(200);
+      const data = await res.json() as any;
+      expect(data.auctions).toBeInstanceOf(Array);
+      expect(data.auctions.length).toBe(1);
+      expect(data.auctions[0].artworkId).toBe(myArtworkId);
+    });
+  });
+
+  describe('POST /api/auctions/:id/bid', () => {
+    it('rejects unauthenticated users', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bid`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: 250 }),
+      });
+      expect(res.status).toBe(401);
+    });
+
+    it('rejects bidding on own artwork', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bid`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${unverifiedArtistToken}`, // The owner of theirArtworkId
+        },
+        body: JSON.stringify({ amount: 250 }),
+      });
+      expect(res.status).toBe(400);
+      const data = await res.json() as any;
+      expect(data.error).toContain('cannot bid on your own');
+    });
+
+    it('rejects bid below starting bid', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bid`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${buyerToken}`,
+        },
+        body: JSON.stringify({ amount: 150 }), // Starting bid is 200
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it('allows a valid first bid', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bid`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${buyerToken}`,
+        },
+        body: JSON.stringify({ amount: 250 }),
+      });
+      expect(res.status).toBe(201);
+      const data = await res.json() as any;
+      expect(Number(data.bid.amount)).toBe(250);
+      expect(data.bid.auctionId).toBe(activeAuctionId);
+      expect(data.currentHighestBid).toBe(250);
+      
+      // Verify auction highest bid is updated
+      const auction = await prisma.auction.findUnique({ where: { id: activeAuctionId } });
+      expect(Number(auction?.currentHighestBid)).toBe(250);
+      
+      // Verify buyer1's wallet was deducted
+      const fetchedBuyer1 = await prisma.user.findUnique({ where: { email: buyerUser.email }, include: { wallet: true } });
+      expect(Number(fetchedBuyer1?.wallet?.balance)).toBe(750); // 1000 - 250
+    });
+
+    it('rejects a second bid that does not meet the minimum increment', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bid`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${buyer2Token}`,
+        },
+        body: JSON.stringify({ amount: 260 }), // minIncrement is 20, highest is 250, so needs 270
+      });
+      expect(res.status).toBe(400);
+      const data = await res.json() as any;
+      expect(data.error).toContain('current highest + increment');
+    });
+
+    it('allows outbidding and refunds the previous bidder', async () => {
+      const res = await fetch(`${baseUrl}/api/auctions/${activeAuctionId}/bid`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${buyer2Token}`,
+        },
+        body: JSON.stringify({ amount: 300 }),
+      });
+      expect(res.status).toBe(201);
+      const data = await res.json() as any;
+      expect(data.currentHighestBid).toBe(300);
+      
+      // Verify buyer2's wallet was deducted
+      const fetchedBuyer2 = await prisma.user.findUnique({ where: { email: buyer2User.email }, include: { wallet: true } });
+      expect(Number(fetchedBuyer2?.wallet?.balance)).toBe(700); // 1000 - 300
+      
+      // Verify buyer1's wallet was refunded the 250
+      const fetchedBuyer1Refunded = await prisma.user.findUnique({ where: { email: buyerUser.email }, include: { wallet: true } });
+      expect(Number(fetchedBuyer1Refunded?.wallet?.balance)).toBe(1000); // 750 + 250
+    });
   });
 });

@@ -1,31 +1,19 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Search,
   X,
   Filter,
-  Sparkles,
   Tag,
   Package,
   ArrowUpDown,
-  MapPin,
+  Layers,
 } from 'lucide-react';
-import { CRAFT_MEDIUMS } from './CreateArtworkModal';
+import { CRAFT_MEDIUMS, CRAFT_STYLES } from './CreateArtworkModal';
+import { artworkApi } from '../../services/artwork.service';
+import { Artwork } from '../../types/artwork';
+import { ArtworkCard, SearchableArtwork } from './ArtworkCard';
 
-export interface SearchableArtwork {
-  id: string;
-  title: string;
-  artistName: string;
-  artistRegion: string;
-  medium: string;
-  description: string;
-  dimensions: string;
-  weight?: string;
-  price: number;
-  imageUrl: string;
-  availability: 'AVAILABLE' | 'SOLD';
-  createdAt: string;
-  featured?: boolean;
-}
+export type { SearchableArtwork };
 
 // Curated authentic Bangladeshi craft demonstration collection
 const CURATED_HERITAGE_ARTWORKS: SearchableArtwork[] = [
@@ -35,6 +23,7 @@ const CURATED_HERITAGE_ARTWORKS: SearchableArtwork[] = [
     artistName: 'Alkas Mia',
     artistRegion: 'Narayanganj',
     medium: 'Handloom Jamdani',
+    style: 'Floral Motifs',
     description: 'Authentic 200-count handloom muslin Jamdani woven with pure zari floral jaal motifs.',
     dimensions: '5.5 meters x 1.2 meters',
     weight: '0.85 kg',
@@ -50,6 +39,7 @@ const CURATED_HERITAGE_ARTWORKS: SearchableArtwork[] = [
     artistName: 'Rokeya Begum',
     artistRegion: 'Jessore',
     medium: 'Nakshi Kantha',
+    style: 'Traditional Folk',
     description: 'Traditional quilt featuring intricate run-stitch peacocks, lotus pond medallions, and village folklore.',
     dimensions: '72 x 54 inches',
     weight: '1.4 kg',
@@ -65,6 +55,7 @@ const CURATED_HERITAGE_ARTWORKS: SearchableArtwork[] = [
     artistName: 'Gouranga Pal',
     artistRegion: 'Panchagarh',
     medium: 'Terracotta Clay',
+    style: 'Sculptural & Relic',
     description: 'Hand-molded kiln-fired terracotta folk artifact embodying ancient North Bengal sacrificial horse motifs.',
     dimensions: '35 x 22 x 12 cm',
     weight: '2.8 kg',
@@ -79,6 +70,7 @@ const CURATED_HERITAGE_ARTWORKS: SearchableArtwork[] = [
     artistName: 'Sukumar Banik',
     artistRegion: 'Dhamrai',
     medium: 'Brass & Bell Metal',
+    style: 'Royal Heritage',
     description: 'Hand-beaten high-resonance lost-wax cast bell metal ceremonial vessel polished with natural clay.',
     dimensions: '28 x 28 x 38 cm',
     weight: '4.2 kg',
@@ -87,26 +79,14 @@ const CURATED_HERITAGE_ARTWORKS: SearchableArtwork[] = [
     availability: 'AVAILABLE',
     createdAt: '2026-09-25T16:45:00Z',
   },
-  {
-    id: 'art-005',
-    title: 'Kalighat Patua Village Life Scroll',
-    artistName: 'Manojit Chitrakar',
-    artistRegion: 'Sundarbans',
-    medium: 'Folk Painting & Patua',
-    description: 'Hand-ground mineral and river vegetable dyes painted on treated vintage cloth portraying riverine life.',
-    dimensions: '48 x 24 inches',
-    weight: '0.6 kg',
-    price: 680.0,
-    imageUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=800&q=80',
-    availability: 'AVAILABLE',
-    createdAt: '2026-09-24T11:20:00Z',
-  },
+
   {
     id: 'art-006',
     title: 'Sylhet Imperial Murta Cane Shital Pati',
     artistName: 'Binoy Das',
     artistRegion: 'Sylhet',
     medium: 'Shital Pati Cane Weave',
+    style: 'Geometric Jaal',
     description: 'Master-grade cold mat handwoven from strips of green Murta reed featuring geometric diamond weave.',
     dimensions: '84 x 60 inches',
     weight: '1.2 kg',
@@ -121,6 +101,7 @@ const CURATED_HERITAGE_ARTWORKS: SearchableArtwork[] = [
     artistName: 'Fatema Khatun',
     artistRegion: 'Faridpur',
     medium: 'Jute Fiber Craft',
+    style: 'Contemporary Heritage',
     description: 'Naturally dyed spun golden jute fibers braided and cross-stitched into an expansive wall tapestry.',
     dimensions: '40 x 30 inches',
     weight: '1.5 kg',
@@ -135,6 +116,7 @@ const CURATED_HERITAGE_ARTWORKS: SearchableArtwork[] = [
     artistName: 'Ranjit Barua',
     artistRegion: 'Chittagong',
     medium: 'Wood Carving & Inlay',
+    style: 'Floral Motifs',
     description: 'Seasoned solid rosewood chest adorned with deep relief floral carvings and brass wire inlays.',
     dimensions: '30 x 20 x 15 cm',
     weight: '2.1 kg',
@@ -149,6 +131,7 @@ const CURATED_HERITAGE_ARTWORKS: SearchableArtwork[] = [
     artistName: 'Bipul Kumar',
     artistRegion: 'Rajshahi',
     medium: 'Ceramic & Traditional Pottery',
+    style: 'Traditional Folk',
     description: 'Wheel-thrown red river silt vessel wood-fired with natural terracotta slip and glazed neck.',
     dimensions: '25 x 25 x 32 cm',
     weight: '1.9 kg',
@@ -160,19 +143,75 @@ const CURATED_HERITAGE_ARTWORKS: SearchableArtwork[] = [
 ];
 
 type SortOption = 'LATEST' | 'PRICE_ASC' | 'PRICE_DESC' | 'TITLE_ASC';
-type PriceFilterOption = 'ALL' | 'UNDER_500' | '500_TO_1000' | 'OVER_1000';
 
 export const ArtworkSearchInterface: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMedium, setSelectedMedium] = useState('ALL');
-  const [priceFilter, setPriceFilter] = useState<PriceFilterOption>('ALL');
+  const [selectedStyle, setSelectedStyle] = useState('ALL');
+  const [creatorName, setCreatorName] = useState('');
+  const [minPrice, setMinPrice] = useState<string>('');
+  const [maxPrice, setMaxPrice] = useState<string>('');
   const [availabilityFilter, setAvailabilityFilter] = useState<'ALL' | 'AVAILABLE'>('ALL');
   const [sortBy, setSortBy] = useState<SortOption>('LATEST');
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
 
-  // Filter & Sort Logic
+  // Live Backend API items state
+  const [apiArtworks, setApiArtworks] = useState<SearchableArtwork[]>([]);
+  const [isApiLoaded, setIsApiLoaded] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    artworkApi
+      .getArtworks({
+        medium: selectedMedium !== 'ALL' ? selectedMedium : undefined,
+        style: selectedStyle !== 'ALL' ? selectedStyle : undefined,
+        search: searchTerm.trim() || undefined,
+        creatorName: creatorName.trim() || undefined,
+        minPrice: minPrice !== '' ? Number(minPrice) : undefined,
+        maxPrice: maxPrice !== '' ? Number(maxPrice) : undefined,
+        availability: availabilityFilter !== 'ALL' ? availabilityFilter : undefined,
+      })
+      .then((data) => {
+        if (isMounted && data.artworks && data.artworks.length > 0) {
+          const mapped: SearchableArtwork[] = data.artworks.map((item: Artwork) => ({
+            id: item.id,
+            title: item.title,
+            artistName: item.artist?.name || 'Master Artisan',
+            artistRegion: 'Bangladesh',
+            medium: item.medium,
+            style: item.style || undefined,
+            description: item.description,
+            dimensions: item.dimensions || 'N/A',
+            weight: item.weight ? `${item.weight} ${item.weightUnit || 'kg'}` : undefined,
+            price: item.price,
+            imageUrl: item.imageUrl,
+            availability: item.availability === 'SOLD' ? 'SOLD' : item.availability === 'RESERVED' ? 'RESERVED' : 'AVAILABLE',
+            createdAt: item.createdAt,
+            like: item.like ?? 0,
+          }));
+          setApiArtworks(mapped);
+          setIsApiLoaded(true);
+        }
+      })
+      .catch(() => {
+        // Fallback to static collection if backend is offline/unreachable
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedMedium, selectedStyle, searchTerm, creatorName, minPrice, maxPrice, availabilityFilter]);
+
+  // Combined Collection & Filter & Sort Logic: Prioritize real backend artworks
+  const allCollection = useMemo(() => {
+    if (isApiLoaded && apiArtworks.length > 0) {
+      return apiArtworks;
+    }
+    return CURATED_HERITAGE_ARTWORKS;
+  }, [apiArtworks, isApiLoaded]);
+
   const filteredArtworks = useMemo(() => {
-    return CURATED_HERITAGE_ARTWORKS.filter((art) => {
+    return allCollection.filter((art) => {
       // 1. Text Search query
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase();
@@ -180,23 +219,39 @@ export const ArtworkSearchInterface: React.FC = () => {
         const matchesArtist = art.artistName.toLowerCase().includes(query);
         const matchesRegion = art.artistRegion.toLowerCase().includes(query);
         const matchesMedium = art.medium.toLowerCase().includes(query);
+        const matchesStyle = art.style ? art.style.toLowerCase().includes(query) : false;
         const matchesDesc = art.description.toLowerCase().includes(query);
-        if (!matchesTitle && !matchesArtist && !matchesRegion && !matchesMedium && !matchesDesc) {
+        if (!matchesTitle && !matchesArtist && !matchesRegion && !matchesMedium && !matchesStyle && !matchesDesc) {
           return false;
         }
       }
 
       // 2. Medium filter
-      if (selectedMedium !== 'ALL' && art.medium !== selectedMedium) {
+      if (selectedMedium !== 'ALL' && art.medium.toLowerCase() !== selectedMedium.toLowerCase()) {
         return false;
       }
 
-      // 3. Price filter
-      if (priceFilter === 'UNDER_500' && art.price >= 500) return false;
-      if (priceFilter === '500_TO_1000' && (art.price < 500 || art.price > 1000)) return false;
-      if (priceFilter === 'OVER_1000' && art.price <= 1000) return false;
+      // 3. Style filter
+      if (selectedStyle !== 'ALL') {
+        if (!art.style || art.style.toLowerCase() !== selectedStyle.toLowerCase()) {
+          return false;
+        }
+      }
 
-      // 4. Availability
+      // 3a. Creator filter (for static/demo data)
+      if (creatorName.trim()) {
+        const query = creatorName.toLowerCase();
+        if (!art.artistName.toLowerCase().includes(query)) {
+          return false;
+        }
+      }
+
+      // 4. Price filter
+      const artPrice = Number(art.price);
+      if (minPrice !== '' && artPrice < Number(minPrice)) return false;
+      if (maxPrice !== '' && artPrice > Number(maxPrice)) return false;
+
+      // 5. Availability
       if (availabilityFilter === 'AVAILABLE' && art.availability !== 'AVAILABLE') {
         return false;
       }
@@ -215,12 +270,15 @@ export const ArtworkSearchInterface: React.FC = () => {
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
     });
-  }, [searchTerm, selectedMedium, priceFilter, availabilityFilter, sortBy]);
+  }, [allCollection, searchTerm, selectedMedium, selectedStyle, creatorName, minPrice, maxPrice, availabilityFilter, sortBy]);
 
   const resetFilters = () => {
     setSearchTerm('');
     setSelectedMedium('ALL');
-    setPriceFilter('ALL');
+    setSelectedStyle('ALL');
+    setCreatorName('');
+    setMinPrice('');
+    setMaxPrice('');
     setAvailabilityFilter('ALL');
     setSortBy('LATEST');
   };
@@ -228,7 +286,10 @@ export const ArtworkSearchInterface: React.FC = () => {
   const hasActiveFilters =
     searchTerm !== '' ||
     selectedMedium !== 'ALL' ||
-    priceFilter !== 'ALL' ||
+    selectedStyle !== 'ALL' ||
+    creatorName !== '' ||
+    minPrice !== '' ||
+    maxPrice !== '' ||
     availabilityFilter !== 'ALL' ||
     sortBy !== 'LATEST';
 
@@ -345,20 +406,64 @@ export const ArtworkSearchInterface: React.FC = () => {
       {/* 4. Controls Bar: Refinements & Sorting */}
       <div className={`bg-surface-container-lowest p-4 rounded-xl border border-outline/20 ambient-shadow flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 ${showFiltersMobile ? 'block' : 'hidden sm:flex'}`}>
         <div className="flex flex-wrap items-center gap-3">
+          {/* Craft Style Filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-on-surface-variant font-medium flex items-center gap-1">
+              <Layers className="w-3.5 h-3.5 text-primary" />
+              <span>Style:</span>
+            </span>
+            <select
+              id="artwork-style-filter"
+              value={selectedStyle}
+              onChange={(e) => setSelectedStyle(e.target.value)}
+              className="bg-surface-container-low text-xs text-on-surface rounded-lg px-3 py-1.5 border border-outline/20 focus:outline-none focus:border-primary font-medium"
+            >
+              <option value="ALL">All Styles</option>
+              {CRAFT_STYLES.map((styleItem) => (
+                <option key={styleItem} value={styleItem}>
+                  {styleItem}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Creator Filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-on-surface-variant font-medium">Creator:</span>
+            <input
+              type="text"
+              id="artwork-creator-filter"
+              value={creatorName}
+              onChange={(e) => setCreatorName(e.target.value)}
+              placeholder="Artist Name"
+              className="bg-surface-container-low text-xs text-on-surface rounded-lg px-3 py-1.5 border border-outline/20 focus:outline-none focus:border-primary font-medium w-32"
+            />
+          </div>
+
           {/* Price Range Filter */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-on-surface-variant font-medium">Price:</span>
-            <select
-              id="artwork-price-filter"
-              value={priceFilter}
-              onChange={(e) => setPriceFilter(e.target.value as PriceFilterOption)}
-              className="bg-surface-container-low text-xs text-on-surface rounded-lg px-3 py-1.5 border border-outline/20 focus:outline-none focus:border-primary"
-            >
-              <option value="ALL">All Prices</option>
-              <option value="UNDER_500">Under 500 Credits</option>
-              <option value="500_TO_1000">500 – 1000 Credits</option>
-              <option value="OVER_1000">Above 1000 Credits</option>
-            </select>
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                id="artwork-min-price-filter"
+                placeholder="Min"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                min="0"
+                className="bg-surface-container-low text-xs text-on-surface rounded-lg px-2 py-1.5 border border-outline/20 focus:outline-none focus:border-primary font-medium w-16"
+              />
+              <span className="text-on-surface-variant">-</span>
+              <input
+                type="number"
+                id="artwork-max-price-filter"
+                placeholder="Max"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                min="0"
+                className="bg-surface-container-low text-xs text-on-surface rounded-lg px-2 py-1.5 border border-outline/20 focus:outline-none focus:border-primary font-medium w-16"
+              />
+            </div>
           </div>
 
           {/* Availability Toggle */}
@@ -423,93 +528,7 @@ export const ArtworkSearchInterface: React.FC = () => {
       ) : (
         <div id="search-artworks-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {filteredArtworks.map((artwork) => (
-            <div
-              key={artwork.id}
-              className="bg-surface-container-lowest rounded-xl border border-outline/20 ambient-shadow overflow-hidden flex flex-col hover:border-outline/40 transition-all hover:scale-[1.01] duration-300 group"
-            >
-              {/* Image Frame */}
-              <div className="h-60 bg-surface-container-high relative overflow-hidden">
-                <img
-                  src={artwork.imageUrl}
-                  alt={artwork.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                {/* Availability Badge */}
-                <span
-                  className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-semibold tracking-wider uppercase backdrop-blur-xs border ${
-                    artwork.availability === 'AVAILABLE'
-                      ? 'bg-surface-container-lowest/90 text-status-valid border-status-valid/30'
-                      : 'bg-surface-container-lowest/90 text-on-surface-variant border-outline/20'
-                  }`}
-                >
-                  {artwork.availability}
-                </span>
-
-                {artwork.featured && (
-                  <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-primary text-on-primary flex items-center gap-1 shadow-xs">
-                    <Sparkles className="w-3 h-3" />
-                    <span>Curator Pick</span>
-                  </span>
-                )}
-              </div>
-
-              {/* Card Body */}
-              <div className="p-5 flex-1 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] uppercase tracking-wider font-semibold text-primary">
-                      {artwork.medium}
-                    </span>
-                    <span className="text-[11px] text-on-surface-variant flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-outline" />
-                      <span>{artwork.artistRegion}</span>
-                    </span>
-                  </div>
-
-                  <h3 className="font-serif text-lg font-bold text-on-surface mb-1 group-hover:text-primary transition-colors line-clamp-1">
-                    {artwork.title}
-                  </h3>
-
-                  <p className="text-xs text-on-surface-variant/90 font-medium mb-2">
-                    By <span className="text-on-surface font-semibold">{artwork.artistName}</span>
-                  </p>
-
-                  <p className="text-xs text-on-surface-variant line-clamp-2 leading-relaxed mb-4">
-                    {artwork.description}
-                  </p>
-
-                  <div className="text-[11px] text-on-surface-variant/80 mb-3 flex flex-wrap gap-2">
-                    <span className="px-2 py-0.5 rounded bg-surface-container-low border border-outline/10">
-                      {artwork.dimensions}
-                    </span>
-                    {artwork.weight && (
-                      <span className="px-2 py-0.5 rounded bg-surface-container-low border border-outline/10">
-                        {artwork.weight}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Card Footer: Price & Details */}
-                <div className="pt-3 border-t border-outline/10 flex items-center justify-between mt-auto">
-                  <div>
-                    <span className="text-[10px] uppercase tracking-wider text-on-surface-variant block font-medium">
-                      Valuation
-                    </span>
-                    <span className="font-serif font-bold text-base text-primary">
-                      {artwork.price.toFixed(2)}{' '}
-                      <span className="text-xs font-sans font-normal text-on-surface-variant">Credits</span>
-                    </span>
-                  </div>
-
-                  <button
-                    className="px-4 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold uppercase tracking-wider rounded-full border border-outline/20 hover:border-outline/40 transition-colors"
-                  >
-                    View Details
-                  </button>
-                </div>
-              </div>
-            </div>
+            <ArtworkCard key={artwork.id} artwork={artwork} />
           ))}
         </div>
       )}

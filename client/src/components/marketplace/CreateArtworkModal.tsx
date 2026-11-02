@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { X, Palette, AlertCircle, CheckCircle, Plus, Image as ImageIcon, UploadCloud, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Palette, AlertCircle, CheckCircle, Plus, Edit, Image as ImageIcon, UploadCloud, RefreshCw } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { artworkApi } from '../../services/artwork.service';
-import { Artwork, CreateArtworkPayload } from '../../types/artwork';
+import { Artwork, CreateArtworkPayload, UpdateArtworkPayload } from '../../types/artwork';
 
 export const CRAFT_MEDIUMS = [
   'Nakshi Kantha',
@@ -17,20 +18,36 @@ export const CRAFT_MEDIUMS = [
   'Other Traditional Craft',
 ] as const;
 
+export const CRAFT_STYLES = [
+  'Traditional Folk',
+  'Royal Heritage',
+  'Geometric Jaal',
+  'Floral Motifs',
+  'Contemporary Heritage',
+  'Sculptural & Relic',
+  'Abstract & Modern',
+] as const;
+
 interface CreateArtworkModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onArtworkCreated: (newArtwork: Artwork) => void;
+  onArtworkCreated?: (newArtwork: Artwork) => void;
+  onArtworkUpdated?: (updatedArtwork: Artwork) => void;
+  artworkToEdit?: Artwork | null;
 }
 
 export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
   isOpen,
   onClose,
   onArtworkCreated,
+  onArtworkUpdated,
+  artworkToEdit = null,
 }) => {
+  const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [medium, setMedium] = useState<string>('Nakshi Kantha');
+  const [style, setStyle] = useState<string>('Traditional Folk');
   const [dimensions, setDimensions] = useState('');
   const [height, setHeight] = useState('');
   const [width, setWidth] = useState('');
@@ -51,6 +68,50 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Authorization checks: Must be an authenticated ARTIST and, if editing, must own the artwork listing
+  const isArtist = user?.role === 'ARTIST';
+  const isOwner = artworkToEdit ? user?.id === artworkToEdit.artistId : true;
+  const isAuthorized = !!user && isArtist && isOwner;
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (artworkToEdit) {
+      setTitle(artworkToEdit.title || '');
+      setDescription(artworkToEdit.description || '');
+      setMedium(artworkToEdit.medium || 'Nakshi Kantha');
+      setStyle(artworkToEdit.style || 'Traditional Folk');
+      setDimensions(artworkToEdit.dimensions || '');
+      setHeight(artworkToEdit.height ? String(artworkToEdit.height) : '');
+      setWidth(artworkToEdit.width ? String(artworkToEdit.width) : '');
+      setDepth(artworkToEdit.depth ? String(artworkToEdit.depth) : '');
+      setWeight(artworkToEdit.weight ? String(artworkToEdit.weight) : '');
+      setWeightUnit(artworkToEdit.weightUnit || 'kg');
+      setPrice(artworkToEdit.price ? String(artworkToEdit.price) : '');
+      setImageUrl(artworkToEdit.imageUrl || '');
+      setPreviewUrl(artworkToEdit.imageUrl || null);
+      setSelectedFile(null);
+    } else {
+      setTitle('');
+      setDescription('');
+      setMedium('Nakshi Kantha');
+      setStyle('Traditional Folk');
+      setDimensions('');
+      setHeight('');
+      setWidth('');
+      setDepth('');
+      setWeight('');
+      setWeightUnit('kg');
+      setPrice('');
+      setImageUrl('');
+      setSelectedFile(null);
+      setPreviewUrl(null);
+    }
+    setError(null);
+    setSuccess(null);
+    setFieldErrors({});
+  }, [artworkToEdit, isOpen]);
 
   const handleFileChange = (file: File | null) => {
     if (!file) return;
@@ -79,6 +140,11 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
     setError(null);
     setSuccess(null);
     setFieldErrors({});
+
+    if (!isAuthorized) {
+      setError('403 Forbidden: Only the verified storefront owner is authorized to add or edit artworks.');
+      return;
+    }
 
     const errors: Record<string, string> = {};
 
@@ -141,26 +207,52 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
         finalImageUrl = uploadResult.imageUrl;
       }
 
-      setUploadStatusText('Saving artwork listing...');
+      setUploadStatusText(artworkToEdit ? 'Updating artwork details...' : 'Saving artwork listing...');
 
-      const payload: CreateArtworkPayload = {
-        title: title.trim(),
-        description: description.trim(),
-        medium: medium.trim(),
-        dimensions: finalDimensions || undefined,
-        height: numericHeight,
-        width: numericWidth,
-        depth: numericDepth,
-        weight: numericWeight,
-        weightUnit: weightUnit.trim() || 'kg',
-        price: numericPrice,
-        imageUrl: finalImageUrl || undefined,
-        availability: 'AVAILABLE',
-      };
+      if (artworkToEdit) {
+        const updatePayload: UpdateArtworkPayload = {
+          title: title.trim(),
+          description: description.trim(),
+          medium: medium.trim(),
+          style: style.trim() || undefined,
+          dimensions: finalDimensions || undefined,
+          height: numericHeight,
+          width: numericWidth,
+          depth: numericDepth,
+          weight: numericWeight,
+          weightUnit: weightUnit.trim() || 'kg',
+          price: numericPrice,
+          imageUrl: finalImageUrl || undefined,
+        };
 
-      const created = await artworkApi.createArtwork(payload);
-      setSuccess('Artwork record successfully published to your storefront!');
-      onArtworkCreated(created);
+        const updated = await artworkApi.updateArtwork(artworkToEdit.id, updatePayload);
+        setSuccess('Artwork listing successfully updated!');
+        if (onArtworkUpdated) {
+          onArtworkUpdated(updated);
+        } else if (onArtworkCreated) {
+          onArtworkCreated(updated);
+        }
+      } else {
+        const createPayload: CreateArtworkPayload = {
+          title: title.trim(),
+          description: description.trim(),
+          medium: medium.trim(),
+          style: style.trim() || undefined,
+          dimensions: finalDimensions || undefined,
+          height: numericHeight,
+          width: numericWidth,
+          depth: numericDepth,
+          weight: numericWeight,
+          weightUnit: weightUnit.trim() || 'kg',
+          price: numericPrice,
+          imageUrl: finalImageUrl || undefined,
+          availability: 'AVAILABLE',
+        };
+
+        const created = await artworkApi.createArtwork(createPayload);
+        setSuccess('Artwork record successfully published to your storefront!');
+        onArtworkCreated?.(created);
+      }
 
       setTimeout(() => {
         setTitle('');
@@ -175,7 +267,7 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
         setPrice('');
         setImageUrl('');
         setSelectedFile(null);
-        if (previewUrl) {
+        if (previewUrl && !artworkToEdit) {
           URL.revokeObjectURL(previewUrl);
         }
         setPreviewUrl(null);
@@ -186,7 +278,14 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
         onClose();
       }, 1200);
     } catch (err: any) {
-      setError(err.message || 'Failed to create artwork listing.');
+      if (err.statusCode === 403 || err.status === 403) {
+        setError('403 Forbidden: You are not authorized to add or edit artworks on this storefront.');
+      } else if (err.statusCode === 401 || err.status === 401) {
+        setError('401 Unauthorized: Please sign in as an authenticated artist.');
+      } else {
+        setError(err.message || 'Failed to process artwork request.');
+      }
+
       if (err.details) {
         setFieldErrors(err.details);
       }
@@ -209,11 +308,24 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
 
         <div className="flex items-center gap-2.5 mb-2">
           <Palette className="w-6 h-6 text-primary" />
-          <h2 className="font-serif text-2xl font-bold text-on-surface">Publish New Artwork</h2>
+          <h2 className="font-serif text-2xl font-bold text-on-surface">
+            {artworkToEdit ? 'Edit Artwork Listing' : 'Publish New Artwork'}
+          </h2>
         </div>
         <p className="text-xs text-on-surface-variant mb-6">
-          Add a handcrafted Bengali textile or heritage craftwork listing to your digital storefront.
+          {artworkToEdit
+            ? 'Update handcrafted textile or craft details for your existing storefront listing.'
+            : 'Add a handcrafted Bengali textile or heritage craftwork listing to your digital storefront.'}
         </p>
+
+        {!isAuthorized && (
+          <div id="unauthorized-artwork-modal-banner" className="mb-4 p-3.5 bg-error-container/60 border border-error/20 text-error rounded text-xs flex items-center gap-2 font-medium">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>
+              403 Forbidden: Only the authentic storefront owner (verified artist) is permitted to add or edit artworks.
+            </span>
+          </div>
+        )}
 
         {error && (
           <div id="create-artwork-error-banner" className="mb-4 p-3.5 bg-error-container/60 border border-error/20 text-error rounded text-xs flex items-center gap-2 font-medium">
@@ -255,8 +367,8 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
             )}
           </div>
 
-          {/* Grid: Medium & Price */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Grid: Medium, Style & Price */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label htmlFor="artwork-medium-select" className="block text-xs uppercase tracking-wider font-semibold text-on-surface-variant mb-1">
                 Craft Medium *
@@ -268,7 +380,7 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
                   setMedium(e.target.value);
                   if (fieldErrors.medium) setFieldErrors((prev) => ({ ...prev, medium: '' }));
                 }}
-                className="w-full bg-surface-container-low border border-outline/30 rounded px-3.5 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
+                className="w-full bg-surface-container-low border border-outline/30 rounded px-3 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
                 required
               >
                 {CRAFT_MEDIUMS.map((item) => (
@@ -286,8 +398,26 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
             </div>
 
             <div>
+              <label htmlFor="artwork-style-select" className="block text-xs uppercase tracking-wider font-semibold text-on-surface-variant mb-1">
+                Craft Style
+              </label>
+              <select
+                id="artwork-style-select"
+                value={style}
+                onChange={(e) => setStyle(e.target.value)}
+                className="w-full bg-surface-container-low border border-outline/30 rounded px-3 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
+              >
+                {CRAFT_STYLES.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
               <label htmlFor="artwork-price-input" className="block text-xs uppercase tracking-wider font-semibold text-on-surface-variant mb-1">
-                Listing Price (Credits) *
+                Price (Credits) *
               </label>
               <input
                 id="artwork-price-input"
@@ -300,7 +430,7 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
                   if (fieldErrors.price) setFieldErrors((prev) => ({ ...prev, price: '' }));
                 }}
                 placeholder="e.g. 450.00"
-                className="w-full bg-surface-container-low border border-outline/30 rounded px-3.5 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
+                className="w-full bg-surface-container-low border border-outline/30 rounded px-3 py-2.5 text-sm outline-none focus:border-primary text-on-surface"
                 required
               />
               {fieldErrors.price && (
@@ -603,13 +733,18 @@ export const CreateArtworkModal: React.FC<CreateArtworkModalProps> = ({
             <button
               id="create-artwork-submit-btn"
               type="submit"
-              disabled={isSubmitting}
-              className="w-full py-3.5 bg-primary text-on-primary font-semibold text-xs uppercase tracking-wider rounded-full hover:bg-surface-tint transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-70 cursor-pointer"
+              disabled={isSubmitting || !isAuthorized}
+              className="w-full py-3.5 bg-primary text-on-primary font-semibold text-xs uppercase tracking-wider rounded-full hover:bg-surface-tint transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isSubmitting ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin shrink-0" />
-                  <span>{uploadStatusText || 'Publishing Artwork...'}</span>
+                  <span>{uploadStatusText || (artworkToEdit ? 'Updating Artwork...' : 'Publishing Artwork...')}</span>
+                </>
+              ) : artworkToEdit ? (
+                <>
+                  <Edit className="w-4 h-4" />
+                  <span>Save Changes to Artwork</span>
                 </>
               ) : (
                 <>

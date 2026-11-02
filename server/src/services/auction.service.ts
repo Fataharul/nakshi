@@ -1,285 +1,382 @@
 import { prisma } from '../config/prisma';
 import { AppError } from './auth.service';
-import {
-  CreateAuctionInput,
-  calculateMinimumBid,
-  validateBidStepIncrement,
-  roundToTwoDecimals,
-} from '../utils/auction.validation';
-import { AuctionStatus, Role } from '@prisma/client';
+import { CreateAuctionInput, PlaceBidInput } from '../utils/auction.validation';
+import { AuctionStatus, ArtworkAvailability, TransactionType } from '@prisma/client';
+import { io } from '../server';
 
 export class AuctionService {
   /**
-   * Formats a raw Prisma Auction record into a standard JSON API response object,
-   * calculating the minimum next bid required for prospective participants.
+   * Format Prisma Auction record into standard JSON response object
    */
-  public static formatAuction(auction: any) {
-    const startingBid = Number(auction.startingBid);
-    const currentHighestBid = auction.currentHighestBid !== null && auction.currentHighestBid !== undefined
-      ? Number(auction.currentHighestBid)
-      : null;
-    const minIncrement = Number(auction.minIncrement);
-    const minNextBid = calculateMinimumBid(currentHighestBid, startingBid, minIncrement);
-
+  private static formatAuction(auction: any) {
     return {
       id: auction.id,
       artworkId: auction.artworkId,
-      startingBid,
-      currentHighestBid,
-      minIncrement,
-      minNextBid,
+      startingBid: Number(auction.startingBid),
+      currentHighestBid: auction.currentHighestBid ? Number(auction.currentHighestBid) : null,
+      minIncrement: Number(auction.minIncrement),
       startTime: auction.startTime,
       endTime: auction.endTime,
       status: auction.status,
-      winnerId: auction.winnerId ?? null,
-      artwork: auction.artwork
-        ? {
-            id: auction.artwork.id,
-            title: auction.artwork.title,
-            description: auction.artwork.description,
-            medium: auction.artwork.medium,
-            imageUrl: auction.artwork.imageUrl,
-            price: Number(auction.artwork.price),
-            artistId: auction.artwork.artistId,
-            artist: auction.artwork.artist
-              ? {
-                  id: auction.artwork.artist.id,
-                  name: auction.artwork.artist.name,
-                }
-              : undefined,
-          }
-        : undefined,
-      bids: auction.bids
-        ? auction.bids.map((b: any) => ({
-            id: b.id,
-            auctionId: b.auctionId,
-            bidderId: b.bidderId,
-            amount: Number(b.amount),
-            createdAt: b.createdAt,
-            bidder: b.bidder
-              ? {
-                  id: b.bidder.id,
-                  name: b.bidder.name,
-                }
-              : undefined,
-          }))
-        : undefined,
+      winnerId: auction.winnerId,
       createdAt: auction.createdAt,
       updatedAt: auction.updatedAt,
+      artwork: auction.artwork ? {
+        id: auction.artwork.id,
+        title: auction.artwork.title,
+        medium: auction.artwork.medium,
+        imageUrl: auction.artwork.imageUrl,
+        availability: auction.artwork.availability,
+        artist: auction.artwork.artist ? {
+          id: auction.artwork.artist.id,
+          name: auction.artwork.artist.name,
+        } : undefined,
+      } : undefined,
     };
   }
 
-  /**
-   * Creates and schedules a new live auction (ADMIN only).
-   */
-  public static async createAuction(adminId: string, input: CreateAuctionInput) {
-    const admin = await prisma.user.findUnique({
-      where: { id: adminId },
-    });
-
-    if (!admin || admin.role !== Role.ADMIN) {
-      throw new AppError('Only platform administrators are authorized to create auctions', 403);
-    }
-
+  public static async createAuction(artistId: string, data: CreateAuctionInput) {
+    // 1. Verify artwork exists and belongs to the artist
     const artwork = await prisma.artwork.findUnique({
-      where: { id: input.artworkId },
+      where: { id: data.artworkId },
     });
 
     if (!artwork) {
-      throw new AppError('Artwork specified for auction does not exist', 404);
+      throw new AppError('Artwork not found', 404);
     }
 
-    // Determine initial status based on start time
-    const now = new Date();
-    const startTime = new Date(input.startTime);
-    const endTime = new Date(input.endTime);
-
-    let status: AuctionStatus = AuctionStatus.UPCOMING;
-    if (now >= startTime && now < endTime) {
-      status = AuctionStatus.ACTIVE;
-    } else if (now >= endTime) {
-      status = AuctionStatus.ENDED;
+    if (artwork.artistId !== artistId) {
+      throw new AppError('You do not have permission to auction this artwork', 403);
     }
 
-    const auction = await prisma.auction.create({
-      data: {
-        artworkId: input.artworkId,
-        startingBid: input.startingBid,
-        minIncrement: input.minIncrement,
-        startTime,
-        endTime,
-        status,
-      },
-      include: {
-        artwork: {
-          include: {
-            artist: {
-              select: { id: true, name: true },
-            },
-          },
-        },
-      },
-    });
-
-    return this.formatAuction(auction);
-  }
-
-  /**
-   * Retrieves an auction by ID with current bids and calculated minimum next bid.
-   */
-  public static async getAuctionById(id: string) {
-    const auction = await prisma.auction.findUnique({
-      where: { id },
-      include: {
-        artwork: {
-          include: {
-            artist: {
-              select: { id: true, name: true },
-            },
-          },
-        },
-        bids: {
-          orderBy: { createdAt: 'desc' },
-          include: {
-            bidder: {
-              select: { id: true, name: true },
-            },
-          },
-        },
-      },
-    });
-
-    if (!auction) {
-      throw new AppError('Auction record not found', 404);
+    // 2. Check if eligible (only APPROVED and AVAILABLE artworks)
+    // Wait, the requirements say 'eligible for auction according to existing business rules'. 
+    // Usually it needs to be APPROVED (or not REJECTED) and AVAILABLE.
+    if (artwork.availability !== ArtworkAvailability.AVAILABLE) {
+      throw new AppError(`Artwork is not available for auction (current status: ${artwork.availability})`, 400);
+    }
+    if (artwork.moderationStatus === 'REJECTED' || artwork.moderationStatus === 'FLAGGED') {
+       throw new AppError('Artwork is not eligible for auction due to moderation status', 400);
     }
 
-    return this.formatAuction(auction);
-  }
-
-  /**
-   * Validates and executes a bid placement transaction atomically.
-   * Enforces:
-   * 1. Auction existence and ACTIVE status
-   * 2. Active time window (between startTime and endTime)
-   * 3. Bidder wallet sufficiency (credits >= bidAmount)
-   * 4. Strict step increment rules (>= startingBid for opening, >= highest + minIncrement for subsequent)
-   */
-  public static async placeBid(auctionId: string, bidderId: string, bidAmount: number) {
-    const roundedBid = roundToTwoDecimals(bidAmount);
-
-    return await prisma.$transaction(async (tx) => {
-      // 1. Fetch auction with artwork details
-      const auction = await tx.auction.findUnique({
-        where: { id: auctionId },
-        include: {
-          artwork: true,
-        },
-      });
-
-      if (!auction) {
-        throw new AppError('Auction record not found', 404);
+    // 3. Prevent Duplicate/Overlapping Auctions
+    // Check if there are any UPCOMING or ACTIVE auctions for this artwork
+    const existingAuction = await prisma.auction.findFirst({
+      where: {
+        artworkId: data.artworkId,
+        status: {
+          in: [AuctionStatus.UPCOMING, AuctionStatus.ACTIVE]
+        }
       }
+    });
 
-      // 2. Validate auction status and timing
+    if (existingAuction) {
+      throw new AppError('This artwork already has an active or upcoming auction', 400);
+    }
+
+    // 4. Create the auction and update artwork availability atomically
+    const auction = await prisma.$transaction(async (tx) => {
+      // Determine initial status based on start time
       const now = new Date();
-      if (auction.status !== AuctionStatus.ACTIVE) {
-        if (auction.status === AuctionStatus.UPCOMING) {
-          throw new AppError('This auction has not started yet. Bids are not accepted for upcoming auctions.', 400);
-        }
-        if (auction.status === AuctionStatus.ENDED || auction.status === AuctionStatus.CANCELLED) {
-          throw new AppError('This auction has closed. Bids are no longer accepted.', 400);
-        }
-      }
+      const startTime = new Date(data.startTime);
+      const initialStatus = startTime <= now ? AuctionStatus.ACTIVE : AuctionStatus.UPCOMING;
 
-      if (now < auction.startTime) {
-        throw new AppError('This auction has not started yet. Bids are not accepted before the start time.', 400);
-      }
-
-      if (now > auction.endTime) {
-        // Auto-mark auction as ended if past end time
-        await tx.auction.update({
-          where: { id: auctionId },
-          data: { status: AuctionStatus.ENDED },
-        });
-        throw new AppError('This auction has concluded. Bids submitted after auction closure are rejected.', 400);
-      }
-
-      // 3. Artist cannot bid on their own artwork
-      if (auction.artwork.artistId === bidderId) {
-        throw new AppError('Artists are not permitted to bid on their own artworks in an auction.', 403);
-      }
-
-      // 4. Validate bidding step increment
-      const incrementCheck = validateBidStepIncrement(
-        roundedBid,
-        auction.currentHighestBid ? Number(auction.currentHighestBid) : null,
-        Number(auction.startingBid),
-        Number(auction.minIncrement)
-      );
-
-      if (!incrementCheck.isValid) {
-        throw new AppError(incrementCheck.error || 'Bid does not satisfy the required increment.', 400);
-      }
-
-      // 5. Verify bidder has sufficient internal credits
-      const bidderWallet = await tx.wallet.findUnique({
-        where: { userId: bidderId },
-      });
-
-      if (!bidderWallet) {
-        throw new AppError('Bidder credit wallet not found', 404);
-      }
-
-      const walletBalance = Number(bidderWallet.balance);
-      if (walletBalance < roundedBid) {
-        throw new AppError(
-          `Insufficient credit balance. You have ${walletBalance.toFixed(2)} credits, but this bid requires ${roundedBid.toFixed(2)} credits.`,
-          400
-        );
-      }
-
-      // 6. Record the bid
-      const bid = await tx.auctionBid.create({
+      const newAuction = await tx.auction.create({
         data: {
-          auctionId,
-          bidderId,
-          amount: roundedBid,
-        },
-        include: {
-          bidder: {
-            select: { id: true, name: true },
-          },
-        },
-      });
-
-      // 7. Update current highest bid on the auction
-      const updatedAuction = await tx.auction.update({
-        where: { id: auctionId },
-        data: {
-          currentHighestBid: roundedBid,
+          artworkId: data.artworkId,
+          startingBid: data.startingBid,
+          minIncrement: data.minIncrement,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          status: initialStatus,
         },
         include: {
           artwork: {
             include: {
-              artist: {
-                select: { id: true, name: true },
-              },
-            },
-          },
-        },
+              artist: true,
+            }
+          }
+        }
       });
 
-      return {
-        bid: {
-          id: bid.id,
-          auctionId: bid.auctionId,
-          bidderId: bid.bidderId,
-          amount: Number(bid.amount),
-          createdAt: bid.createdAt,
-          bidder: bid.bidder,
-        },
-        auction: this.formatAuction(updatedAuction),
-      };
+      // Mark artwork as RESERVED so it cannot be purchased via direct sale while auction is active/upcoming
+      await tx.artwork.update({
+        where: { id: data.artworkId },
+        data: { availability: ArtworkAvailability.RESERVED },
+      });
+
+      return newAuction;
     });
+
+    return this.formatAuction(auction);
+  }
+
+  public static async getMyAuctions(artistId: string) {
+    const auctions = await prisma.auction.findMany({
+      where: {
+        artwork: {
+          artistId: artistId,
+        }
+      },
+      include: {
+        artwork: {
+          include: {
+            artist: true,
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc',
+      }
+    });
+
+    return auctions.map(this.formatAuction);
+  }
+
+  public static async placeBid(userId: string, auctionId: string, data: PlaceBidInput) {
+    const auction = await prisma.auction.findUnique({
+      where: { id: auctionId },
+      include: {
+        artwork: true,
+        bids: {
+          orderBy: { amount: 'desc' },
+          take: 1
+        }
+      }
+    });
+
+    if (!auction) {
+      throw new AppError('Auction not found', 404);
+    }
+
+    if (auction.status !== AuctionStatus.ACTIVE) {
+      throw new AppError(`Cannot bid on auction. Current status: ${auction.status}`, 400);
+    }
+
+    if (auction.artwork.artistId === userId) {
+      throw new AppError('You cannot bid on your own artwork', 400);
+    }
+
+    // Bid validation
+    const bidAmount = Number(data.amount);
+    const startingBid = Number(auction.startingBid);
+    const minIncrement = Number(auction.minIncrement);
+    const currentHighest = auction.currentHighestBid ? Number(auction.currentHighestBid) : null;
+
+    if (bidAmount < startingBid) {
+      throw new AppError(`Bid must be at least the starting bid of ${startingBid}`, 400);
+    }
+
+    if (currentHighest !== null && bidAmount < currentHighest + minIncrement) {
+      throw new AppError(`Bid must be at least ${currentHighest + minIncrement} (current highest + increment)`, 400);
+    }
+
+    const previousHighestBid = auction.bids.length > 0 ? auction.bids[0] : null;
+
+    // Transaction to handle the bid, deductions, and refunds
+    const newBid = await prisma.$transaction(async (tx) => {
+      // 1. Verify and hold funds from the new bidder
+      const wallet = await tx.wallet.findUnique({
+        where: { userId: userId },
+      });
+
+      if (!wallet || Number(wallet.balance) < bidAmount) {
+        throw new AppError('Insufficient credits to place this bid', 400);
+      }
+
+      await tx.wallet.update({
+        where: { id: wallet.id },
+        data: { balance: { decrement: bidAmount } }
+      });
+
+      await tx.creditTransaction.create({
+        data: {
+          walletId: wallet.id,
+          amount: bidAmount,
+          type: TransactionType.AUCTION_BID_HOLD,
+          description: `Bid hold for auction ${auctionId}`,
+          referenceId: auctionId
+        }
+      });
+
+      // 2. Refund the previous highest bidder if they exist
+      if (previousHighestBid) {
+        const prevWallet = await tx.wallet.findUnique({
+          where: { userId: previousHighestBid.bidderId }
+        });
+
+        if (prevWallet) {
+          await tx.wallet.update({
+            where: { id: prevWallet.id },
+            data: { balance: { increment: previousHighestBid.amount } }
+          });
+
+          await tx.creditTransaction.create({
+            data: {
+              walletId: prevWallet.id,
+              amount: previousHighestBid.amount,
+              type: TransactionType.AUCTION_BID_REFUND,
+              description: `Refund for outbid on auction ${auctionId}`,
+              referenceId: auctionId
+            }
+          });
+        }
+      }
+
+      // 3. Create the new bid record
+      const bid = await tx.auctionBid.create({
+        data: {
+          auctionId,
+          bidderId: userId,
+          amount: bidAmount
+        }
+      });
+
+      // 4. Update the auction's highest bid
+      const updatedAuction = await tx.auction.update({
+        where: { id: auctionId },
+        data: { currentHighestBid: bidAmount }
+      });
+
+      return { bid, currentHighestBid: Number(updatedAuction.currentHighestBid) };
+    });
+
+    // 5. Emit Real-time events
+    try {
+      io.to(`auction:${auctionId}`).emit('auction:new_bid', {
+        auctionId,
+        bidderId: userId,
+        amount: bidAmount,
+        timestamp: newBid.bid.createdAt
+      });
+
+      if (previousHighestBid) {
+        io.to(`user:${previousHighestBid.bidderId}`).emit('auction:outbid', {
+          auctionId,
+          artworkTitle: auction.artwork.title,
+          newHighestBid: bidAmount
+        });
+      }
+    } catch (err) {
+      console.error('Socket emission failed', err);
+    }
+
+    return newBid;
+  }
+
+  static async getById(auctionId: string) {
+    const auction = await prisma.auction.findUnique({
+      where: { id: auctionId },
+      include: {
+        artwork: {
+          select: {
+            id: true,
+            title: true,
+            medium: true,
+            imageUrl: true,
+            artist: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          }
+        },
+        bids: {
+          orderBy: { amount: 'desc' },
+          take: 10,
+          include: {
+            bidder: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!auction) {
+      throw new AppError('Auction not found', 404);
+    }
+
+    return auction;
+  }
+
+  static async processEndedAuctions() {
+    const now = new Date();
+    
+    // Find all ACTIVE auctions that have passed their endTime
+    const endedAuctions = await prisma.auction.findMany({
+      where: {
+        status: AuctionStatus.ACTIVE,
+        endTime: { lte: now }
+      },
+      include: {
+        artwork: true,
+        bids: {
+          orderBy: { amount: 'desc' },
+          take: 1
+        }
+      }
+    });
+
+    for (const auction of endedAuctions) {
+      await prisma.$transaction(async (tx) => {
+        const highestBid = auction.bids[0];
+
+        // 1. Mark auction as CLOSED
+        await tx.auction.update({
+          where: { id: auction.id },
+          data: { 
+            status: AuctionStatus.CLOSED,
+            winnerId: highestBid ? highestBid.bidderId : null
+          }
+        });
+
+        if (highestBid) {
+          // 2. Someone won. Mark artwork as SOLD.
+          await tx.artwork.update({
+            where: { id: auction.artworkId },
+            data: { availability: ArtworkAvailability.SOLD }
+          });
+
+          // 3. Transfer the escrowed bid amount to the artist's wallet
+          const artistId = auction.artwork.artistId;
+          const artistWallet = await tx.wallet.findUnique({ where: { userId: artistId } });
+          
+          if (artistWallet) {
+            await tx.wallet.update({
+              where: { id: artistWallet.id },
+              data: { balance: { increment: highestBid.amount } }
+            });
+
+            await tx.creditTransaction.create({
+              data: {
+                walletId: artistWallet.id,
+                amount: highestBid.amount,
+                type: 'AUCTION_WIN_PAYOUT',
+                description: `Revenue from auction ${auction.id}`,
+                referenceId: auction.id
+              }
+            });
+          }
+        } else {
+          // 4. No one bid. Return artwork to AVAILABLE.
+          await tx.artwork.update({
+            where: { id: auction.artworkId },
+            data: { availability: ArtworkAvailability.AVAILABLE }
+          });
+        }
+      });
+
+      // 5. Emit event
+      io.to(`auction:${auction.id}`).emit('auction:ended', {
+        auctionId: auction.id,
+        winnerId: auction.bids[0]?.bidderId || null,
+        finalBid: auction.bids[0]?.amount || 0
+      });
+    }
   }
 }
