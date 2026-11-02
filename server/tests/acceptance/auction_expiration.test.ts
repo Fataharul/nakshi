@@ -138,5 +138,22 @@ describe('Auction Expiration & Post-Close Bid Rejection (T-060)', () => {
       expect(await prisma.auctionBid.count({ where: { auctionId } })).toBe(1);
       expect(await getBalance(buyer2Id)).toBe(buyer2BalanceBefore); // no credits held
     }, 30000);
+    
+    it('closes the expired auction, records the winner, marks the artwork SOLD and pays the artist', async () => {
+      const artistBalanceBefore = await getBalance(artistId);
+
+      // Listing auctions runs the same expiry sync that the background worker uses
+      const listRes = await fetch(`${baseUrl}/api/auctions?status=ALL`);
+      expect(listRes.status).toBe(200);
+
+      const closed = await prisma.auction.findUnique({ where: { id: auctionId } });
+      expect(closed?.status).toBe('CLOSED');
+      expect(closed?.winnerId).toBe(buyer1Id);
+
+      const artwork = await prisma.artwork.findUnique({ where: { id: artworkId } });
+      expect(artwork?.availability).toBe('SOLD');
+
+      expect(await getBalance(artistId)).toBe(artistBalanceBefore + 250);
+    }, 30000);
   });
 });
