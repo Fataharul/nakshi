@@ -432,4 +432,40 @@ describe('Exhibition Ticket Token Validation & Entry Hardening Acceptance Tests'
     expect(vipData.ticket.isVip).toBe(true);
     expect(vipData.exhibition.isVipActive).toBe(true);
   });
+
+  it('rejects ticket purchase or upgrade on a concluded exhibition with 400', async () => {
+    const purchaseRes = await fetch(`${baseUrl}/api/exhibitions/${concludedExhibitionId}/ticket`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${otherBuyerToken}`,
+      },
+      body: JSON.stringify({ isVip: false }),
+    });
+
+    const data = (await purchaseRes.json()) as any;
+    expect(purchaseRes.status).toBe(400);
+    expect(data.error || data.message).toMatch(/viewing schedule has concluded/i);
+  });
+
+  it('rejects room entry for visitors on concluded exhibition with 400, but permits organizer archival access with 200', async () => {
+    // 1. Regular buyer attempting room entry is rejected
+    const visitorRoomRes = await fetch(`${baseUrl}/api/exhibitions/${concludedExhibitionId}/room`, {
+      headers: { Authorization: `Bearer ${buyerToken}` },
+    });
+    const visitorData = (await visitorRoomRes.json()) as any;
+    expect(visitorRoomRes.status).toBe(400);
+    expect(visitorData.error || visitorData.message).toMatch(/concluded its viewing schedule/i);
+
+    // 2. Organizer attempting room entry is granted archival access with 200
+    const orgRoomRes = await fetch(`${baseUrl}/api/exhibitions/${concludedExhibitionId}/room`, {
+      headers: { Authorization: `Bearer ${organizerToken}` },
+    });
+    const orgData = (await orgRoomRes.json()) as any;
+    expect(orgRoomRes.status).toBe(200);
+    expect(orgData.exhibition.id).toBe(concludedExhibitionId);
+    expect(orgData.accessPass.ticketToken).toBe('CURATOR-ACCESS');
+  });
 });
+
+

@@ -9,7 +9,7 @@ A full-stack digital gallery and marketplace celebrating Bangladeshi arts, texti
 - **Multi-Vendor Marketplace**: Artist storefronts, artwork listings, categorization, search & filtering.
 - **Internal Credit-Based Transactions**: Secure fictional credits with atomic ledger transactions, race-condition protection, and simulated dummy top-ups (zero external payment gateway costs).
 - **Admin-Managed Live Auctions**: Real-time bidding via WebSockets (Socket.IO), countdown synchronization, outbid alerts, and automated winner settlement.
-- **Virtual Exhibitions**: Digital gallery walls, floor layout customization, VIP viewing windows, and unique access ticket tokens (`NK-EXH-2026-X9B2`).
+- **Virtual Exhibitions**: Digital gallery walls, floor layout customization, VIP preview windows, unique access ticket tokens (`NK-EXH-...`), and schedule-concluded access protection with curator archival review.
 - **Duplicate Artwork Protection**: Background visual similarity detection using `sharp` (64-bit dHash). Artwork exceeding the **80% similarity threshold** is automatically routed to an Admin Review Queue featuring side-by-side comparative moderation.
 - **Responsive Gallery UI**: Crafted to match [DESIGN.md](.context/DESIGN.md) and [DESIGN_DIRECTION.md](.context/DESIGN_DIRECTION.md) down to **360px screen width**.
 

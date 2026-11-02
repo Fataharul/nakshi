@@ -309,6 +309,18 @@ async function main() {
           walls: ['Royal Pavilion: Floral Jaal', 'Weavers Studio: Historical Looms'],
         },
       },
+      {
+        title: 'Ancient Kantha & Silk Archive (Concluded)',
+        description: 'Archived heritage exhibition showcasing 19th-century Rajshahi silk tapestries and ceremonial quilts.',
+        bannerUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=80',
+        ticketPrice: 40.0,
+        startTime: new Date(now.getTime() - 86400000 * 30),
+        endTime: new Date(now.getTime() - 86400000 * 2),
+        layoutConfig: {
+          curatorNote: 'Archived historical showcase. Viewing period has concluded.',
+          walls: ['Historical Pavilion', 'Archived Gallery'],
+        },
+      },
     ];
 
     for (const exh of demoExhibitions) {

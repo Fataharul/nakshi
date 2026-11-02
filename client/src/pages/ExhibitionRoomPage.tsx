@@ -136,6 +136,9 @@ export const ExhibitionRoomPage: React.FC = () => {
   const hasTicket = Boolean(activeTicket) || isOrganizer || isFree;
   const isTicketVip = activeTicket?.isVip || isOrganizer;
 
+  const isConcluded = now > new Date(exhibition.endTime);
+  const isExpired = isConcluded && !isOrganizer;
+
   // Check VIP window
   const isVipWindowActive = Boolean(
     exhibition.vipStartTime &&
@@ -184,7 +187,15 @@ export const ExhibitionRoomPage: React.FC = () => {
 
           <div className="flex items-center gap-3">
             {/* Admission / Pass Status Pill */}
-            {hasTicket ? (
+            {isExpired ? (
+              <div
+                id="expired-ticket-badge"
+                className="px-3 py-1.5 rounded-full text-xs font-semibold bg-surface-container-high text-error border border-error/20 flex items-center gap-1.5 shadow-xs"
+              >
+                <Clock className="w-3.5 h-3.5 text-error" />
+                <span>Viewing Closed</span>
+              </div>
+            ) : hasTicket ? (
               <div
                 id="active-ticket-badge"
                 className="px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5 shadow-xs"
@@ -204,11 +215,12 @@ export const ExhibitionRoomPage: React.FC = () => {
             ) : (
               <button
                 id="header-reserve-ticket-btn"
+                disabled={isConcluded}
                 onClick={() => setIsTicketModalOpen(true)}
-                className="px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider bg-primary text-on-primary hover:bg-surface-tint transition-all shadow-xs flex items-center gap-1.5"
+                className="px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider bg-primary text-on-primary hover:bg-surface-tint disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xs flex items-center gap-1.5"
               >
                 <Ticket className="w-3.5 h-3.5" />
-                <span>Reserve Pass ({exhibition.ticketPrice} Credits)</span>
+                <span>{isConcluded ? 'Schedule Concluded' : `Reserve Pass (${exhibition.ticketPrice} Credits)`}</span>
               </button>
             )}
 
@@ -221,7 +233,87 @@ export const ExhibitionRoomPage: React.FC = () => {
       </header>
 
       {/* Main Exhibition Hall Viewport */}
-      {!hasTicket ? (
+      {isExpired ? (
+        /* Dedicated Concluded / Expired Access Screen */
+        <main
+          id="exhibition-concluded-view"
+          className="flex-1 max-w-3xl mx-auto px-4 py-16 text-center flex flex-col items-center justify-center"
+        >
+          <div className="w-20 h-20 rounded-full bg-error/10 text-error flex items-center justify-center mb-6 border border-error/20">
+            <Clock className="w-10 h-10" />
+          </div>
+
+          <div
+            id="exhibition-concluded-badge"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-error/10 text-error border border-error/20 mb-4 uppercase tracking-wider"
+          >
+            <Clock className="w-3.5 h-3.5" />
+            <span>Exhibition Schedule Concluded</span>
+          </div>
+
+          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-on-surface mb-3">
+            Viewing Period Has Ended
+          </h2>
+
+          <p className="text-sm text-on-surface-variant max-w-lg mb-6 leading-relaxed">
+            This curated exhibition concluded its viewing schedule on{' '}
+            <strong className="text-on-surface">
+              {new Date(exhibition.endTime).toLocaleDateString(undefined, {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </strong>
+            . Access to the virtual gallery walls and curator spotlights is now closed to visitors.
+          </p>
+
+          {/* Exhibition Schedule and Ticket Details */}
+          <div className="w-full max-w-md bg-surface-container-lowest p-6 rounded-2xl border border-outline/20 mb-8 text-left shadow-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-outline/10 text-xs">
+              <span className="text-on-surface-variant uppercase font-semibold">Exhibition</span>
+              <strong className="text-on-surface font-serif">{exhibition.title}</strong>
+            </div>
+            <div className="flex items-center justify-between py-3 border-b border-outline/10 text-xs">
+              <span className="text-on-surface-variant uppercase font-semibold">Curator</span>
+              <span className="text-on-surface font-medium">{exhibition.organizer.name}</span>
+            </div>
+            <div className="flex items-center justify-between py-3 border-b border-outline/10 text-xs">
+              <span className="text-on-surface-variant uppercase font-semibold">Schedule Period</span>
+              <span className="text-on-surface font-mono text-[11px]">
+                {new Date(exhibition.startTime).toLocaleDateString()} – {new Date(exhibition.endTime).toLocaleDateString()}
+              </span>
+            </div>
+            {activeTicket && (
+              <div className="flex items-center justify-between pt-3 text-xs">
+                <span className="text-on-surface-variant uppercase font-semibold">Expired Pass Token</span>
+                <span id="expired-ticket-token-pill" className="font-mono text-primary font-bold text-xs bg-primary/10 px-2.5 py-1 rounded-md">
+                  {activeTicket.ticketToken}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <button
+              id="unlock-exhibition-ticket-btn"
+              disabled
+              className="px-6 py-3 bg-surface-container-high text-on-surface-variant font-semibold text-xs uppercase tracking-wider rounded-full border border-outline/20 flex items-center gap-2 cursor-not-allowed opacity-60"
+            >
+              <Ticket className="w-4 h-4" />
+              <span>Pass Reservations Closed</span>
+            </button>
+            <Link
+              id="return-to-catalog-btn"
+              to="/exhibitions"
+              className="px-8 py-3 bg-primary text-on-primary text-xs font-semibold uppercase tracking-wider rounded-full hover:bg-surface-tint transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Return to Exhibitions Catalog</span>
+            </Link>
+          </div>
+        </main>
+      ) : !hasTicket ? (
         /* Foyer / Reception View: Locked Hall Requiring Admission Pass */
         <main id="exhibition-foyer-view" className="flex-1 max-w-5xl mx-auto px-4 py-12 flex flex-col justify-center">
           <div className="bg-surface-container-lowest rounded-3xl border border-outline/20 overflow-hidden ambient-shadow shadow-xl">
@@ -290,14 +382,27 @@ export const ExhibitionRoomPage: React.FC = () => {
                     Unlock the virtual 3D gallery walls, inspect high-res artisan textiles, and examine provenance.
                   </p>
 
-                  <button
-                    id="unlock-exhibition-ticket-btn"
-                    onClick={() => setIsTicketModalOpen(true)}
-                    className="w-full py-3.5 bg-primary text-on-primary font-semibold text-xs uppercase tracking-wider rounded-xl hover:bg-surface-tint transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <Ticket className="w-4 h-4" />
-                    <span>Get Exhibition Pass</span>
-                  </button>
+                  {isConcluded ? (
+                    <button
+                      id="unlock-exhibition-ticket-btn"
+                      disabled
+                      className="w-full py-3.5 bg-surface-container-high text-on-surface-variant font-semibold text-xs uppercase tracking-wider rounded-xl border border-outline/20 flex items-center justify-center gap-2 cursor-not-allowed opacity-75"
+                    >
+                      <div id="exhibition-concluded-badge" className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-error" />
+                        <span>Exhibition Schedule Concluded</span>
+                      </div>
+                    </button>
+                  ) : (
+                    <button
+                      id="unlock-exhibition-ticket-btn"
+                      onClick={() => setIsTicketModalOpen(true)}
+                      className="w-full py-3.5 bg-primary text-on-primary font-semibold text-xs uppercase tracking-wider rounded-xl hover:bg-surface-tint transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Ticket className="w-4 h-4" />
+                      <span>Get Exhibition Pass</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Ticket Token Validation Gate */}

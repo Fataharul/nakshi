@@ -584,3 +584,27 @@
   - **Client Production Build**: Vite production bundle compiled cleanly with 0 errors (`npm --prefix client run build`).
   - **Playwright E2E Ticket Validation Suite**: 6/6 tests passed in `e2e/05_exhibition_tickets.spec.ts` across Desktop Chrome, Tablet 768px, and Mobile 360px viewports.
   - **Playwright E2E Regression Suite**: 12/12 tests passed in `e2e/05_exhibitions.spec.ts` across all responsive viewports.
+
+## [2026-11-02 23:20:00 +06:00] Milestone: Concluded Exhibition Access Blocking & Expired Schedule Protection Implemented & Verified
+- **Completed**:
+  - **Backend Purchase & Entry Protection**:
+    - Hardened `ExhibitionService.purchaseTicket` to reject ticket reservations or VIP pass upgrades on concluded exhibitions (`now > new Date(exhibition.endTime)`) with 400 Bad Request (`"Cannot purchase or upgrade passes for an exhibition whose viewing schedule has concluded"`).
+    - Configured Prisma interactive transactions with `{ maxWait: 10000, timeout: 20000 }` to eliminate transaction timeouts under concurrent load.
+    - Re-ordered organizer resolution before schedule expiration check in `ExhibitionService.getRoom` so that visitors and ticket holders are blocked once `now > exhibition.endTime` with 400 Bad Request (`"This exhibition has concluded its viewing schedule"`), while granting organizers/admins archival room access with 200 OK.
+  - **Frontend Concluded View & State Synchronization**:
+    - Enhanced `client/src/pages/ExhibitionRoomPage.tsx` to compute `isConcluded = now > new Date(exhibition.endTime)` and `isExpired = isConcluded && !isOrganizer`.
+    - Main Viewport: Render dedicated `#exhibition-concluded-view` when `isExpired` is true, displaying the conclusion date, curator attribution, schedule duration, expired pass token (`#expired-ticket-token-pill`) if held, disabled pass button with `#exhibition-concluded-badge`, and `#return-to-catalog-btn` navigating back to `/exhibitions`. Virtual gallery wall tabs and interactive exhibit frames are strictly blocked from rendering.
+    - Header: Display `#expired-ticket-badge` with `"Viewing Closed"` when `isExpired` is true.
+    - Foyer & Modal: In `#exhibition-foyer-view`, replace the active pass reservation button with `#exhibition-concluded-badge`. In `BuyTicketModal.tsx`, display `#modal-concluded-alert` and disable `#confirm-ticket-purchase-btn` when `isConcluded` is true.
+  - **Seed Data Enhancement**:
+    - Added demo concluded exhibition `"Ancient Kantha & Silk Archive (Concluded)"` to `server/prisma/seed.ts` for automated verification.
+  - **Testing Coverage**:
+    - Added 2 backend acceptance tests in `server/tests/acceptance/exhibition_ticket_validation.test.ts` (11/11 tests passing).
+    - Added responsive E2E test in `e2e/05_exhibition_tickets.spec.ts` (9/9 tests passing across Desktop Chrome, Tablet 768px, and Mobile 360px).
+- **Verified**:
+  - **Server Acceptance Tests**: 11/11 acceptance tests passed in `exhibition_ticket_validation.test.ts` and 4/4 passed in `organizer_exhibition.test.ts`.
+  - **Server Production Build**: TypeScript compiled cleanly with 0 errors (`npm --prefix server run build`).
+  - **Client Production Build**: Vite production bundle compiled cleanly with 0 errors (`npm --prefix client run build`).
+  - **Playwright E2E Ticket Validation Suite**: 9/9 tests passed in `e2e/05_exhibition_tickets.spec.ts` across Desktop Chrome, Tablet 768px, and Mobile 360px viewports.
+  - **Playwright E2E General Exhibition Suite**: 12/12 tests passed in `e2e/05_exhibitions.spec.ts` across Desktop Chrome, Tablet 768px, and Mobile 360px viewports.
+

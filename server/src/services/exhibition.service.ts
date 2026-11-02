@@ -301,6 +301,11 @@ export class ExhibitionService {
       throw new AppError('Exhibition not found', 404);
     }
 
+    const now = new Date();
+    if (now > new Date(exhibition.endTime)) {
+      throw new AppError('Cannot purchase or upgrade passes for an exhibition whose viewing schedule has concluded', 400);
+    }
+
     // Check if user already holds a ticket
     const existingTicket = await prisma.exhibitionTicket.findFirst({
       where: {
@@ -319,29 +324,32 @@ export class ExhibitionService {
           throw new AppError(`Insufficient credits for VIP upgrade (${vipUpgradeCost} Credits required)`, 400);
         }
 
-        return await prisma.$transaction(async (tx) => {
-          await tx.wallet.update({
-            where: { id: wallet.id },
-            data: { balance: { decrement: vipUpgradeCost } },
-          });
+        return await prisma.$transaction(
+          async (tx) => {
+            await tx.wallet.update({
+              where: { id: wallet.id },
+              data: { balance: { decrement: vipUpgradeCost } },
+            });
 
-          await tx.creditTransaction.create({
-            data: {
-              walletId: wallet.id,
-              amount: vipUpgradeCost,
-              type: TransactionType.EXHIBITION_TICKET,
-              description: `VIP Pass Upgrade for "${exhibition.title}"`,
-              referenceId: exhibitionId,
-            },
-          });
+            await tx.creditTransaction.create({
+              data: {
+                walletId: wallet.id,
+                amount: vipUpgradeCost,
+                type: TransactionType.EXHIBITION_TICKET,
+                description: `VIP Pass Upgrade for "${exhibition.title}"`,
+                referenceId: exhibitionId,
+              },
+            });
 
-          const updated = await tx.exhibitionTicket.update({
-            where: { id: existingTicket.id },
-            data: { isVip: true },
-          });
+            const updated = await tx.exhibitionTicket.update({
+              where: { id: existingTicket.id },
+              data: { isVip: true },
+            });
 
-          return updated;
-        });
+            return updated;
+          },
+          { maxWait: 10000, timeout: 20000 }
+        );
       }
 
       return existingTicket;
@@ -356,7 +364,8 @@ export class ExhibitionService {
     const timePart = Date.now().toString(36).substring(4).toUpperCase();
     const ticketToken = `NK-EXH-${year}-${timePart}-${randPart}`;
 
-    const ticket = await prisma.$transaction(async (tx) => {
+    const ticket = await prisma.$transaction(
+      async (tx) => {
       // Deduct internal credits if ticketPrice > 0
       if (finalPrice > 0) {
         const wallet = await tx.wallet.findUnique({ where: { userId } });
@@ -411,7 +420,7 @@ export class ExhibitionService {
       });
 
       return createdTicket;
-    });
+    }, { maxWait: 10000, timeout: 20000 });
 
     return ticket;
   }
@@ -459,11 +468,6 @@ export class ExhibitionService {
     const start = new Date(exhibition.startTime);
     const end = new Date(exhibition.endTime);
 
-    // If exhibition has closed
-    if (now > end) {
-      throw new AppError('This exhibition has concluded its viewing schedule', 400);
-    }
-
     let isOrganizer = false;
     let ticket = null;
 
@@ -479,6 +483,11 @@ export class ExhibitionService {
           },
         });
       }
+    }
+
+    // If exhibition has closed
+    if (now > end && !isOrganizer) {
+      throw new AppError('This exhibition has concluded its viewing schedule', 400);
     }
 
     if (!isOrganizer && !ticket && ticketToken) {

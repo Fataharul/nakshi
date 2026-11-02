@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, CheckCircle2, Ticket, Crown, AlertCircle, ArrowRight } from 'lucide-react';
+import { X, CheckCircle2, Ticket, Crown, AlertCircle, ArrowRight, Clock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { ExhibitionDetail, ExhibitionTicket, ExhibitionService } from '../../services/exhibition.service';
 
@@ -44,6 +44,7 @@ export const BuyTicketModal: React.FC<BuyTicketModalProps> = ({
 
   if (!isOpen) return null;
 
+  const isConcluded = new Date() > new Date(exhibition.endTime);
   const basePrice = Number(exhibition.ticketPrice);
   const vipPrice = basePrice + Math.round(basePrice * 0.5 || 25);
   const selectedPrice = isVipSelected ? vipPrice : basePrice;
@@ -276,6 +277,16 @@ export const BuyTicketModal: React.FC<BuyTicketModalProps> = ({
                 )}
               </div>
 
+              {isConcluded && (
+                <div
+                  id="modal-concluded-alert"
+                  className="mb-4 p-3 rounded-lg bg-error/10 border border-error/20 text-error text-xs flex items-center gap-2"
+                >
+                  <Clock className="w-4 h-4 shrink-0" />
+                  <span>This exhibition's viewing schedule has concluded. Ticket sales and pass upgrades are closed.</span>
+                </div>
+              )}
+
               {error && (
                 <div
                   id="ticket-error-banner"
@@ -290,7 +301,7 @@ export const BuyTicketModal: React.FC<BuyTicketModalProps> = ({
               <button
                 id="confirm-ticket-purchase-btn"
                 onClick={handlePurchase}
-                disabled={isSubmitting || (!hasSufficientCredits && selectedPrice > 0)}
+                disabled={isSubmitting || isConcluded || (!hasSufficientCredits && selectedPrice > 0)}
                 className="w-full py-3.5 bg-primary text-on-primary font-semibold text-xs uppercase tracking-wider rounded-lg hover:bg-surface-tint disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
@@ -298,6 +309,8 @@ export const BuyTicketModal: React.FC<BuyTicketModalProps> = ({
                     <span className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
                     Issuing Pass...
                   </span>
+                ) : isConcluded ? (
+                  <span>Exhibition Schedule Concluded</span>
                 ) : (
                   <span>
                     Confirm {isVipSelected ? 'VIP' : 'Standard'} Pass ({selectedPrice} Credits)

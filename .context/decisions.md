@@ -318,3 +318,23 @@
 - **Rationale**:
   - Enforces mathematical security and access integrity for ticketed cultural exhibitions.
   - Guarantees seamless guest entry via token input or direct pass links without compromising VIP exclusivity or exhibition schedules.
+
+## 26. Expired Exhibition & Ticket Access Blocking Architecture
+- **Timestamp**: 2026-11-02 23:15:00 +06:00
+- **Context**: Virtual exhibitions have defined calendar viewing periods (`startTime` to `endTime`). Once an exhibition period has concluded, regular visitors and ticket holders must be blocked from entering virtual gallery halls, purchasing tickets, or upgrading passes, while organizers and admins must retain archival room access for audit, provenance inspection, and curatorial review (Requirements 2.6, 3.6).
+- **Decision**:
+  - Backend Access Hardening:
+    - In `ExhibitionService.purchaseTicket`: Check `now > new Date(exhibition.endTime)` before initiating wallet transactions, rejecting purchases or VIP upgrades on concluded exhibitions with 400 Bad Request (`"Cannot purchase or upgrade passes for an exhibition whose viewing schedule has concluded"`). Configure interactive transaction timeouts with `{ maxWait: 10000, timeout: 20000 }` to guard against latency.
+    - In `ExhibitionService.getRoom`: Resolve organizer identity prior to schedule expiration verification; block general visitors and pass holders once `now > exhibition.endTime` with 400 Bad Request (`"This exhibition has concluded its viewing schedule"`), while granting organizers/admins archival room access with 200 OK and `accessPass: { ticketToken: 'CURATOR-ACCESS', isVip: true }`.
+  - Frontend UI Synchronization:
+    - In `ExhibitionRoomPage.tsx`: Compute `isConcluded = now > new Date(exhibition.endTime)` and `isExpired = isConcluded && !isOrganizer`.
+    - Main Viewport: Render `#exhibition-concluded-view` when `isExpired` is true, displaying conclusion date, curator attribution, expired pass token (`#expired-ticket-token-pill`) if held, schedule timeframe, disabled pass button with `#exhibition-concluded-badge`, and `#return-to-catalog-btn` navigating back to `/exhibitions`. Virtual gallery wall tabs and exhibit frames are strictly blocked from rendering.
+    - Header: Display `#expired-ticket-badge` with `"Viewing Closed"` when `isExpired` is true.
+    - Foyer & Modal: In `#exhibition-foyer-view`, replace the active pass reservation button with `#exhibition-concluded-badge`. In `BuyTicketModal.tsx`, display `#modal-concluded-alert` and disable `#confirm-ticket-purchase-btn` when `isConcluded` is true.
+  - Acceptance & E2E Verification:
+    - 11 backend acceptance tests in `server/tests/acceptance/exhibition_ticket_validation.test.ts` verifying purchase blocking on closed exhibitions and curator archival entry.
+    - 9 responsive E2E tests in `e2e/05_exhibition_tickets.spec.ts` verifying access blocking across Desktop Chrome, Tablet 768px, and Mobile 360px.
+- **Rationale**:
+  - Upholds exhibition schedule integrity and prevents financial deductions for concluded events.
+  - Gives visitors clear, informative status explanations and recovery routes to the catalog while preserving essential curator auditing privileges.
+

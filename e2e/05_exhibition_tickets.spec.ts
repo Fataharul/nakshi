@@ -218,4 +218,47 @@ test.describe('Acceptance Criteria 3.6: Exhibition Ticket Token Validation & Ent
     await expect(page.locator('#active-ticket-badge')).toContainText('VIP Collector Pass');
     await expect(page.locator('button[id^="wall-tab-"]').first()).toBeVisible({ timeout: 10000 });
   });
+
+  test('blocks access when exhibition period has expired, rendering concluded screen and disabling pass purchase', async ({
+    page,
+  }) => {
+    test.setTimeout(90000);
+
+    // 1. Navigate to Exhibitions catalog
+    await page.goto('/exhibitions');
+    await expect(page.locator('#exhibitions-filter-all')).toBeVisible({ timeout: 15000 });
+
+    // 2. Select the concluded exhibition
+    const concludedCard = page.locator('article:has-text("Ancient Kantha & Silk Archive (Concluded)")');
+    await expect(concludedCard).toBeVisible({ timeout: 10000 });
+    await concludedCard.locator('[id^="enter-exhibition-btn-"]').click();
+
+    // 3. Verify concluded access block view is displayed
+    await expect(page).toHaveURL(/\/exhibitions\/[a-zA-Z0-9-]+/);
+    await expect(page.locator('#exhibition-concluded-view')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#exhibition-concluded-badge')).toBeVisible();
+    await expect(page.locator('#exhibition-concluded-badge')).toContainText('Exhibition Schedule Concluded');
+    await expect(page.locator('#expired-ticket-badge')).toBeVisible();
+    await expect(page.locator('#expired-ticket-badge')).toContainText('Viewing Closed');
+
+    // 4. Verify gallery wall tabs and interactive exhibits are strictly blocked
+    await expect(page.locator('button[id^="wall-tab-"]')).toHaveCount(0);
+    await expect(page.locator('#unlock-exhibition-ticket-btn')).toBeDisabled();
+    await expect(page.locator('#unlock-exhibition-ticket-btn')).toContainText('Pass Reservations Closed');
+
+    // 5. Verify responsive layout on Tablet (768px) and Mobile (360px)
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await expect(page.locator('#exhibition-concluded-view')).toBeVisible();
+    await expect(page.locator('#return-to-catalog-btn')).toBeVisible();
+
+    await page.setViewportSize({ width: 360, height: 800 });
+    await expect(page.locator('#exhibition-concluded-view')).toBeVisible();
+    await expect(page.locator('#return-to-catalog-btn')).toBeVisible();
+
+    // 6. Return to catalog button works
+    await page.locator('#return-to-catalog-btn').click();
+    await expect(page).toHaveURL(/\/exhibitions/);
+    await expect(page.locator('#exhibitions-filter-all')).toBeVisible({ timeout: 10000 });
+  });
 });
+
