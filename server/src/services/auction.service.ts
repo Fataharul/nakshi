@@ -184,6 +184,11 @@ export class AuctionService {
     if (auction.status !== AuctionStatus.ACTIVE) {
       throw new AppError(`Cannot bid on auction. Current status: ${auction.status}`, 400);
     }
+        // The background worker closes expired auctions every 10 seconds, so an auction
+    // can still be ACTIVE for a short time after its endTime. Reject bids in that gap.
+    if (auction.endTime <= new Date()) {
+      throw new AppError('Auction has ended. No more bids can be placed', 400);
+    }
 
     if (auction.artwork.artistId === userId) {
       throw new AppError('You cannot bid on your own artwork', 400);
