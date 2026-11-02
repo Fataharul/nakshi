@@ -456,6 +456,7 @@ export class ExhibitionService {
     }
 
     const now = new Date();
+    const start = new Date(exhibition.startTime);   // <-- notun line
     const end = new Date(exhibition.endTime);
 
     // If exhibition has closed
@@ -480,18 +481,23 @@ export class ExhibitionService {
       }
     }
 
-    if (!isOrganizer && !ticket && ticketToken) {
-      ticket = await prisma.exhibitionTicket.findUnique({
-        where: { ticketToken },
-      });
-    }
+    // A submitted token must exist and belong to THIS exhibition
+if (!isOrganizer && !ticket && ticketToken) {
+  const tokenTicket = await prisma.exhibitionTicket.findUnique({
+    where: { ticketToken },
+  });
 
-    // Free exhibition allows all users without a ticket
-    const isFree = Number(exhibition.ticketPrice) === 0;
+  if (!tokenTicket || tokenTicket.exhibitionId !== exhibitionId) {
+    throw new AppError('Invalid ticket token for this exhibition', 403);
+  }
 
-    if (!isOrganizer && !ticket && !isFree) {
-      throw new AppError('Exhibition access pass required. Please reserve your ticket to enter.', 403);
-    }
+  ticket = tokenTicket;
+}
+
+// Visitors cannot enter before the exhibition opens (organizers may preview)
+if (!isOrganizer && now < start) {
+  throw new AppError('This exhibition has not opened yet. Please return at its scheduled start time.', 403);
+}
 
     // Check VIP Window restrictions
     if (exhibition.vipStartTime && exhibition.vipEndTime) {
