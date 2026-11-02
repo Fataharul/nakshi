@@ -155,5 +155,76 @@ describe('Auction Expiration & Post-Close Bid Rejection (T-060)', () => {
 
       expect(await getBalance(artistId)).toBe(artistBalanceBefore + 250);
     }, 30000);
+    
+    it('rejects bids once the auction is CLOSED and leaves bids and wallets unchanged', async () => {
+      const buyer1BalanceBefore = await getBalance(buyer1Id);
+      const buyer2BalanceBefore = await getBalance(buyer2Id);
+
+      for (const token of [buyer2Token, buyer1Token]) {
+        const res = await postBid(token, auctionId, 500);
+        expect(res.status).toBe(400);
+        const data = (await res.json()) as any;
+        expect(data.error).toContain('Current status: CLOSED');
+      }
+
+      const auction = await prisma.auction.findUnique({ where: { id: auctionId } });
+      expect(Number(auction?.currentHighestBid)).toBe(250);
+      expect(auction?.winnerId).toBe(buyer1Id);
+      expect(await prisma.auctionBid.count({ where: { auctionId } })).toBe(1);
+      expect(await getBalance(buyer1Id)).toBe(buyer1BalanceBefore);
+      expect(await getBalance(buyer2Id)).toBe(buyer2BalanceBefore);
+    }, 30000);
+
+    it('does not pay the artist again when a CLOSED auction is processed a second time', async () => {
+      const artistBalanceBefore = await getBalance(artistId);
+
+      const listRes = await fetch(`${baseUrl}/api/auctions?status=ALL`);
+      expect(listRes.status).toBe(200);
+
+      expect(await getBalance(artistId)).toBe(artistBalanceBefore);
+    }, 30000);
+  });
+  describe('auction that expires without any bids', () => {
+    let auctionId: string;
+    let artworkId: string;
+
+    beforeAll(async () => {
+      const artwork = await createReservedArtwork('Expiry Artwork Without Bid');
+      artworkId = artwork.id;
+
+      const auction = await prisma.auction.create({
+        data: {
+          artworkId,
+          startingBid: 200,
+          minIncrement: 20,
+          startTime: new Date(Date.now() - 60000),
+          endTime: new Date(Date.now() - 1000), // already expired, status still ACTIVE
+          status: 'ACTIVE',
+        },
+      });
+      auctionId = auction.id;
+    }, 60000);
+
+    it('closes with no winner and returns the artwork to AVAILABLE', async () => {
+      const listRes = await fetch(`${baseUrl}/api/auctions?status=ALL`);
+      expect(listRes.status).toBe(200);
+
+      const closed = await prisma.auction.findUnique({ where: { id: auctionId } });
+      expect(closed?.status).toBe('CLOSED');
+      expect(closed?.winnerId).toBeNull();
+
+      const artwork = await prisma.artwork.findUnique({ where: { id: artworkId } });
+      expect(artwork?.availability).toBe('AVAILABLE');
+    }, 30000);
+
+    it('rejects a bid after it has closed', async () => {
+      const res = await postBid(buyer1Token, auctionId, 250);
+      expect(res.status).toBe(400);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('Current status: CLOSED');
+      expect(await prisma.auctionBid.count({ where: { auctionId } })).toBe(0);
+    }, 30000);
   });
 });
+  
+
