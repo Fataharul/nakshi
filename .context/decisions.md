@@ -193,12 +193,15 @@
 - **Context**: Requirements 1.4, 2.6, and 3.6 mandate that authorized exhibition organizers can define VIP viewing windows, allowing ticket holders exclusive preview gallery access prior to general public admission, with strict server-side validation and responsive mobile usability down to 360px.
 - **Decision**:
   - Implement full-stack VIP Viewing Schedule Configuration:
+    - Database: Persist `vipStartTime` and `vipEndTime` as nullable UTC `timestamp(3)` columns on `model Exhibition` in PostgreSQL, backed by a composite index `@@index([vipStartTime, vipEndTime])` for performant range queries.
     - Backend: Zod schemas (`configureVipScheduleSchema`, `createExhibitionSchema`) in `server/src/utils/exhibition.validation.ts` validating date validity and ordering (`vipEndTime > vipStartTime`).
     - Service layer `ExhibitionService` enforcing ownership guards (only the exhibition's creator organizer or ADMIN can update the schedule) and real-time status calculation (`computeVipStatus` returning `'NOT_CONFIGURED'`, `'SCHEDULED'`, `'ACTIVE'`, or `'CONCLUDED'`).
     - API Endpoints: `POST /api/exhibitions`, `GET /api/exhibitions`, `GET /api/exhibitions/:id`, `GET /api/exhibitions/organizer/my`, and `PATCH /api/exhibitions/:id/vip-schedule` guarded by `authenticateJWT` and `requireRoles(Role.ORGANIZER, Role.ADMIN)`.
     - Frontend: Modular `VipScheduleConfigModal.tsx` conforming to `DESIGN.md` and `DESIGN_DIRECTION.md` with master toggle, quick duration presets (24h, 48h, 72h relative to public opening), interactive timeline preview (`#vip-timeline-preview`), and inline error guidance.
     - Integrated with dedicated `OrganizerDashboardLayout.tsx` for curators on `/dashboard/organizer`.
 - **Rationale**:
+  - Composite indexing on `(vipStartTime, vipEndTime)` prevents table scans when checking active VIP admission windows.
   - Adheres strictly to the 3-Tier Layered Architecture and RBAC security constraints without external API dependencies.
   - Guarantees seamless UX across desktop, tablet, and mobile 360px viewports.
+
 

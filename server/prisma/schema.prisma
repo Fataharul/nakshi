@@ -211,6 +211,7 @@ model Exhibition {
 
   @@index([organizerId])
   @@index([startTime, endTime])
+  @@index([vipStartTime, vipEndTime])
 }
 
 model ExhibitionArtwork {

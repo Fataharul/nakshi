@@ -158,11 +158,23 @@ describe('Exhibition & VIP Viewing Schedule Acceptance Tests', () => {
     expect(data.exhibition).toBeDefined();
     expect(data.exhibition.title).toBe(payload.title);
     expect(data.exhibition.isVipEnabled).toBe(true);
+    expect(data.exhibition.vipStartTime).toBe(payload.vipStartTime);
+    expect(data.exhibition.vipEndTime).toBe(payload.vipEndTime);
     expect(data.exhibition.vipStatus).toBe('SCHEDULED');
     expect(data.exhibition.vipDuration).toContain('preview');
     expect(data.exhibition.organizerId).toBe(organizerId);
 
     exhibitionId = data.exhibition.id;
+
+    // Verify timestamps are accurately stored in PostgreSQL database
+    const storedInDb = await prisma.exhibition.findUnique({
+      where: { id: exhibitionId },
+    });
+    expect(storedInDb).toBeDefined();
+    expect(storedInDb?.vipStartTime).toBeInstanceOf(Date);
+    expect(storedInDb?.vipEndTime).toBeInstanceOf(Date);
+    expect(storedInDb?.vipStartTime?.toISOString()).toBe(payload.vipStartTime);
+    expect(storedInDb?.vipEndTime?.toISOString()).toBe(payload.vipEndTime);
   });
 
   it('retrieves public exhibitions list (200)', async () => {
@@ -261,6 +273,16 @@ describe('Exhibition & VIP Viewing Schedule Acceptance Tests', () => {
     expect(data.exhibition.vipEndTime).toBe(newSchedule.vipEndTime);
     expect(data.exhibition.isVipEnabled).toBe(true);
     expect(data.exhibition.vipStatus).toBe('SCHEDULED');
+
+    // Verify updated timestamps are accurately persisted in PostgreSQL database
+    const updatedInDb = await prisma.exhibition.findUnique({
+      where: { id: exhibitionId },
+    });
+    expect(updatedInDb).toBeDefined();
+    expect(updatedInDb?.vipStartTime).toBeInstanceOf(Date);
+    expect(updatedInDb?.vipEndTime).toBeInstanceOf(Date);
+    expect(updatedInDb?.vipStartTime?.toISOString()).toBe(newSchedule.vipStartTime);
+    expect(updatedInDb?.vipEndTime?.toISOString()).toBe(newSchedule.vipEndTime);
   });
 
   it('allows disabling VIP viewing schedule window (200)', async () => {
@@ -285,5 +307,13 @@ describe('Exhibition & VIP Viewing Schedule Acceptance Tests', () => {
     expect(data.exhibition.vipStartTime).toBeNull();
     expect(data.exhibition.vipEndTime).toBeNull();
     expect(data.exhibition.vipStatus).toBe('NOT_CONFIGURED');
+
+    // Verify disabled VIP timestamps are set to null in PostgreSQL database
+    const disabledInDb = await prisma.exhibition.findUnique({
+      where: { id: exhibitionId },
+    });
+    expect(disabledInDb).toBeDefined();
+    expect(disabledInDb?.vipStartTime).toBeNull();
+    expect(disabledInDb?.vipEndTime).toBeNull();
   });
 });

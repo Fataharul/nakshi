@@ -375,3 +375,14 @@
   - Both server TypeScript compilation (`npm --prefix server run build`) and client production bundle (`npm --prefix client run build`) compiled with 0 errors.
   - All Playwright test checks passed across Desktop Chrome (1280px), Mobile 360px, and Tablet 768px viewports (`e2e/vip_viewing_schedule.spec.ts` & `e2e/05_exhibition_tickets.spec.ts`).
 
+## [2026-11-02 21:05:00 +06:00] Milestone: Exhibition VIP Start & End Timestamps Storage & Indexing Verified
+- **Completed**:
+  - Configured composite index `@@index([vipStartTime, vipEndTime])` on `model Exhibition` in `server/prisma/schema.prisma` and applied to PostgreSQL.
+  - Added explicit database persistence assertions using Prisma Client in `server/tests/acceptance/exhibition.test.ts`, asserting that `vipStartTime` and `vipEndTime` are stored as genuine UTC `Date` timestamps in PostgreSQL upon creation, properly mutated upon update, and set to `null` upon disabling VIP access.
+- **Verified**:
+  - Direct PostgreSQL database queries via Prisma verified UTC timestamp persistence and null transitions in `server/tests/acceptance/exhibition.test.ts` (10 tests passing).
+  - All 24 unit and acceptance tests passed (`vitest run tests/unit/exhibition.validation.test.ts tests/acceptance/exhibition.test.ts`).
+  - Playwright multi-viewport tests passed across Desktop, Mobile (360px), and Tablet (768px) (`e2e/vip_viewing_schedule.spec.ts`).
+  - Server TypeScript (`tsc`) and Client Vite build compiled with 0 errors.
+
+
