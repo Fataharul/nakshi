@@ -496,3 +496,31 @@
   - **Server Test Suite**: All 18 Vitest test suites (156 unit and acceptance tests) passed with 0 failures (`npm --prefix server test`).
   - **Server Production Build**: TypeScript compiled cleanly with 0 errors (`npm --prefix server run build`).
   - **Client Production Build**: Vite bundle compiled cleanly with 0 errors (`npm --prefix client run build`).
+
+## [2026-11-03 01:25:00 +06:00] Milestone: VIP Access Window Temporal Lifecycle Verification & Testing Complete
+- **Completed**:
+  - **Backend Acceptance Test Suite**:
+    - Created [`server/tests/acceptance/exhibition_vip_access.test.ts`](file:///c:/Users/HP/nakshi/server/tests/acceptance/exhibition_vip_access.test.ts) covering all temporal states:
+      1. *Before the VIP Window* (`startTime <= now < vipStartTime`): Standard ticket holders are granted entry with 200 without premature VIP restrictions.
+      2. *During the VIP Window* (`vipStartTime <= now <= vipEndTime`): Standard pass holders are rejected with 403, VIP pass holders and curators are admitted with 200, and upgrading to a VIP pass unlocks instant access.
+      3. *After the VIP Window* (`vipEndTime < now < endTime`): VIP exclusivity naturally lapses, granting standard pass holders unrestricted hall entry with 200.
+      4. *Pre-Opening Guard* (`now < startTime < vipStartTime`): Access is strictly blocked with 403 prior to exhibition opening.
+  - **Controller & Service Refinements**:
+    - Enhanced `server/src/controllers/exhibition.controller.ts` to accept `req.query.token`, `req.query.ticketToken`, and `x-ticket-token` header.
+    - Extended Prisma interactive transactions in `ExhibitionService.purchaseTicket` and `AuthService.register` with `{ maxWait: 10000, timeout: 20000 }` to eliminate remote Supabase pooler latency timeouts.
+  - **Frontend UI & Filter Fixes**:
+    - Updated `BuyTicketModal.tsx` to reset modal state and preselect the VIP tier when upgrading from the active VIP restriction screen.
+    - Updated `ExhibitionsPage.tsx` with a `useRef` guard to eliminate race conditions when toggling status filter tabs rapidly.
+    - Seeded demo exhibition "Sonargaon Loom & Silk Heritage" representing the pre-VIP window state.
+  - **Playwright End-to-End Test Suite**:
+    - Updated `e2e/05_exhibition_tickets.spec.ts` to verify the complete VIP lifecycle (during VIP window restriction + upgrade, before VIP window access, and after VIP window access).
+- **Verified**:
+  - **Backend Acceptance Suite**: 13/13 tests passed in `exhibition_vip_access.test.ts` (`vitest run tests/acceptance/exhibition_vip_access.test.ts`).
+  - **Full Backend Acceptance Suite**: 10/10 test files passed (118 tests passed) (`npm --prefix server run test:acceptance`).
+  - **Frontend & E2E Tests**:
+    - `e2e/05_exhibition_tickets.spec.ts`: 6/6 tests passed across Desktop Chrome, Mobile 360px, and Tablet 768px.
+    - `e2e/05_exhibitions.spec.ts`: 12/12 tests passed across Desktop Chrome, Mobile 360px, and Tablet 768px.
+  - **Production Builds**:
+    - Client build: `npm --prefix client run build` completed with code 0.
+    - Server build: `npm --prefix server run build` completed with code 0.
+

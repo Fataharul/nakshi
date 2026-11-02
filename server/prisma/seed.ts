@@ -309,6 +309,20 @@ async function main() {
           walls: ['Royal Pavilion: Floral Jaal', 'Weavers Studio: Historical Looms'],
         },
       },
+      {
+        title: 'Sonargaon Loom & Silk Heritage',
+        description: 'Living heritage exhibition with upcoming VIP collector preview.',
+        bannerUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
+        ticketPrice: 45.0,
+        startTime: new Date(now.getTime() - 86400000 * 2),
+        endTime: new Date(now.getTime() + 86400000 * 12),
+        vipStartTime: new Date(now.getTime() + 86400000 * 2),
+        vipEndTime: new Date(now.getTime() + 86400000 * 4),
+        layoutConfig: {
+          curatorNote: 'General hall open; VIP preview window starts soon.',
+          walls: ['Silk Pavilion', 'Loom Gallery'],
+        },
+      },
     ];
 
     for (const exh of demoExhibitions) {

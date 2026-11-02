@@ -249,3 +249,21 @@
 - **Rationale**:
   - Ensures accurate, tamper-resistant virtual exhibition performance analytics for organizers.
   - Aligns with the platform's internal credit ledger consistency model.
+
+## 22. VIP Access Window Temporal Lifecycle Verification & Asynchronous Filter Guard
+- **Timestamp**: 2026-11-03 01:25:00 +06:00
+- **Context**: Requirement 3.6 mandates: "VIP access is restricted to its configured time window" and edge case: "VIP access attempted outside the configured VIP window." Verification must validate all three temporal intervals (before, during, and after the VIP window) across backend REST APIs, frontend ticket reservation workflows, and responsive viewports, while eliminating asynchronous stale-filter race conditions.
+- **Decision**:
+  - Temporal Access Lifecycle Rules in `ExhibitionService.getRoom`:
+    - **Pre-opening guard**: Visitors attempting entry before `startTime` are rejected with `403` ("This exhibition has not opened yet").
+    - **Before the VIP window (`startTime <= now < vipStartTime`)**: Standard ticket holders and organizers have unrestricted access (200 OK); the hall is not prematurely locked with VIP restrictions.
+    - **During the VIP window (`vipStartTime <= now <= vipEndTime`)**: Standard ticket holders are rejected with `403` ("The hall is currently reserved for VIP Collectors Pass holders. General admission opens following the VIP window."), while VIP pass holders and the exhibition organizer enter with `200 OK`. Upgrading a standard pass to a VIP pass immediately grants entry.
+    - **After the VIP window (`vipEndTime < now < endTime`)**: VIP exclusivity expires automatically; standard ticket holders enter with `200 OK` without seeing the VIP restriction view.
+  - Frontend Race Condition Guard in `ExhibitionsPage.tsx`:
+    - Utilize `useRef<StatusFilter>(selectedFilter)` to ensure that concurrent or delayed async catalog responses from previous filter tabs do not overwrite the currently selected filter view with stale catalog items.
+  - Modal State Reset in `BuyTicketModal.tsx`:
+    - Clear `issuedTicket` and reset to VIP tier selection whenever the ticket modal is reopened from the `#vip-restriction-view` upgrade prompt.
+- **Rationale**:
+  - Provides mathematical and temporal certainty across the full lifecycle of exhibition scheduling.
+  - Eliminates UI flicker and out-of-order response bugs during rapid catalog browsing.
+

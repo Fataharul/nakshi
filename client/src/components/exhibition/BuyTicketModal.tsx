@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, CheckCircle2, Ticket, Crown, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { ExhibitionDetail, ExhibitionTicket, ExhibitionService } from '../../services/exhibition.service';
@@ -21,6 +21,26 @@ export const BuyTicketModal: React.FC<BuyTicketModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [issuedTicket, setIssuedTicket] = useState<ExhibitionTicket | null>(null);
+  const prevIsOpen = useRef(isOpen);
+
+  useEffect(() => {
+    if (isOpen && !prevIsOpen.current) {
+      setIssuedTicket(null);
+      setError(null);
+      if (exhibition.userTicket && !exhibition.userTicket.isVip) {
+        setIsVipSelected(true);
+      } else {
+        setIsVipSelected(false);
+      }
+    }
+    prevIsOpen.current = isOpen;
+  }, [isOpen]);
+
+  const handleModalClose = () => {
+    setIssuedTicket(null);
+    setError(null);
+    onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -65,7 +85,7 @@ export const BuyTicketModal: React.FC<BuyTicketModalProps> = ({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleModalClose}
             className="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors"
           >
             <X className="w-5 h-5" />
@@ -136,7 +156,7 @@ export const BuyTicketModal: React.FC<BuyTicketModalProps> = ({
 
               <button
                 id="enter-hall-from-modal-btn"
-                onClick={onClose}
+                onClick={handleModalClose}
                 className="w-full py-3.5 bg-primary text-on-primary font-semibold text-xs uppercase tracking-wider rounded-lg hover:bg-surface-tint transition-all shadow-sm flex items-center justify-center gap-2"
               >
                 <span>Enter Virtual Exhibition Hall</span>
