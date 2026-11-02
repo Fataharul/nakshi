@@ -484,3 +484,11 @@
   - Added "Analytics" button on organizer exhibition cards.
   - Report shows an empty-state note instead of fabricated values when no visits are recorded.
 - **Verified**: Playwright `e2e/10_exhibition_analytics.spec.ts`, client production build.
+
+## [2026-10-29 HH:MM:00 +06:00] Milestone: Ticket T-081 — Exhibition Visitor Traffic & Viewing-Time Collection Implemented
+- **Completed**:
+  - Added `useExhibitionVisitTracking` hook: records a visit on hall entry and sends a heartbeat every 30s while the tab is visible, plus a final heartbeat on leave.
+  - Wired tracking into `ExhibitionRoomPage` (ticket holders and free exhibitions only; organizers and admins are not counted as visitors).
+  - Added `startVisit` and `sendVisitHeartbeat` client API methods and types.
+  - Server-side idle gaps are capped at 90s; tracking failures never break the page.
+- **Verified**: `server/tests/unit/exhibition_visit_tracking.test.ts`, client and server production builds, manual check via analytics report.
