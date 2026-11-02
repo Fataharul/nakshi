@@ -499,3 +499,10 @@
   - `AuctionService.placeBid` now rejects bids once `endTime` has passed (400 `Auction has ended...`), even if the background worker has not yet flipped the status to `CLOSED` (worker polls every 10 seconds). Existing status checks and messages for `CLOSED`/`UPCOMING`/`CANCELLED` are unchanged.
   - Added `server/tests/acceptance/auction_expiration.test.ts` covering: bid rejected after `endTime` before the worker runs; expired auction closes with correct winner, artwork `SOLD` and a single artist payout; bids rejected after `CLOSED` with no bid record or wallet change; no double payout on re-processing; expired auction with no bids closes with no winner and artwork back to `AVAILABLE`.
 - **Verified**: `npm --prefix server run test` (run locally before committing).
+
+
+## [2026-11-02 HH:MM:00 +06:00] Milestone: Ticket T-076 — Valid, Invalid & Expired Ticket Entry Tests Implemented
+- **Completed**:
+  - Hardened `ExhibitionService.getRoom`: a submitted ticket token must exist and belong to the requested exhibition (otherwise 403), and non-organizer visitors are blocked before the exhibition `startTime` (403). Ended exhibitions still return 400.
+  - Added `server/tests/unit/exhibition_ticket_entry.test.ts` (10 tests: valid token, ticket-holder buyer, free exhibition, unknown token, cross-exhibition token, no ticket, missing exhibition, expired, not-yet-open, organizer preview).
+  - Added `server/tests/acceptance/exhibition_ticket_entry.test.ts` covering the same flows end to end through `/api/exhibitions/:id/room` with real purchased tickets.
