@@ -466,7 +466,38 @@
   - `client`: Production bundle build succeeded cleanly (`npm run --prefix client build`).
   - `server`: TypeScript compilation passed cleanly (`npm run --prefix server build`).
 
-## [2026-11-02 20:07:00 +06:00] Milestone: Flagged Listings Routing to Administrator Review Queue Implemented & Verified
+## [2026-10-29 HH:MM:00 +06:00] Milestone: Ticket T-082 — Exhibition Average Viewing Time & Ticket Revenue Calculation Implemented
+- **Completed**:
+  - Added `ExhibitionVisit` Prisma model to record per-visit viewing time (foundation for T-081).
+  - Added `exhibition-analytics.util.ts` helpers: `calculateAverageViewingTime` and `calculateTicketRevenue` (cent-based sums).
+  - Added `ExhibitionAnalyticsService`, controller and routes:
+    - `POST /api/exhibitions/:id/visits` and `POST /api/exhibitions/:id/visits/:visitId/heartbeat` (idle gaps capped at 90s).
+    - `GET /api/exhibitions/:id/analytics` (owner ORGANIZER or ADMIN only).
+  - Ticket revenue is derived from persisted `EXHIBITION_TICKET` credit transactions, not fabricated values.
+- **Pending**: Client-side visit heartbeat in `ExhibitionRoomPage.tsx` (T-081) and report UI (T-083).
+
+## [2026-10-29 HH:MM:00 +06:00] Milestone: Ticket T-083 — Exhibition Analytics Report Interface Implemented
+- **Completed**:
+  - Added `ExhibitionAnalyticsReport` component showing visitor traffic, average viewing time, tickets sold and ticket revenue.
+  - Added protected page `/dashboard/organizer/exhibitions/:id/analytics` (ORGANIZER and ADMIN only).
+  - Added `getExhibitionAnalytics` client method and `formatDuration` helper.
+  - Added "Analytics" button on organizer exhibition cards.
+  - Report shows an empty-state note instead of fabricated values when no visits are recorded.
+- **Verified**: Playwright `e2e/10_exhibition_analytics.spec.ts`, client production build.
+
+## [2026-11-02 20:15:00 +06:00] Milestone: PR #34 & PR #35 Integrated into main; Conflicted PR #29 Closed
+- **Completed**:
+  - Evaluated unmerged pull requests on remote repository `fataharul/nakshi`:
+    - **PR #29** (`feature/T-049-bid-submission`): Evaluated and identified as unmergeable due to extensive conflicts in auction routes, controllers, and services with Phase 5 live auctions. Remote head branch deleted to close PR #29 as superseded.
+    - **PR #34** (`feature/t-082-exhibition-analytics`): Cleanly integrated into `main`. Implemented exhibition visit tracking, capped heartbeats, and average viewing time & ticket revenue calculation.
+    - **PR #35** (`feature/t-083-exhibition-analytics-report`): Cleanly integrated into `main`. Added frontend `ExhibitionAnalyticsReport.tsx` component, protected `/dashboard/organizer/exhibitions/:id/analytics` route, analytics navigation trigger on exhibition cards, and Playwright E2E coverage.
+  - Safely synchronized database schema in Supabase PostgreSQL by provisioning the `ExhibitionVisit` table, indexes, and cascade foreign key constraints.
+- **Verified**:
+  - **Server Test Suite**: All 18 Vitest test suites (156 unit and acceptance tests) passed with 0 failures (`npm --prefix server test`).
+  - **Server Production Build**: TypeScript compiled cleanly with 0 errors (`npm --prefix server run build`).
+  - **Client Production Build**: Vite bundle compiled cleanly with 0 errors (`npm --prefix client run build`).
+
+## [2026-11-02 20:20:00 +06:00] Milestone: Flagged Listings Routing to Administrator Review Queue Implemented & Verified
 - **Completed**:
   - **Listing Update Re-evaluation & Queue Routing**:
     - Enhanced `ArtworkService.updateArtwork` in `server/src/services/artwork.service.ts` to recompute perceptual dHash and evaluate Hamming similarity when `imageUrl` is modified.
@@ -484,4 +515,3 @@
   - **Backend Acceptance Tests**: 15 test suites, 146 unit & acceptance tests passed with 0 failures (`npm --prefix server test`).
   - **E2E Playwright Tests**: 6/6 tests passed in `e2e/06_duplicate_moderation.spec.ts` across Desktop Chrome, Tablet 768px, and Mobile 360px viewports.
   - **Production Builds**: `npm --prefix server run build` and `npm --prefix client run build` both succeeded with 0 errors.
-

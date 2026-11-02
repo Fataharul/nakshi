@@ -251,3 +251,15 @@
 
 
 
+
+## 21. Exhibition Viewing Time Tracking & Real-Time Heartbeat Architecture
+- **Timestamp**: 2026-11-02 20:15:00 +06:00
+- **Context**: Ticket T-082 (BL-025) and T-083 require computing and displaying exhibition engagement metrics (average viewing time, visitor count, tickets sold, and ticket revenue) without inflated figures or floating-point financial drift.
+- **Decision**:
+  - Add `ExhibitionVisit` model tracking `enteredAt`, `lastSeenAt`, and cumulative `durationSeconds` indexed by `exhibitionId` and `userId`.
+  - Cap idle heartbeat gaps at 90 seconds (`MAX_HEARTBEAT_GAP_SECONDS = 90`) in `ExhibitionAnalyticsService.heartbeat` so idle or backgrounded tabs do not artificially inflate viewing time.
+  - Calculate ticket revenue directly from persisted `EXHIBITION_TICKET` credit transaction records, summing in integer cents before converting to credits to prevent IEEE-754 floating-point errors.
+  - Enforce RBAC on both backend (`GET /api/exhibitions/:id/analytics`) and frontend route (`/dashboard/organizer/exhibitions/:id/analytics`), restricting access strictly to the exhibition's owning `ORGANIZER` or platform `ADMIN`.
+- **Rationale**:
+  - Ensures accurate, tamper-resistant virtual exhibition performance analytics for organizers.
+  - Aligns with the platform's internal credit ledger consistency model.

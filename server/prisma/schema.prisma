@@ -67,6 +67,7 @@ model User {
   tickets            ExhibitionTicket[]
   reviewedFlags      ModerationReview[]   @relation("AdminReviews")
   comments           ArtworkComment[]
+  exhibitionVisits   ExhibitionVisit[]
 
   @@index([role])
   @@index([email])
@@ -210,6 +211,7 @@ model Exhibition {
   organizer   User                @relation("OrganizerExhibitions", fields: [organizerId], references: [id], onDelete: Cascade)
   artworks    ExhibitionArtwork[]
   tickets     ExhibitionTicket[]
+  visits      ExhibitionVisit[]
 
   @@index([organizerId])
   @@index([startTime, endTime])
@@ -276,5 +278,19 @@ model ArtworkComment {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([artworkId])
+  @@index([userId])
+}
+model ExhibitionVisit {
+  id              String   @id @default(uuid())
+  exhibitionId    String
+  userId          String?
+  enteredAt       DateTime @default(now())
+  lastSeenAt      DateTime @default(now())
+  durationSeconds Int      @default(0)
+
+  exhibition      Exhibition @relation(fields: [exhibitionId], references: [id], onDelete: Cascade)
+  user            User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([exhibitionId])
   @@index([userId])
 }
