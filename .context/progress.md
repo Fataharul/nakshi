@@ -492,3 +492,10 @@
   - Added `startVisit` and `sendVisitHeartbeat` client API methods and types.
   - Server-side idle gaps are capped at 90s; tracking failures never break the page.
 - **Verified**: `server/tests/unit/exhibition_visit_tracking.test.ts`, client and server production builds, manual check via analytics report.
+
+
+## [2026-11-02 HH:MM:00 +06:00] Milestone: T-060 — Auction Expiration & Post-Close Bid Rejection Tests
+- **Completed**:
+  - `AuctionService.placeBid` now rejects bids once `endTime` has passed (400 `Auction has ended...`), even if the background worker has not yet flipped the status to `CLOSED` (worker polls every 10 seconds). Existing status checks and messages for `CLOSED`/`UPCOMING`/`CANCELLED` are unchanged.
+  - Added `server/tests/acceptance/auction_expiration.test.ts` covering: bid rejected after `endTime` before the worker runs; expired auction closes with correct winner, artwork `SOLD` and a single artist payout; bids rejected after `CLOSED` with no bid record or wallet change; no double payout on re-processing; expired auction with no bids closes with no winner and artwork back to `AVAILABLE`.
+- **Verified**: `npm --prefix server run test` (run locally before committing).
