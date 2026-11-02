@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Menu, X, Wallet, LogOut, LayoutDashboard, Settings, Plus } from 'lucide-react';
+import { Menu, X, Wallet, LogOut, LayoutDashboard, Settings, Plus, ShieldCheck } from 'lucide-react';
+
 import { TopUpCreditsModal } from './wallet/TopUpCreditsModal';
 
 export const Navbar: React.FC = () => {
@@ -61,7 +62,18 @@ export const Navbar: React.FC = () => {
             >
               Exhibitions
             </Link>
+            {user?.role === 'ADMIN' && (
+              <Link
+                to="/admin/moderation"
+                id="navbar-moderation-link"
+                className="text-xs uppercase tracking-wider font-semibold text-primary hover:text-primary-hover transition-colors flex items-center gap-1.5"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Moderation</span>
+              </Link>
+            )}
           </nav>
+
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-4">
@@ -281,9 +293,21 @@ export const Navbar: React.FC = () => {
             >
               Exhibitions
             </Link>
+            {user?.role === 'ADMIN' && (
+              <Link
+                to="/admin/moderation"
+                id="mobile-navbar-moderation-link"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block py-2 text-sm font-medium text-primary hover:text-primary-hover flex items-center gap-2"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>Moderation Queue</span>
+              </Link>
+            )}
           </div>
         </div>
       )}
+
       </header>
 
       {/* Internal Credit Top-Up Modal */}

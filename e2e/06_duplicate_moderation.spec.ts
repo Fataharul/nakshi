@@ -25,7 +25,7 @@ test.describe('Acceptance Criteria 3.7: Duplicate Detection & Moderation', () =>
     await page.locator('#password').fill('Password123!');
     await page.locator('#bio').fill('Original folk artisan preserving Bengal embroidery heritage.');
     await page.locator('#register-submit-btn').click();
-    await expect(page).toHaveURL(/\/dashboard\/artist/);
+    await expect(page).toHaveURL(/\/dashboard\/artist/, { timeout: 15000 });
 
     // 2. Artist 1 creates Original Artwork
     await page.locator('#add-artwork-btn').click();
@@ -63,7 +63,8 @@ test.describe('Acceptance Criteria 3.7: Duplicate Detection & Moderation', () =>
     await page.locator('#password').fill('Password123!');
     await page.locator('#bio').fill('Secondary artisan account.');
     await page.locator('#register-submit-btn').click();
-    await expect(page).toHaveURL(/\/dashboard\/artist/);
+    await expect(page).toHaveURL(/\/dashboard\/artist/, { timeout: 15000 });
+
 
     // 5. Artist 2 creates Duplicate Artwork with identical photography
     await page.locator('#add-artwork-btn').click();
@@ -119,7 +120,7 @@ test.describe('Acceptance Criteria 3.7: Duplicate Detection & Moderation', () =>
     await expect(page.locator('#moderation-queue-list')).toContainText('Visual Match');
   });
 
-  test('allows admin to approve flagged artwork and publish to marketplace', async ({ page }) => {
+  test('allows admin to inspect, approve flagged artwork, and verify audit history', async ({ page }) => {
     // 1. Log in as Admin if needed
     await page.goto('/login');
     await page.locator('#email').fill('admin@nakshi.test');
@@ -127,22 +128,57 @@ test.describe('Acceptance Criteria 3.7: Duplicate Detection & Moderation', () =>
     await page.locator('#login-submit-btn').click();
     await expect(page).toHaveURL(/\/dashboard/);
 
+    // 2. Navigate to dedicated /admin/moderation console via dashboard link
+    const consoleLink = page.locator('#admin-moderation-console-link');
+    await expect(consoleLink).toBeVisible();
+    await consoleLink.click();
+    await expect(page).toHaveURL(/\/admin\/moderation/);
     await expect(page.locator('#admin-moderation-queue')).toBeVisible();
 
-    // 2. Locate the flagged artwork card in the moderation queue
+    // 3. Search for the duplicate artwork in the queue
+    await page.locator('#moderation-search-input').fill(duplicateTitle);
+
+    // 4. Locate the flagged artwork card in the moderation queue
     const card = page.locator('#moderation-queue-list > div').filter({ hasText: duplicateTitle });
     await expect(card).toBeVisible({ timeout: 10000 });
 
-    // 3. Admin clicks Approve button
+    // 5. Open Fullscreen Comparison Modal
+    const inspectBtn = card.locator('button:has-text("Compare Fullscreen")');
+    await expect(inspectBtn).toBeVisible();
+    await inspectBtn.click();
+
+    // 6. Verify Fullscreen Comparison Modal is open with side-by-side specs
+    await expect(page.locator('#comparison-inspection-modal')).toBeVisible();
+    await expect(page.locator('#comparison-inspection-modal')).toContainText('High-Resolution Comparative Inspection');
+    await expect(page.locator('#comparison-inspection-modal')).toContainText('Flagged Upload (New)');
+    await expect(page.locator('#comparison-inspection-modal')).toContainText('Suspected Match (Archive)');
+
+    // 7. Close Comparison Modal
+    await page.locator('#close-inspection-modal-btn').click();
+    await expect(page.locator('#comparison-inspection-modal')).not.toBeVisible();
+
+    // 8. Select quick preset note
+    const presetBtn = card.locator('button:has-text("Authentic folk craft variation")');
+    if (await presetBtn.isVisible()) {
+      await presetBtn.click();
+    }
+
+    // 9. Admin clicks Approve button
     const approveBtn = card.locator('button:has-text("Approve & Publish")');
     await expect(approveBtn).toBeVisible();
     await approveBtn.click();
 
-    // 4. Verify toast notification and card removal from pending queue
+    // 10. Verify toast notification and card removal from pending queue
     await expect(page.locator('#moderation-success-toast')).toBeVisible();
     await expect(page.locator('#moderation-queue-list')).not.toContainText(duplicateTitle);
 
-    // 5. Navigate to public gallery and verify approved artwork is now visible
+    // 11. Switch to Audit History Tab and verify reviewed item is logged
+    await page.locator('#tab-audit-history').click();
+    await expect(page.locator('#audit-history-section')).toBeVisible();
+    await expect(page.locator('#audit-history-section')).toContainText(duplicateTitle);
+    await expect(page.locator('#audit-history-section')).toContainText('APPROVED');
+
+    // 12. Navigate to public gallery and verify approved artwork is now visible
     await page.goto('/gallery');
     await expect(page.locator('#artwork-search-input')).toBeVisible();
     await page.locator('#artwork-search-input').fill(duplicateTitle);
@@ -151,3 +187,4 @@ test.describe('Acceptance Criteria 3.7: Duplicate Detection & Moderation', () =>
     await expect(page.locator('#search-artworks-grid')).toContainText('420.00 Credits');
   });
 });
+

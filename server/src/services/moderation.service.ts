@@ -362,4 +362,128 @@ export class ModerationService {
       review,
     };
   }
+
+  /**
+   * Retrieves resolved moderation reviews (where actionTaken is not null).
+   */
+  public static async getHistory() {
+    const history = await prisma.moderationReview.findMany({
+      where: {
+        actionTaken: { not: null },
+      },
+      orderBy: { reviewedAt: 'desc' },
+      include: {
+        sourceArtwork: {
+          include: {
+            artist: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+                bio: true,
+              },
+            },
+          },
+        },
+        suspectedMatchArtwork: {
+          include: {
+            artist: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+                bio: true,
+              },
+            },
+          },
+        },
+        admin: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return history.map((r) => ({
+      id: r.id,
+      sourceArtworkId: r.sourceArtworkId,
+      suspectedMatchId: r.suspectedMatchId,
+      similarityScore: r.similarityScore,
+      actionTaken: r.actionTaken,
+      adminNotes: r.adminNotes,
+      createdAt: r.createdAt,
+      reviewedAt: r.reviewedAt,
+      sourceArtwork: {
+        id: r.sourceArtwork.id,
+        title: r.sourceArtwork.title,
+        description: r.sourceArtwork.description,
+        medium: r.sourceArtwork.medium,
+        style: r.sourceArtwork.style,
+        dimensions: r.sourceArtwork.dimensions,
+        price: Number(r.sourceArtwork.price),
+        imageUrl: r.sourceArtwork.imageUrl,
+        imageHash: r.sourceArtwork.imageHash,
+        moderationStatus: r.sourceArtwork.moderationStatus,
+        availability: r.sourceArtwork.availability,
+        createdAt: r.sourceArtwork.createdAt,
+        artist: r.sourceArtwork.artist,
+      },
+      suspectedMatchArtwork: r.suspectedMatchArtwork
+        ? {
+            id: r.suspectedMatchArtwork.id,
+            title: r.suspectedMatchArtwork.title,
+            description: r.suspectedMatchArtwork.description,
+            medium: r.suspectedMatchArtwork.medium,
+            style: r.suspectedMatchArtwork.style,
+            dimensions: r.suspectedMatchArtwork.dimensions,
+            price: Number(r.suspectedMatchArtwork.price),
+            imageUrl: r.suspectedMatchArtwork.imageUrl,
+            imageHash: r.suspectedMatchArtwork.imageHash,
+            moderationStatus: r.suspectedMatchArtwork.moderationStatus,
+            availability: r.suspectedMatchArtwork.availability,
+            createdAt: r.suspectedMatchArtwork.createdAt,
+            artist: r.suspectedMatchArtwork.artist,
+          }
+        : null,
+      admin: r.admin,
+    }));
+  }
+
+  /**
+   * Retrieves summary statistics for the moderation queue.
+   */
+  public static async getStats() {
+    const pendingCount = await prisma.artwork.count({
+      where: { moderationStatus: 'FLAGGED' },
+    });
+
+    const approvedCount = await prisma.moderationReview.count({
+      where: { actionTaken: 'APPROVED' },
+    });
+
+    const rejectedCount = await prisma.moderationReview.count({
+      where: { actionTaken: 'REJECTED' },
+    });
+
+    const avgSimilarity = await prisma.moderationReview.aggregate({
+      _avg: {
+        similarityScore: true,
+      },
+    });
+
+    return {
+      pendingCount,
+      approvedCount,
+      rejectedCount,
+      averageSimilarity: avgSimilarity._avg.similarityScore
+        ? Number(avgSimilarity._avg.similarityScore.toFixed(1))
+        : 80.0,
+    };
+  }
 }
+

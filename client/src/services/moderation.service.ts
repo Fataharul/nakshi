@@ -1,5 +1,5 @@
 import { getStoredToken } from './auth.service';
-import { ModerationQueueItem, ModerationReviewPayload } from '../types/moderation';
+import { ModerationQueueItem, ModerationReviewPayload, ModerationStats } from '../types/moderation';
 
 const API_BASE_URL = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:5000';
 
@@ -23,6 +23,47 @@ export const moderationApi = {
 
     const data = await res.json();
     return data.queue || [];
+  },
+
+  /**
+   * Retrieves resolved moderation reviews (history)
+   */
+  async getHistory(): Promise<ModerationQueueItem[]> {
+    const token = getStoredToken();
+    const res = await fetch(`${API_BASE_URL}/api/moderation/history`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Failed to fetch moderation history');
+    }
+
+    const data = await res.json();
+    return data.history || [];
+  },
+
+  /**
+   * Retrieves moderation queue statistics
+   */
+  async getStats(): Promise<ModerationStats> {
+    const token = getStoredToken();
+    const res = await fetch(`${API_BASE_URL}/api/moderation/stats`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Failed to fetch moderation stats');
+    }
+
+    return await res.json();
   },
 
   /**
@@ -69,3 +110,4 @@ export const moderationApi = {
     return await res.json();
   },
 };
+

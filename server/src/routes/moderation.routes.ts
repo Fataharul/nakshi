@@ -9,7 +9,10 @@ const router = Router();
 router.use(authenticateJWT, requireRoles(Role.ADMIN));
 
 router.get('/queue', ModerationController.getQueue);
+router.get('/history', ModerationController.getHistory);
+router.get('/stats', ModerationController.getStats);
 router.post('/:id/review', ModerationController.reviewItem);
 router.post('/:id/flag', ModerationController.flagListing);
 
 export default router;
+

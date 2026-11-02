@@ -58,5 +58,32 @@ export class ModerationController {
       next(error);
     }
   }
+
+  /**
+   * GET /api/moderation/history
+   * Retrieves resolved moderation reviews.
+   */
+  public static async getHistory(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const history = await ModerationService.getHistory();
+      res.status(200).json({ history, total: history.length });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /api/moderation/stats
+   * Retrieves summary statistics for the moderation queue.
+   */
+  public static async getStats(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const stats = await ModerationService.getStats();
+      res.status(200).json(stats);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
+
 

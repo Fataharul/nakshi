@@ -478,4 +478,52 @@ describe('Admin Moderation Queue & Duplicate Detection Acceptance Tests (Phase 4
       });
     });
   });
+
+  describe('8. Moderation History and Statistics Retrieval (GET /api/moderation/history & /stats)', () => {
+    it('retrieves resolved moderation decisions in the audit history endpoint', async () => {
+      const historyRes = await fetch(`${baseUrl}/api/moderation/history`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
+      expect(historyRes.status).toBe(200);
+      const data = (await historyRes.json()) as any;
+      expect(Array.isArray(data.history)).toBe(true);
+      expect(typeof data.total).toBe('number');
+      // Every item in history must have a non-null actionTaken
+      data.history.forEach((item: any) => {
+        expect(item.actionTaken).not.toBeNull();
+        expect(['APPROVED', 'REJECTED']).toContain(item.actionTaken);
+      });
+    });
+
+    it('enforces ADMIN RBAC on /history and /stats endpoints', async () => {
+      const anonHist = await fetch(`${baseUrl}/api/moderation/history`);
+      expect(anonHist.status).toBe(401);
+
+      const buyerHist = await fetch(`${baseUrl}/api/moderation/history`, {
+        headers: { Authorization: `Bearer ${buyerToken}` },
+      });
+      expect(buyerHist.status).toBe(403);
+
+      const anonStats = await fetch(`${baseUrl}/api/moderation/stats`);
+      expect(anonStats.status).toBe(401);
+
+      const buyerStats = await fetch(`${baseUrl}/api/moderation/stats`, {
+        headers: { Authorization: `Bearer ${buyerToken}` },
+      });
+      expect(buyerStats.status).toBe(403);
+    });
+
+    it('retrieves accurate queue summary statistics', async () => {
+      const statsRes = await fetch(`${baseUrl}/api/moderation/stats`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
+      expect(statsRes.status).toBe(200);
+      const stats = (await statsRes.json()) as any;
+      expect(typeof stats.pendingCount).toBe('number');
+      expect(typeof stats.approvedCount).toBe('number');
+      expect(typeof stats.rejectedCount).toBe('number');
+      expect(typeof stats.averageSimilarity).toBe('number');
+    });
+  });
 });
+

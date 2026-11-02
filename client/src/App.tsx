@@ -14,6 +14,7 @@ import { ArtworkDetailPage } from './pages/ArtworkDetailPage';
 import { ExhibitionsPage } from './pages/ExhibitionsPage';
 import { ExhibitionRoomPage } from './pages/ExhibitionRoomPage';
 import { ExhibitionAnalyticsPage } from './pages/ExhibitionAnalyticsPage';
+import { AdminModerationPage } from './pages/AdminModerationPage';
 
 const HomePage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -134,9 +135,18 @@ export const App: React.FC = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/admin/moderation"
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN']}>
+                    <AdminModerationPage />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Catch-all redirect */}
               <Route path="*" element={<Navigate to="/" replace />} />
+
             </Routes>
           </div>
         </div>

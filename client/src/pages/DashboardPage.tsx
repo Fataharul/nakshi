@@ -154,7 +154,15 @@ export const DashboardPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                to="/admin/moderation"
+                id="admin-moderation-console-link"
+                className="flex items-center gap-2 py-2.5 px-4 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold uppercase tracking-wider rounded-lg border border-outline/20 transition-colors shadow-xs"
+              >
+                <ShieldCheck className="w-4 h-4 text-primary" />
+                <span>Moderation Console</span>
+              </Link>
               <button
                 id="admin-open-create-auction-btn"
                 onClick={() => setIsAdminAuctionModalOpen(true)}
@@ -173,6 +181,7 @@ export const DashboardPage: React.FC = () => {
               </Link>
             </div>
           </div>
+
 
           {/* Admin Moderation Queue */}
           <AdminModerationQueue />

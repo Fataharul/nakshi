@@ -42,3 +42,14 @@ export interface ModerationReviewPayload {
   action: 'APPROVE' | 'REJECT';
   notes?: string;
 }
+
+export interface ModerationStats {
+  pendingCount: number;
+  approvedCount: number;
+  rejectedCount: number;
+  averageSimilarity: number;
+}
+
+export type ModerationFilter = 'ALL' | 'HIGH_RISK' | 'CATALOGUE_DUPLICATE' | 'MANUAL_FLAG';
+export type ModerationSort = 'SIMILARITY_DESC' | 'NEWEST' | 'OLDEST';
+

@@ -280,3 +280,22 @@
   - Guarantees complete end-to-end integrity between moderation status and transaction workflows.
   - Prevents race conditions or direct API calls from acquiring unmoderated or flagged listings.
 
+## 24. Dedicated Administrator Review Interface & Moderation Console Architecture
+- **Timestamp**: 2026-11-02 21:20:00 +06:00
+- **Context**: To strictly satisfy Requirements 2.7 & 3.7 and the visual specifications in `DESIGN_DIRECTION.md` and `DESIGN.md`, platform administrators require a dedicated, full-featured review interface for comparative inspection of flagged duplicate artwork uploads with high-resolution inspection, decision reason presets, queue filtering, and audit history.
+- **Decision**:
+  - Implement dedicated review page `AdminModerationPage.tsx` at `/admin/moderation` guarded by `ProtectedRoute allowedRoles={['ADMIN']}`.
+  - Wire direct access points via desktop & mobile `Navbar` ("Moderation") and Admin `DashboardPage` ("Moderation Console").
+  - Elevate `AdminModerationQueue.tsx` with:
+    - Side-by-side 50/50 split view with floating similarity badge pinned at center.
+    - Deep-dive fullscreen inspection modal (`#comparison-inspection-modal`) with synchronized spec comparison table and high-res imagery.
+    - Queue search and risk filtering chips (All, High Match >90%, Catalogue Duplicates, Admin Manual Flags).
+    - Quick reason presets for approval and rejection notes.
+    - Navigation tabs switching between Active Review Queue and Chronological Audit History (`#tab-audit-history`).
+    - Live metrics overview (pending count, approved overrides, rejected duplicates, average match score).
+  - Add backend endpoints `GET /api/moderation/history` and `GET /api/moderation/stats` protected by `authenticateJWT` and `requireRoles(Role.ADMIN)`.
+- **Rationale**:
+  - Provides administrators with deep provenance inspection to distinguish authentic folk variations from fraudulent duplicates.
+  - Maintains a complete, verifiable audit trail of every moderation decision taken.
+
+
