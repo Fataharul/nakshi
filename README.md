@@ -151,6 +151,9 @@ npm run dev
   - `GET /api/exhibitions/organizer/my` — Exhibitions curated by authenticated organizer (`ORGANIZER` / `ADMIN` role).
   - `POST /api/exhibitions` — Curate and publish a new virtual exhibition (`ORGANIZER` / `ADMIN` role).
   - `PATCH /api/exhibitions/:id/vip-schedule` — Configure or update VIP preview commencement, conclusion, and duration (`ORGANIZER` / `ADMIN` role).
+  - `POST /api/exhibitions/:id/tickets` — Purchase standard admission or VIP vernissage pass using internal credits (`BUYER` role).
+  - `GET /api/exhibitions/:id/my-ticket` — Retrieve authenticated user's ticket token for an exhibition.
+  - `POST /api/exhibitions/:id/enter` — Enter virtual gallery with server-side timestamp VIP window access gating.
 - **Live Auctions (`/api/auctions`)**:
   - `POST /api/auctions` — Create/schedule new artwork auction (`ARTIST` role).
   - `GET /api/auctions/:id` — Retrieve auction details with current highest bid and artwork information.

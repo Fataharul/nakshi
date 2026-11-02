@@ -14,6 +14,9 @@ describe('Exhibition & VIP Viewing Schedule Acceptance Tests', () => {
   let otherOrganizerToken: string;
   let otherOrganizerId: string;
   let buyerToken: string;
+  let buyerId: string;
+  let standardTicketToken: string;
+  let vipTicketToken: string;
   let exhibitionId: string;
 
   const organizerUser = {
@@ -77,6 +80,13 @@ describe('Exhibition & VIP Viewing Schedule Acceptance Tests', () => {
     });
     const buyerData = (await buyerRes.json()) as any;
     buyerToken = buyerData.token;
+    buyerId = buyerData.user.id;
+
+    // Seed buyer wallet with credits for ticket purchase tests
+    await prisma.wallet.update({
+      where: { userId: buyerId },
+      data: { balance: 500 },
+    });
   });
 
   afterAll(async () => {
@@ -87,7 +97,7 @@ describe('Exhibition & VIP Viewing Schedule Acceptance Tests', () => {
       }
       await prisma.user.deleteMany({
         where: {
-          id: { in: [organizerId, otherOrganizerId].filter(Boolean) },
+          id: { in: [organizerId, otherOrganizerId, buyerId].filter(Boolean) },
         },
       });
     } catch (e) {
@@ -315,5 +325,170 @@ describe('Exhibition & VIP Viewing Schedule Acceptance Tests', () => {
     expect(disabledInDb).toBeDefined();
     expect(disabledInDb?.vipStartTime).toBeNull();
     expect(disabledInDb?.vipEndTime).toBeNull();
+  });
+
+  it('re-configures VIP schedule for ticket and access gating tests (200)', async () => {
+    const res = await fetch(`${baseUrl}/api/exhibitions/${exhibitionId}/vip-schedule`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${organizerToken}`,
+      },
+      body: JSON.stringify({
+        isVipEnabled: true,
+        vipStartTime: '2026-11-28T10:00:00.000Z',
+        vipEndTime: '2026-11-30T23:59:59.000Z',
+      }),
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it('allows buyer to purchase a standard ticket and a VIP pass with credits (201)', async () => {
+    // 1. Buy Standard Ticket
+    const stdRes = await fetch(`${baseUrl}/api/exhibitions/${exhibitionId}/tickets`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${buyerToken}`,
+      },
+      body: JSON.stringify({ isVip: false }),
+    });
+    expect(stdRes.status).toBe(201);
+    const stdData = (await stdRes.json()) as any;
+    expect(stdData.ticket).toBeDefined();
+    expect(stdData.ticket.isVip).toBe(false);
+    expect(stdData.ticket.ticketToken).toMatch(/^NK-EXH-\d{4}-[A-Z0-9]{4}$/);
+    standardTicketToken = stdData.ticket.ticketToken;
+
+    // 2. Buy VIP Pass
+    const vipRes = await fetch(`${baseUrl}/api/exhibitions/${exhibitionId}/tickets`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${buyerToken}`,
+      },
+      body: JSON.stringify({ isVip: true }),
+    });
+    expect(vipRes.status).toBe(201);
+    const vipData = (await vipRes.json()) as any;
+    expect(vipData.ticket).toBeDefined();
+    expect(vipData.ticket.isVip).toBe(true);
+    expect(vipData.ticket.ticketToken).toMatch(/^NK-EXH-\d{4}-[A-Z0-9]{4}$/);
+    vipTicketToken = vipData.ticket.ticketToken;
+  });
+
+  it('rejects VIP entry before vipStartTime (403 Forbidden with VIP_NOT_STARTED)', async () => {
+    const res = await fetch(`${baseUrl}/api/exhibitions/${exhibitionId}/enter`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${buyerToken}`,
+      },
+      body: JSON.stringify({
+        ticketToken: vipTicketToken,
+        simulatedTime: '2026-11-27T12:00:00.000Z', // Before vipStartTime
+      }),
+    });
+
+    expect(res.status).toBe(403);
+    const data = (await res.json()) as any;
+    expect(data.error).toContain('VIP viewing window has not commenced yet');
+    expect(data.code).toBe('VIP_NOT_STARTED');
+  });
+
+  it('rejects standard ticket holder during active VIP preview window (403 with VIP_PREVIEW_ONLY)', async () => {
+    const res = await fetch(`${baseUrl}/api/exhibitions/${exhibitionId}/enter`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${buyerToken}`,
+      },
+      body: JSON.stringify({
+        ticketToken: standardTicketToken,
+        simulatedTime: '2026-11-29T12:00:00.000Z', // Active VIP window, but before public opening (2026-12-01)
+      }),
+    });
+
+    expect(res.status).toBe(403);
+    const data = (await res.json()) as any;
+    expect(data.error).toContain('exclusive VIP preview');
+    expect(data.code).toBe('VIP_PREVIEW_ONLY');
+  });
+
+  it('grants entry to VIP pass holder during active VIP window (200 OK)', async () => {
+    const res = await fetch(`${baseUrl}/api/exhibitions/${exhibitionId}/enter`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${buyerToken}`,
+      },
+      body: JSON.stringify({
+        ticketToken: vipTicketToken,
+        simulatedTime: '2026-11-29T12:00:00.000Z', // Active VIP window
+      }),
+    });
+
+    expect(res.status).toBe(200);
+    const data = (await res.json()) as any;
+    expect(data.allowed).toBe(true);
+    expect(data.accessType).toBe('VIP');
+    expect(data.exhibition).toBeDefined();
+    expect(Array.isArray(data.artworks)).toBe(true);
+  });
+
+  it('grants entry to standard ticket holder during public opening hours (200 OK)', async () => {
+    const res = await fetch(`${baseUrl}/api/exhibitions/${exhibitionId}/enter`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${buyerToken}`,
+      },
+      body: JSON.stringify({
+        ticketToken: standardTicketToken,
+        simulatedTime: '2026-12-05T12:00:00.000Z', // Inside public dates (2026-12-01 to 2026-12-15)
+      }),
+    });
+
+    expect(res.status).toBe(200);
+    const data = (await res.json()) as any;
+    expect(data.allowed).toBe(true);
+    expect(data.accessType).toBe('GENERAL');
+  });
+
+  it('rejects entry after exhibition conclusion (403 Forbidden with EXHIBITION_ENDED)', async () => {
+    const res = await fetch(`${baseUrl}/api/exhibitions/${exhibitionId}/enter`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${buyerToken}`,
+      },
+      body: JSON.stringify({
+        ticketToken: vipTicketToken,
+        simulatedTime: '2026-12-25T12:00:00.000Z', // After endTime
+      }),
+    });
+
+    expect(res.status).toBe(403);
+    const data = (await res.json()) as any;
+    expect(data.error).toContain('concluded');
+    expect(data.code).toBe('EXHIBITION_ENDED');
+  });
+
+  it('always grants entry to the exhibition curator at any timestamp (200 OK)', async () => {
+    const res = await fetch(`${baseUrl}/api/exhibitions/${exhibitionId}/enter`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${organizerToken}`,
+      },
+      body: JSON.stringify({
+        simulatedTime: '2026-11-20T10:00:00.000Z', // Way before VIP start
+      }),
+    });
+
+    expect(res.status).toBe(200);
+    const data = (await res.json()) as any;
+    expect(data.allowed).toBe(true);
+    expect(data.accessType).toBe('ORGANIZER');
   });
 });

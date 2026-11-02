@@ -385,4 +385,20 @@
   - Playwright multi-viewport tests passed across Desktop, Mobile (360px), and Tablet (768px) (`e2e/vip_viewing_schedule.spec.ts`).
   - Server TypeScript (`tsc`) and Client Vite build compiled with 0 errors.
 
+## [2026-11-02 21:30:00 +06:00] Milestone: Timestamp-Based VIP Access Restriction & Ticket Verification Implemented & Verified
+- **Completed**:
+  - Implemented timestamp evaluation engine `evaluateExhibitionAccess` in `server/src/utils/exhibition.validation.ts` enforcing schedule gating across VIP tickets, standard tickets, and organizer bypasses.
+  - Implemented `generateTicketToken` formatting tokens as `NK-EXH-YYYY-XXXX`.
+  - Implemented `purchaseTicket`, `enterExhibition`, and `getMyTicket` in `server/src/services/exhibition.service.ts` with atomic internal credit deductions (`EXHIBITION_TICKET`) and timestamp-based access gating.
+  - Exposed `POST /api/exhibitions/:id/enter`, `POST /api/exhibitions/:id/tickets`, and `GET /api/exhibitions/:id/my-ticket` in `server/src/routes/exhibition.routes.ts` and `server/src/controllers/exhibition.controller.ts`.
+  - Developed full-stack Virtual Exhibition Portal `client/src/pages/ExhibitionPage.tsx` with editorial hero header, VIP status indicator, ticket purchase options, contextual access restriction banner (`#vip-access-restricted-banner`), and virtual gallery room (`#virtual-gallery-view`).
+  - Added unit test suite `server/tests/unit/exhibition.access.test.ts` (16 tests passing).
+  - Expanded acceptance test suite `server/tests/acceptance/exhibition.test.ts` (18 tests passing).
+  - Expanded Playwright E2E suite `e2e/05_exhibition_tickets.spec.ts` (6 tests passing across Desktop, Mobile 360px, and Tablet 768px).
+- **Verified**:
+  - All 48 exhibition unit and acceptance tests passed (`vitest run`).
+  - All 9 Playwright tests passed across all viewports (`e2e/05_exhibition_tickets.spec.ts` & `e2e/vip_viewing_schedule.spec.ts`).
+  - Client Vite production build and Server TypeScript build compiled with 0 errors.
+
+
 

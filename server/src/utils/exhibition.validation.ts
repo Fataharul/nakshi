@@ -194,3 +194,163 @@ export const createExhibitionSchema = z
   });
 
 export type CreateExhibitionInput = z.infer<typeof createExhibitionSchema>;
+
+export type AccessRestrictionReason =
+  | 'NO_TICKET'
+  | 'VIP_NOT_CONFIGURED'
+  | 'VIP_NOT_STARTED'
+  | 'VIP_PREVIEW_ONLY'
+  | 'VIP_CONCLUDED'
+  | 'EXHIBITION_NOT_STARTED'
+  | 'EXHIBITION_ENDED';
+
+export interface AccessEvaluationResult {
+  allowed: boolean;
+  accessType?: 'ORGANIZER' | 'VIP' | 'GENERAL';
+  reason?: AccessRestrictionReason;
+  message?: string;
+}
+
+/**
+ * Generates an exhibition ticket token conforming to the format NK-EXH-YYYY-XXXX.
+ */
+export function generateTicketToken(): string {
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let randomPart = '';
+  for (let i = 0; i < 4; i++) {
+    randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  const year = new Date().getFullYear();
+  return `NK-EXH-${year}-${randomPart}`;
+}
+
+/**
+ * Evaluates whether a user can enter an exhibition at the given timestamp.
+ * Enforces strict VIP window bounds and ticket privileges.
+ */
+export function evaluateExhibitionAccess(
+  now: Date,
+  exhibition: {
+    startTime: Date | string;
+    endTime: Date | string;
+    vipStartTime?: Date | string | null;
+    vipEndTime?: Date | string | null;
+    organizerId: string;
+  },
+  user: { id: string; role: string },
+  ticket?: { id: string; isVip: boolean; ticketToken: string } | null
+): AccessEvaluationResult {
+  // 1. Organizer or Admin bypass: always granted curatorial access
+  if (user.role === 'ADMIN' || user.id === exhibition.organizerId) {
+    return {
+      allowed: true,
+      accessType: 'ORGANIZER',
+    };
+  }
+
+  // 2. Buyer/Visitor ticket check
+  if (!ticket) {
+    return {
+      allowed: false,
+      reason: 'NO_TICKET',
+      message: 'Admission ticket required to enter this virtual exhibition.',
+    };
+  }
+
+  const currentTime = now.getTime();
+  const startTime = new Date(exhibition.startTime).getTime();
+  const endTime = new Date(exhibition.endTime).getTime();
+  const vipStartTime = exhibition.vipStartTime ? new Date(exhibition.vipStartTime).getTime() : null;
+  const vipEndTime = exhibition.vipEndTime ? new Date(exhibition.vipEndTime).getTime() : null;
+
+  // 3. If exhibition has concluded overall
+  if (currentTime > endTime) {
+    return {
+      allowed: false,
+      reason: 'EXHIBITION_ENDED',
+      message: 'This virtual exhibition has concluded.',
+    };
+  }
+
+  // 4. Ticket is VIP
+  if (ticket.isVip) {
+    if (!vipStartTime || !vipEndTime) {
+      // Exhibition does not have a VIP window configured; falls back to standard exhibition hours
+      if (currentTime < startTime) {
+        return {
+          allowed: false,
+          reason: 'EXHIBITION_NOT_STARTED',
+          message: 'Virtual exhibition has not opened yet.',
+        };
+      }
+      return { allowed: true, accessType: 'GENERAL' };
+    }
+
+    if (currentTime < vipStartTime) {
+      return {
+        allowed: false,
+        reason: 'VIP_NOT_STARTED',
+        message: 'VIP viewing window has not commenced yet.',
+      };
+    }
+
+    if (currentTime >= vipStartTime && currentTime <= vipEndTime) {
+      return {
+        allowed: true,
+        accessType: 'VIP',
+      };
+    }
+
+    // After VIP end: if general public is open, VIP pass allows entry as well
+    if (currentTime >= startTime && currentTime <= endTime) {
+      return {
+        allowed: true,
+        accessType: 'GENERAL',
+      };
+    }
+
+    // If currentTime is between vipEndTime and startTime
+    return {
+      allowed: false,
+      reason: 'VIP_CONCLUDED',
+      message: 'VIP viewing window has concluded. General admission opens soon.',
+    };
+  }
+
+  // 5. Standard Ticket
+  if (currentTime < startTime) {
+    // If currently inside an active VIP preview window
+    if (vipStartTime && vipEndTime && currentTime >= vipStartTime && currentTime <= vipEndTime) {
+      return {
+        allowed: false,
+        reason: 'VIP_PREVIEW_ONLY',
+        message: 'General admission is not open yet. Exhibition is currently in exclusive VIP preview.',
+      };
+    }
+
+    return {
+      allowed: false,
+      reason: 'EXHIBITION_NOT_STARTED',
+      message: 'General admission has not opened yet.',
+    };
+  }
+
+  return {
+    allowed: true,
+    accessType: 'GENERAL',
+  };
+}
+
+export const purchaseTicketSchema = z.object({
+  isVip: z.boolean().default(false),
+});
+
+export type PurchaseTicketInput = z.infer<typeof purchaseTicketSchema>;
+
+export const enterExhibitionSchema = z.object({
+  ticketToken: z.string().optional(),
+  simulatedTime: z.string().optional(),
+});
+
+export type EnterExhibitionInput = z.infer<typeof enterExhibitionSchema>;
+

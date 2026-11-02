@@ -41,4 +41,30 @@ router.put(
 // Individual exhibition details
 router.get('/:id', ExhibitionController.getById);
 
+// Ticket purchase and retrieval (authenticated users)
+router.post(
+  '/:id/tickets',
+  authenticateJWT,
+  ExhibitionController.buyTicket
+);
+
+router.get(
+  '/:id/my-ticket',
+  authenticateJWT,
+  ExhibitionController.getMyTicket
+);
+
+// Virtual gallery entry with timestamp-based VIP access gating
+router.post(
+  '/:id/enter',
+  authenticateJWT,
+  ExhibitionController.enter
+);
+
+router.get(
+  '/:id/enter',
+  authenticateJWT,
+  ExhibitionController.enter
+);
+
 export default router;

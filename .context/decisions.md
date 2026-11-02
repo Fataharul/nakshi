@@ -204,4 +204,22 @@
   - Adheres strictly to the 3-Tier Layered Architecture and RBAC security constraints without external API dependencies.
   - Guarantees seamless UX across desktop, tablet, and mobile 360px viewports.
 
+## 18. Timestamp-Based VIP Access Restriction & Ticket Verification Architecture
+- **Timestamp**: 2026-11-02 21:30:00 +06:00
+- **Context**: Requirements 2.6 and 3.6 dictate that virtual exhibition VIP access must strictly be restricted to its configured schedule window (`[vipStartTime, vipEndTime]`). Standard general admission ticket holders must be barred during exclusive VIP vernissage hours, unauthenticated visitors must be prompted to obtain access, and expired exhibitions must terminate all attendee access. Curators and admins must maintain preview access regardless of current timestamp.
+- **Decision**:
+  - Implement access boundary evaluation engine `evaluateExhibitionAccess(now, exhibition, user, ticket)` in `server/src/utils/exhibition.validation.ts`:
+    - Role Override: `ADMIN` or the exhibition creator (`organizerId === user.id`) is always granted curatorial access.
+    - Ticket Token Generation: Formatted token `NK-EXH-YYYY-XXXX` generated for each purchased ticket.
+    - Atomic Purchase: Deducts internal credits (`EXHIBITION_TICKET`) inside a Prisma interactive transaction.
+    - VIP Restriction: Rejects VIP pass access if `now < vipStartTime` (`VIP_NOT_STARTED`, HTTP 403) or after VIP conclusion before public opening (`VIP_CONCLUDED`, HTTP 403). Permits VIP access during `[vipStartTime, vipEndTime]` and throughout subsequent general admission.
+    - General Admission Restriction: Standard ticket holders attempting entry during active VIP preview are rejected with HTTP 403 (`VIP_PREVIEW_ONLY`), prompting upgrade to VIP pass.
+    - Conclusion: Terminates all attendee entry after `endTime` (`EXHIBITION_ENDED`, HTTP 403).
+  - Exposed REST endpoints: `POST /api/exhibitions/:id/enter`, `POST /api/exhibitions/:id/tickets`, `GET /api/exhibitions/:id/my-ticket`.
+  - Frontend: Gated virtual gallery portal at `/exhibitions/:id` rendering contextual restriction alerts (`#vip-access-restricted-banner`) and unlocked virtual gallery rooms (`#virtual-gallery-view`) upon verified access.
+- **Rationale**:
+  - Eliminates client-side clock tampering by evaluating access strictly against server UTC timestamps.
+  - Conforms to internal credit integrity and zero-external-cost architectural tenets.
+
+
 

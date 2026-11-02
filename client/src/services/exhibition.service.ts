@@ -3,15 +3,19 @@ import {
   Exhibition,
   ConfigureVipSchedulePayload,
   CreateExhibitionPayload,
+  ExhibitionTicket,
+  ExhibitionAccessResponse,
 } from '../types/exhibition';
 
 const API_BASE_URL = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:5000';
 
-class ApiError extends Error {
+export class ApiError extends Error {
   statusCode: number;
-  constructor(message: string, statusCode: number) {
+  code?: string;
+  constructor(message: string, statusCode: number, code?: string) {
     super(message);
     this.statusCode = statusCode;
+    this.code = code;
   }
 }
 
@@ -41,7 +45,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   if (!response.ok) {
     throw new ApiError(
       data?.error || data?.message || 'An unexpected error occurred',
-      response.status
+      response.status,
+      data?.code
     );
   }
 
@@ -99,5 +104,49 @@ export const exhibitionApi = {
       }
     );
     return res.exhibition;
+  },
+
+  /**
+   * Purchases an admission ticket or VIP pass for an exhibition.
+   */
+  async purchaseTicket(
+    id: string,
+    isVip: boolean = false
+  ): Promise<ExhibitionTicket> {
+    const res = await request<{ ticket: ExhibitionTicket; message: string }>(
+      `/api/exhibitions/${id}/tickets`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ isVip }),
+      }
+    );
+    return res.ticket;
+  },
+
+  /**
+   * Retrieves user's active ticket for an exhibition.
+   */
+  async getMyTicket(id: string): Promise<ExhibitionTicket | null> {
+    const res = await request<{ ticket: ExhibitionTicket | null }>(
+      `/api/exhibitions/${id}/my-ticket`
+    );
+    return res.ticket;
+  },
+
+  /**
+   * Enters the virtual exhibition gallery verifying timestamp-based VIP access.
+   */
+  async enterExhibition(
+    id: string,
+    options?: { ticketToken?: string; simulatedTime?: string }
+  ): Promise<ExhibitionAccessResponse> {
+    const res = await request<ExhibitionAccessResponse>(
+      `/api/exhibitions/${id}/enter`,
+      {
+        method: 'POST',
+        body: JSON.stringify(options || {}),
+      }
+    );
+    return res;
   },
 };

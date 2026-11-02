@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   Wallet,
   Calendar,
@@ -9,6 +10,7 @@ import {
   Lock,
   Plus,
   Compass,
+  ExternalLink,
 } from 'lucide-react';
 import { Exhibition } from '../../types/exhibition';
 import { User } from '../../types/auth';
@@ -259,16 +261,26 @@ export const OrganizerDashboardLayout: React.FC<OrganizerDashboardLayoutProps> =
                       </div>
                     </div>
 
-                    {/* Action Trigger Button */}
-                    <button
-                      type="button"
-                      id={`configure-vip-btn-${exhibition.id}`}
-                      onClick={() => onOpenVipConfig(exhibition)}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 text-xs font-semibold uppercase tracking-wider text-on-surface hover:text-white bg-surface-container hover:bg-on-surface border border-outline/30 rounded transition-all shadow-sm"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-primary group-hover:text-white" />
-                      <span>{isVipConfigured ? 'Configure VIP Schedule' : 'Set Up VIP Window'}</span>
-                    </button>
+                    {/* Action Trigger Buttons */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <Link
+                        to={`/exhibitions/${exhibition.id}`}
+                        id={`view-exhibition-btn-${exhibition.id}`}
+                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs font-semibold uppercase tracking-wider text-on-surface hover:text-white bg-surface hover:bg-on-surface border border-outline/30 rounded transition-all shadow-sm"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>View Gallery</span>
+                      </Link>
+                      <button
+                        type="button"
+                        id={`configure-vip-btn-${exhibition.id}`}
+                        onClick={() => onOpenVipConfig(exhibition)}
+                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs font-semibold uppercase tracking-wider text-on-surface hover:text-white bg-surface-container hover:bg-on-surface border border-outline/30 rounded transition-all shadow-sm"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-primary group-hover:text-white" />
+                        <span>{isVipConfigured ? 'VIP Window' : 'Set Up VIP'}</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               );

@@ -9,6 +9,7 @@ import { AccountSetupPage } from './pages/AccountSetupPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { MarketplacePage } from './pages/MarketplacePage';
 import { AuctionPage } from './pages/AuctionPage';
+import { ExhibitionPage } from './pages/ExhibitionPage';
 
 const HomePage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -81,6 +82,7 @@ export const App: React.FC = () => {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/auctions/:id" element={<AuctionPage />} />
+              <Route path="/exhibitions/:id" element={<ExhibitionPage />} />
 
               {/* Protected User Routes */}
               <Route

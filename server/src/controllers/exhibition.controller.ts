@@ -3,6 +3,8 @@ import { ExhibitionService } from '../services/exhibition.service';
 import {
   createExhibitionSchema,
   configureVipScheduleSchema,
+  purchaseTicketSchema,
+  enterExhibitionSchema,
 } from '../utils/exhibition.validation';
 
 export class ExhibitionController {
@@ -83,4 +85,70 @@ export class ExhibitionController {
       next(error);
     }
   }
+
+  /**
+   * Purchase an admission ticket or VIP pass for an exhibition.
+   */
+  public static async buyTicket(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const exhibitionId = req.params.id as string;
+      const validatedData = purchaseTicketSchema.parse(req.body || {});
+      const buyerId = req.user!.id;
+
+      const ticket = await ExhibitionService.purchaseTicket(
+        exhibitionId,
+        buyerId,
+        validatedData.isVip
+      );
+
+      res.status(201).json({
+        ticket,
+        message: `${validatedData.isVip ? 'VIP Access Pass' : 'Admission Ticket'} purchased successfully.`,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Get authenticated user's ticket for this exhibition.
+   */
+  public static async getMyTicket(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const exhibitionId = req.params.id as string;
+      const userId = req.user!.id;
+
+      const ticket = await ExhibitionService.getMyTicket(exhibitionId, userId);
+      res.status(200).json({ ticket });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Enter the virtual exhibition gallery with timestamp-based VIP access gating.
+   */
+  public static async enter(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const exhibitionId = req.params.id as string;
+      const validatedData = enterExhibitionSchema.parse(req.body || {});
+      const userId = req.user!.id;
+      const userRole = req.user!.role;
+
+      const accessResult = await ExhibitionService.enterExhibition(
+        exhibitionId,
+        userId,
+        userRole,
+        {
+          ticketToken: validatedData.ticketToken || (req.query.ticketToken as string | undefined),
+          simulatedTime: validatedData.simulatedTime || (req.query.simulatedTime as string | undefined),
+        }
+      );
+
+      res.status(200).json(accessResult);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
+

@@ -42,3 +42,33 @@ export interface CreateExhibitionPayload {
   vipStartTime?: string | null;
   vipEndTime?: string | null;
 }
+
+export interface ExhibitionTicket {
+  id: string;
+  ticketToken: string;
+  exhibitionId: string;
+  buyerId: string;
+  isVip: boolean;
+  cost?: number;
+  purchasedAt: string;
+}
+
+export interface ExhibitionArtworkBrief {
+  id: string;
+  title: string;
+  imageUrl: string;
+  price: number;
+  medium: string;
+  wallPosition?: number | null;
+  posX?: number | null;
+  posY?: number | null;
+}
+
+export interface ExhibitionAccessResponse {
+  allowed: boolean;
+  accessType?: 'ORGANIZER' | 'VIP' | 'GENERAL';
+  evaluationTimestamp: string;
+  exhibition: Exhibition;
+  artworks: ExhibitionArtworkBrief[];
+  ticket: ExhibitionTicket | null;
+}

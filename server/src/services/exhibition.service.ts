@@ -6,6 +6,9 @@ import {
   computeVipStatus,
   formatVipDuration,
   VipScheduleStatus,
+  generateTicketToken,
+  evaluateExhibitionAccess,
+  AccessEvaluationResult,
 } from '../utils/exhibition.validation';
 
 export interface FormattedExhibition {
@@ -21,6 +24,7 @@ export interface FormattedExhibition {
   isVipEnabled: boolean;
   vipStatus: VipScheduleStatus;
   vipDuration: string | null;
+  layoutConfig?: any;
   organizerId: string;
   organizer?: {
     id: string;
@@ -56,6 +60,7 @@ export class ExhibitionService {
       isVipEnabled: isVipConfigured,
       vipStatus,
       vipDuration,
+      layoutConfig: exhibition.layoutConfig ?? null,
       organizerId: exhibition.organizerId,
       organizer: exhibition.organizer
         ? {
@@ -249,5 +254,227 @@ export class ExhibitionService {
     });
 
     return this.formatExhibition(updated);
+  }
+
+  /**
+   * Purchases an admission ticket or VIP access pass for a virtual exhibition.
+   * Atomically verifies and deducts internal credits from the buyer's wallet.
+   */
+  public static async purchaseTicket(
+    exhibitionId: string,
+    buyerId: string,
+    isVip: boolean = false
+  ) {
+    const exhibition = await prisma.exhibition.findUnique({
+      where: { id: exhibitionId },
+      include: { organizer: { select: { id: true, name: true } } },
+    });
+
+    if (!exhibition) {
+      throw new AppError('Exhibition not found', 404);
+    }
+
+    const basePrice = Number(exhibition.ticketPrice ?? 0);
+    // VIP pass is basePrice * 1.5 (or minimum 10 credits for free general admission)
+    const ticketCost = isVip
+      ? Math.max(10, Math.round(basePrice * 1.5 * 100) / 100)
+      : basePrice;
+
+    // Execute atomic ticket purchase with credit deduction
+    const ticket = await prisma.$transaction(async (tx) => {
+      // 1. Get or create buyer wallet
+      let wallet = await tx.wallet.findUnique({
+        where: { userId: buyerId },
+      });
+
+      if (!wallet) {
+        wallet = await tx.wallet.create({
+          data: {
+            userId: buyerId,
+            balance: 0,
+          },
+        });
+      }
+
+      // Check sufficient balance
+      if (Number(wallet.balance) < ticketCost) {
+        throw new AppError(
+          `Insufficient credit balance. Required: ${ticketCost.toFixed(2)} credits, Available: ${Number(wallet.balance).toFixed(2)} credits.`,
+          400
+        );
+      }
+
+      // 2. Deduct credits if cost > 0
+      if (ticketCost > 0) {
+        await tx.wallet.update({
+          where: { id: wallet.id },
+          data: {
+            balance: {
+              decrement: ticketCost,
+            },
+          },
+        });
+
+        await tx.creditTransaction.create({
+          data: {
+            walletId: wallet.id,
+            amount: -ticketCost,
+            type: 'EXHIBITION_TICKET',
+            description: `${isVip ? 'VIP Early Access Pass' : 'General Admission Ticket'} for ${exhibition.title}`,
+            referenceId: exhibition.id,
+          },
+        });
+      }
+
+      // 3. Issue unique ticket token
+      const ticketToken = generateTicketToken();
+
+      const createdTicket = await tx.exhibitionTicket.create({
+        data: {
+          ticketToken,
+          exhibitionId,
+          buyerId,
+          isVip,
+        },
+      });
+
+      return createdTicket;
+    });
+
+    return {
+      id: ticket.id,
+      ticketToken: ticket.ticketToken,
+      exhibitionId: ticket.exhibitionId,
+      buyerId: ticket.buyerId,
+      isVip: ticket.isVip,
+      cost: ticketCost,
+      purchasedAt: ticket.purchasedAt.toISOString(),
+    };
+  }
+
+  /**
+   * Retrieves the authenticated user's ticket for an exhibition.
+   */
+  public static async getMyTicket(exhibitionId: string, userId: string) {
+    const ticket = await prisma.exhibitionTicket.findFirst({
+      where: {
+        exhibitionId,
+        buyerId: userId,
+      },
+      orderBy: { purchasedAt: 'desc' },
+    });
+
+    if (!ticket) return null;
+
+    return {
+      id: ticket.id,
+      ticketToken: ticket.ticketToken,
+      exhibitionId: ticket.exhibitionId,
+      buyerId: ticket.buyerId,
+      isVip: ticket.isVip,
+      purchasedAt: ticket.purchasedAt.toISOString(),
+    };
+  }
+
+  /**
+   * Evaluates timestamp-based access gating to enter a virtual exhibition gallery.
+   * Restricts VIP access outside its configured schedule window.
+   */
+  public static async enterExhibition(
+    exhibitionId: string,
+    userId: string,
+    userRole: string,
+    options?: { ticketToken?: string; simulatedTime?: string }
+  ) {
+    const exhibition = await prisma.exhibition.findUnique({
+      where: { id: exhibitionId },
+      include: {
+        organizer: {
+          select: { id: true, name: true, email: true },
+        },
+        artworks: {
+          include: {
+            artwork: {
+              select: {
+                id: true,
+                title: true,
+                imageUrl: true,
+                price: true,
+                medium: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: { artworks: true, tickets: true },
+        },
+      },
+    });
+
+    if (!exhibition) {
+      throw new AppError('Exhibition not found', 404);
+    }
+
+    const now = options?.simulatedTime ? new Date(options.simulatedTime) : new Date();
+
+    // Find ticket if user is not organizer or admin
+    let ticket: any = null;
+    if (userRole !== 'ADMIN' && exhibition.organizerId !== userId) {
+      if (options?.ticketToken) {
+        ticket = await prisma.exhibitionTicket.findUnique({
+          where: { ticketToken: options.ticketToken },
+        });
+
+        if (!ticket || ticket.exhibitionId !== exhibitionId || ticket.buyerId !== userId) {
+          throw new AppError('Invalid or mismatched exhibition ticket token.', 403);
+        }
+      } else {
+        ticket = await prisma.exhibitionTicket.findFirst({
+          where: {
+            exhibitionId,
+            buyerId: userId,
+          },
+          orderBy: { purchasedAt: 'desc' },
+        });
+      }
+    }
+
+    const evalResult: AccessEvaluationResult = evaluateExhibitionAccess(
+      now,
+      exhibition,
+      { id: userId, role: userRole },
+      ticket
+    );
+
+    if (!evalResult.allowed) {
+      const err = new AppError(evalResult.message || 'Access restricted', 403);
+      (err as any).code = evalResult.reason;
+      throw err;
+    }
+
+    return {
+      allowed: true,
+      accessType: evalResult.accessType,
+      evaluationTimestamp: now.toISOString(),
+      exhibition: this.formatExhibition(exhibition),
+      artworks: exhibition.artworks.map((ea) => ({
+        id: ea.artwork.id,
+        title: ea.artwork.title,
+        imageUrl: ea.artwork.imageUrl,
+        price: Number(ea.artwork.price),
+        medium: ea.artwork.medium,
+        wallPosition: ea.wallPosition,
+        posX: ea.posX,
+        posY: ea.posY,
+      })),
+      ticket: ticket
+        ? {
+            id: ticket.id,
+            ticketToken: ticket.ticketToken,
+            isVip: ticket.isVip,
+            purchasedAt: ticket.purchasedAt.toISOString(),
+          }
+        : null,
+    };
   }
 }
