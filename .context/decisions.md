@@ -187,3 +187,18 @@
 - **Rationale**:
   - Eliminates 100+ lines of duplicate card markup from `ArtworkSearchInterface.tsx`.
   - Ensures clean separation of concerns and reliable, isolated Playwright E2E testability.
+
+## 17. Virtual Exhibition VIP Viewing Schedule Configuration & RBAC Architecture
+- **Timestamp**: 2026-11-02 20:50:00 +06:00
+- **Context**: Requirements 1.4, 2.6, and 3.6 mandate that authorized exhibition organizers can define VIP viewing windows, allowing ticket holders exclusive preview gallery access prior to general public admission, with strict server-side validation and responsive mobile usability down to 360px.
+- **Decision**:
+  - Implement full-stack VIP Viewing Schedule Configuration:
+    - Backend: Zod schemas (`configureVipScheduleSchema`, `createExhibitionSchema`) in `server/src/utils/exhibition.validation.ts` validating date validity and ordering (`vipEndTime > vipStartTime`).
+    - Service layer `ExhibitionService` enforcing ownership guards (only the exhibition's creator organizer or ADMIN can update the schedule) and real-time status calculation (`computeVipStatus` returning `'NOT_CONFIGURED'`, `'SCHEDULED'`, `'ACTIVE'`, or `'CONCLUDED'`).
+    - API Endpoints: `POST /api/exhibitions`, `GET /api/exhibitions`, `GET /api/exhibitions/:id`, `GET /api/exhibitions/organizer/my`, and `PATCH /api/exhibitions/:id/vip-schedule` guarded by `authenticateJWT` and `requireRoles(Role.ORGANIZER, Role.ADMIN)`.
+    - Frontend: Modular `VipScheduleConfigModal.tsx` conforming to `DESIGN.md` and `DESIGN_DIRECTION.md` with master toggle, quick duration presets (24h, 48h, 72h relative to public opening), interactive timeline preview (`#vip-timeline-preview`), and inline error guidance.
+    - Integrated with dedicated `OrganizerDashboardLayout.tsx` for curators on `/dashboard/organizer`.
+- **Rationale**:
+  - Adheres strictly to the 3-Tier Layered Architecture and RBAC security constraints without external API dependencies.
+  - Guarantees seamless UX across desktop, tablet, and mobile 360px viewports.
+

@@ -1,6 +1,6 @@
 import { prisma } from '../config/prisma';
 import { AppError } from './auth.service';
-import { CreateAuctionInput, PlaceBidInput } from '../utils/auction.validation';
+import { CreateAuctionInput, PlaceBidInput, calculateMinimumBid } from '../utils/auction.validation';
 import { AuctionStatus, ArtworkAvailability, TransactionType } from '@prisma/client';
 import { io } from '../server';
 
@@ -8,13 +8,19 @@ export class AuctionService {
   /**
    * Format Prisma Auction record into standard JSON response object
    */
-  private static formatAuction(auction: any) {
+  public static formatAuction(auction: any) {
+    const startingBid = Number(auction.startingBid);
+    const currentHighestBid = auction.currentHighestBid ? Number(auction.currentHighestBid) : null;
+    const minIncrement = Number(auction.minIncrement);
+    const minNextBid = calculateMinimumBid(currentHighestBid, startingBid, minIncrement);
+
     return {
       id: auction.id,
       artworkId: auction.artworkId,
-      startingBid: Number(auction.startingBid),
-      currentHighestBid: auction.currentHighestBid ? Number(auction.currentHighestBid) : null,
-      minIncrement: Number(auction.minIncrement),
+      startingBid,
+      currentHighestBid,
+      minIncrement,
+      minNextBid,
       startTime: auction.startTime,
       endTime: auction.endTime,
       status: auction.status,
@@ -32,6 +38,17 @@ export class AuctionService {
           name: auction.artwork.artist.name,
         } : undefined,
       } : undefined,
+      bids: auction.bids ? auction.bids.map((b: any) => ({
+        id: b.id,
+        auctionId: b.auctionId,
+        bidderId: b.bidderId,
+        amount: Number(b.amount),
+        createdAt: b.createdAt,
+        bidder: b.bidder ? {
+          id: b.bidder.id,
+          name: b.bidder.name,
+        } : undefined,
+      })) : undefined,
     };
   }
 

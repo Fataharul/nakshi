@@ -5,25 +5,41 @@ import { Wallet, Settings, ShoppingBag, Palette, Compass, ShieldCheck } from 'lu
 import { CreateArtworkModal } from '../components/marketplace/CreateArtworkModal';
 import { CreateAuctionModal } from '../components/dashboard/CreateAuctionModal';
 import { SellerDashboardLayout } from '../components/dashboard/SellerDashboardLayout';
+import { OrganizerDashboardLayout } from '../components/dashboard/OrganizerDashboardLayout';
+import { VipScheduleConfigModal } from '../components/exhibition/VipScheduleConfigModal';
+import { CreateExhibitionModal } from '../components/exhibition/CreateExhibitionModal';
 import { artworkApi } from '../services/artwork.service';
 import { AuctionService, AuctionResponse } from '../services/auction.service';
+import { exhibitionApi } from '../services/exhibition.service';
 import { Artwork } from '../types/artwork';
+import { Exhibition } from '../types/exhibition';
 
 export const DashboardPage: React.FC = () => {
   const { role } = useParams<{ role: string }>();
   const { user } = useAuth();
 
+  // Artist Storefront State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [isLoadingArtworks, setIsLoadingArtworks] = useState(false);
 
+  // Auction State
   const [isAuctionModalOpen, setIsAuctionModalOpen] = useState(false);
   const [auctions, setAuctions] = useState<AuctionResponse[]>([]);
   const [isLoadingAuctions, setIsLoadingAuctions] = useState(false);
 
+  // Organizer Exhibition & VIP Schedule State
+  const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
+  const [isLoadingExhibitions, setIsLoadingExhibitions] = useState(false);
+  const [isCreateExhibitionModalOpen, setIsCreateExhibitionModalOpen] = useState(false);
+  const [isVipModalOpen, setIsVipModalOpen] = useState(false);
+  const [selectedExhibitionForVip, setSelectedExhibitionForVip] = useState<Exhibition | null>(null);
+
   useEffect(() => {
-    if (user && user.role === 'ARTIST') {
+    if (!user) return;
+
+    if (user.role === 'ARTIST') {
       setIsLoadingArtworks(true);
       artworkApi
         .getMyArtworks()
@@ -37,6 +53,15 @@ export const DashboardPage: React.FC = () => {
         .then((data) => setAuctions(data))
         .catch((err) => console.error('Failed to load artist auctions:', err))
         .finally(() => setIsLoadingAuctions(false));
+    }
+
+    if (user.role === 'ORGANIZER' || user.role === 'ADMIN') {
+      setIsLoadingExhibitions(true);
+      exhibitionApi
+        .getMyExhibitions()
+        .then((data) => setExhibitions(data))
+        .catch((err) => console.error('Failed to load curator exhibitions:', err))
+        .finally(() => setIsLoadingExhibitions(false));
     }
   }, [user]);
 
@@ -97,6 +122,22 @@ export const DashboardPage: React.FC = () => {
     );
   };
 
+  const handleOpenVipConfig = (exhibition: Exhibition) => {
+    setSelectedExhibitionForVip(exhibition);
+    setIsVipModalOpen(true);
+  };
+
+  const handleExhibitionCreated = (newExhibition: Exhibition) => {
+    setExhibitions((prev) => [newExhibition, ...prev]);
+  };
+
+  const handleScheduleUpdated = (updatedExhibition: Exhibition) => {
+    setExhibitions((prev) =>
+      prev.map((e) => (e.id === updatedExhibition.id ? updatedExhibition : e))
+    );
+    setSelectedExhibitionForVip(updatedExhibition);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
       {user.role === 'ARTIST' ? (
@@ -110,6 +151,14 @@ export const DashboardPage: React.FC = () => {
           auctions={auctions}
           isLoadingAuctions={isLoadingAuctions}
           onOpenCreateAuctionModal={() => setIsAuctionModalOpen(true)}
+        />
+      ) : user.role === 'ORGANIZER' ? (
+        <OrganizerDashboardLayout
+          user={user}
+          exhibitions={exhibitions}
+          isLoading={isLoadingExhibitions}
+          onOpenCreateExhibition={() => setIsCreateExhibitionModalOpen(true)}
+          onOpenVipConfig={handleOpenVipConfig}
         />
       ) : (
         <>
@@ -156,7 +205,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Main Content Grid for non-artists */}
+          {/* Main Content Grid for non-artists/non-organizers */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Left Column: Quick Profile Info */}
             <div className="space-y-6">
@@ -226,6 +275,7 @@ export const DashboardPage: React.FC = () => {
         artworkToEdit={editingArtwork}
       />
 
+      {/* Create Auction Modal (Artist) */}
       {user.role === 'ARTIST' && (
         <CreateAuctionModal
           isOpen={isAuctionModalOpen}
@@ -234,9 +284,26 @@ export const DashboardPage: React.FC = () => {
           onSubmit={handleCreateAuction}
         />
       )}
+
+      {/* VIP Viewing Schedule Configuration Modal */}
+      <VipScheduleConfigModal
+        isOpen={isVipModalOpen}
+        onClose={() => {
+          setIsVipModalOpen(false);
+          setSelectedExhibitionForVip(null);
+        }}
+        exhibition={selectedExhibitionForVip}
+        onScheduleUpdated={handleScheduleUpdated}
+      />
+
+      {/* Create Exhibition Modal (Organizer) */}
+      <CreateExhibitionModal
+        isOpen={isCreateExhibitionModalOpen}
+        onClose={() => setIsCreateExhibitionModalOpen(false)}
+        onExhibitionCreated={handleExhibitionCreated}
+      />
     </div>
   );
 };
 
 export default DashboardPage;
-

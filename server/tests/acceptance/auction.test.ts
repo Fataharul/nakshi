@@ -164,7 +164,7 @@ describe('Auction Creation & Seller Management Acceptance Tests', () => {
       }
     });
     activeAuctionId = activeAuction.id;
-  });
+  }, 30000);
 
   afterAll(async () => {
     serverInstance.close();

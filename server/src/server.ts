@@ -8,10 +8,13 @@ import authRoutes from './routes/auth.routes';
 import artworkRoutes from './routes/artwork.routes';
 import sellerRoutes from './routes/seller.routes';
 import auctionRoutes from './routes/auction.routes';
+import exhibitionRoutes from './routes/exhibition.routes';
 import { AuctionService } from './services/auction.service';
 import { errorHandler } from './middleware/error.middleware';
 
+import path from 'path';
 dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 const server = http.createServer(app);
@@ -47,6 +50,9 @@ app.use('/api/seller', sellerRoutes);
 
 // Live Auction & Bidding Routes
 app.use('/api/auctions', auctionRoutes);
+
+// Virtual Exhibition & VIP Viewing Schedule Routes
+app.use('/api/exhibitions', exhibitionRoutes);
 
 // Centralized error handling
 app.use(errorHandler);

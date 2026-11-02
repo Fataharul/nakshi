@@ -14,6 +14,7 @@ export default defineConfig({
   use: {
     baseURL: process.env.CLIENT_URL || 'http://localhost:5173',
     trace: 'on-first-retry',
+    channel: 'chrome',
   },
   projects: [
     {

@@ -355,3 +355,23 @@
   - Playwright E2E test `e2e/like_artwork.spec.ts` passed across Desktop Chrome, Tablet 768px, and Mobile 360px (`npx playwright test e2e/like_artwork.spec.ts`).
   - Client Vite production build compiled with 0 errors (`npm --prefix client run build`).
   - Server TypeScript build compiled with 0 errors (`npm --prefix server run build`).
+
+## [2026-11-02 20:50:00 +06:00] Milestone: VIP Viewing Schedule Configuration Interface Implemented & Verified
+- **Completed**:
+  - Cleaned up unmerged merge conflict markers across auction and server files, verifying zero build regression.
+  - Implemented exhibition validation schemas (`configureVipScheduleSchema`, `createExhibitionSchema`), `computeVipStatus`, and `formatVipDuration` in `server/src/utils/exhibition.validation.ts`.
+  - Implemented `server/src/services/exhibition.service.ts` supporting `createExhibition`, `getExhibitions`, `getExhibitionById`, `getOrganizerExhibitions`, and `updateVipSchedule` with RBAC ownership checks.
+  - Built `server/src/controllers/exhibition.controller.ts` and routes `server/src/routes/exhibition.routes.ts` mounting `POST /api/exhibitions`, `GET /api/exhibitions`, `GET /api/exhibitions/:id`, `GET /api/exhibitions/organizer/my`, and `PATCH /api/exhibitions/:id/vip-schedule`.
+  - Created client API client in `client/src/services/exhibition.service.ts` and TypeScript interfaces in `client/src/types/exhibition.ts`.
+  - Developed `client/src/components/exhibition/VipScheduleConfigModal.tsx` following `DESIGN.md` and `DESIGN_DIRECTION.md`, featuring master toggle switch, duration presets (24h, 48h, 72h), datetime inputs, live status chip (`#vip-status-badge`), interactive timeline preview (`#vip-timeline-preview`), and inline error guidance.
+  - Developed `client/src/components/dashboard/OrganizerDashboardLayout.tsx` for curators on `/dashboard/organizer` with exhibition cards and VIP viewing window action triggers.
+  - Developed `client/src/components/exhibition/CreateExhibitionModal.tsx` and integrated curator dashboard routing in `client/src/pages/DashboardPage.tsx`.
+  - Added unit test suite `server/tests/unit/exhibition.validation.test.ts` (14 tests passing).
+  - Added integration acceptance test suite `server/tests/acceptance/exhibition.test.ts` (10 tests passing).
+  - Added Playwright E2E test suite `e2e/vip_viewing_schedule.spec.ts` (3 tests passing across Desktop Chrome, Mobile 360px, and Tablet 768px viewports).
+  - Updated `e2e/05_exhibition_tickets.spec.ts` with VIP viewing schedule enforcement.
+- **Verified**:
+  - All 14 server Vitest test suites (154 unit and acceptance tests) passed cleanly (`npm --prefix server run test`).
+  - Both server TypeScript compilation (`npm --prefix server run build`) and client production bundle (`npm --prefix client run build`) compiled with 0 errors.
+  - All Playwright test checks passed across Desktop Chrome (1280px), Mobile 360px, and Tablet 768px viewports (`e2e/vip_viewing_schedule.spec.ts` & `e2e/05_exhibition_tickets.spec.ts`).
+

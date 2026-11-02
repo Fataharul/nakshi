@@ -145,6 +145,12 @@ npm run dev
   - `GET /api/artworks/storefront/:artistId` — Public storefront profile and published inventory.
 - **Seller Analytics (`/api/seller`)**:
   - `GET /api/seller/metrics` — Aggregate sales volume, gross revenue, AOV, and recent customer orders (`ARTIST` / `ADMIN` role).
+- **Virtual Exhibitions & VIP Schedule (`/api/exhibitions`)**:
+  - `GET /api/exhibitions` — Public directory of virtual exhibitions.
+  - `GET /api/exhibitions/:id` — Exhibition details, admission pricing, and computed VIP viewing status.
+  - `GET /api/exhibitions/organizer/my` — Exhibitions curated by authenticated organizer (`ORGANIZER` / `ADMIN` role).
+  - `POST /api/exhibitions` — Curate and publish a new virtual exhibition (`ORGANIZER` / `ADMIN` role).
+  - `PATCH /api/exhibitions/:id/vip-schedule` — Configure or update VIP preview commencement, conclusion, and duration (`ORGANIZER` / `ADMIN` role).
 - **Live Auctions (`/api/auctions`)**:
   - `POST /api/auctions` — Create/schedule new artwork auction (`ARTIST` role).
   - `GET /api/auctions/:id` — Retrieve auction details with current highest bid and artwork information.
