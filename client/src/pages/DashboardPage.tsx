@@ -8,6 +8,7 @@ import { SellerDashboardLayout } from '../components/dashboard/SellerDashboardLa
 import { OrganizerDashboardLayout } from '../components/dashboard/OrganizerDashboardLayout';
 import { VipScheduleConfigModal } from '../components/exhibition/VipScheduleConfigModal';
 import { CreateExhibitionModal } from '../components/exhibition/CreateExhibitionModal';
+import { ExhibitionAnalyticsModal } from '../components/exhibition/ExhibitionAnalyticsModal';
 import { artworkApi } from '../services/artwork.service';
 import { AuctionService, AuctionResponse } from '../services/auction.service';
 import { exhibitionApi } from '../services/exhibition.service';
@@ -35,6 +36,8 @@ export const DashboardPage: React.FC = () => {
   const [isCreateExhibitionModalOpen, setIsCreateExhibitionModalOpen] = useState(false);
   const [isVipModalOpen, setIsVipModalOpen] = useState(false);
   const [selectedExhibitionForVip, setSelectedExhibitionForVip] = useState<Exhibition | null>(null);
+  const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
+  const [selectedExhibitionForAnalytics, setSelectedExhibitionForAnalytics] = useState<Exhibition | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -127,6 +130,11 @@ export const DashboardPage: React.FC = () => {
     setIsVipModalOpen(true);
   };
 
+  const handleOpenAnalytics = (exhibition: Exhibition) => {
+    setSelectedExhibitionForAnalytics(exhibition);
+    setIsAnalyticsModalOpen(true);
+  };
+
   const handleExhibitionCreated = (newExhibition: Exhibition) => {
     setExhibitions((prev) => [newExhibition, ...prev]);
   };
@@ -159,6 +167,7 @@ export const DashboardPage: React.FC = () => {
           isLoading={isLoadingExhibitions}
           onOpenCreateExhibition={() => setIsCreateExhibitionModalOpen(true)}
           onOpenVipConfig={handleOpenVipConfig}
+          onOpenAnalytics={handleOpenAnalytics}
         />
       ) : (
         <>
@@ -301,6 +310,16 @@ export const DashboardPage: React.FC = () => {
         isOpen={isCreateExhibitionModalOpen}
         onClose={() => setIsCreateExhibitionModalOpen(false)}
         onExhibitionCreated={handleExhibitionCreated}
+      />
+
+      {/* Exhibition Analytics & Curatorial Reporting Modal */}
+      <ExhibitionAnalyticsModal
+        isOpen={isAnalyticsModalOpen}
+        onClose={() => {
+          setIsAnalyticsModalOpen(false);
+          setSelectedExhibitionForAnalytics(null);
+        }}
+        exhibition={selectedExhibitionForAnalytics}
       />
     </div>
   );

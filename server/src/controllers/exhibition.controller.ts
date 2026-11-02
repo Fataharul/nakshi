@@ -150,5 +150,26 @@ export class ExhibitionController {
       next(error);
     }
   }
+
+  /**
+   * Get exhibition analytics and curatorial performance report (creator ORGANIZER or ADMIN).
+   */
+  public static async getAnalytics(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const exhibitionId = req.params.id as string;
+      const userId = req.user!.id;
+      const userRole = req.user!.role;
+
+      const analytics = await ExhibitionService.getExhibitionAnalytics(
+        exhibitionId,
+        userId,
+        userRole
+      );
+
+      res.status(200).json({ analytics });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 

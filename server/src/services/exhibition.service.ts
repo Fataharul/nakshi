@@ -10,6 +10,11 @@ import {
   evaluateExhibitionAccess,
   AccessEvaluationResult,
 } from '../utils/exhibition.validation';
+import {
+  calculateExhibitionAnalytics,
+  CalculatedExhibitionAnalytics,
+  RawExhibitionAnalyticsData,
+} from '../utils/exhibition.analytics';
 
 export interface FormattedExhibition {
   id: string;
@@ -452,6 +457,19 @@ export class ExhibitionService {
       throw err;
     }
 
+    // Record gallery visit activity
+    await prisma.exhibitionVisit.create({
+      data: {
+        exhibitionId,
+        userId,
+        enteredAt: now,
+        lastSeenAt: now,
+      },
+    }).catch((err) => {
+      // Non-blocking catch to guarantee entry continuity
+      console.error('Failed to log exhibition visit record:', err);
+    });
+
     return {
       allowed: true,
       accessType: evalResult.accessType,
@@ -476,5 +494,98 @@ export class ExhibitionService {
           }
         : null,
     };
+  }
+
+  /**
+   * Retrieves aggregated analytics and curatorial performance report for an exhibition.
+   * Restricted strictly to the exhibition organizer and ADMINs.
+   */
+  public static async getExhibitionAnalytics(
+    exhibitionId: string,
+    userId: string,
+    userRole: string
+  ): Promise<CalculatedExhibitionAnalytics> {
+    const exhibition = await prisma.exhibition.findUnique({
+      where: { id: exhibitionId },
+      include: {
+        organizer: {
+          select: { id: true, name: true, email: true },
+        },
+        tickets: {
+          include: {
+            buyer: {
+              select: { id: true, name: true, email: true },
+            },
+          },
+        },
+        visits: {
+          include: {
+            user: {
+              select: { id: true, name: true, email: true },
+            },
+          },
+        },
+        artworks: {
+          include: {
+            artwork: {
+              select: { id: true, title: true, price: true, medium: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!exhibition) {
+      throw new AppError('Exhibition not found', 404);
+    }
+
+    // RBAC: Only exhibition creator or ADMIN
+    if (userRole !== 'ADMIN' && exhibition.organizerId !== userId) {
+      throw new AppError('You do not have permission to view analytics for this exhibition.', 403);
+    }
+
+    const rawData: RawExhibitionAnalyticsData = {
+      exhibition: {
+        id: exhibition.id,
+        title: exhibition.title,
+        description: exhibition.description,
+        ticketPrice: Number(exhibition.ticketPrice ?? 0),
+        startTime: exhibition.startTime,
+        endTime: exhibition.endTime,
+        vipStartTime: exhibition.vipStartTime,
+        vipEndTime: exhibition.vipEndTime,
+        organizer: exhibition.organizer,
+      },
+      tickets: exhibition.tickets.map((t) => ({
+        id: t.id,
+        ticketToken: t.ticketToken,
+        buyerId: t.buyerId,
+        isVip: t.isVip,
+        purchasedAt: t.purchasedAt,
+        cost: Number(
+          (t as any).cost ??
+            (t.isVip
+              ? Math.max(10, Math.round(Number(exhibition.ticketPrice ?? 0) * 1.5 * 100) / 100)
+              : exhibition.ticketPrice)
+        ),
+        buyer: t.buyer,
+      })),
+      visits: exhibition.visits.map((v) => ({
+        id: v.id,
+        userId: v.userId,
+        enteredAt: v.enteredAt,
+        lastSeenAt: v.lastSeenAt,
+        durationSeconds: v.durationSeconds,
+        user: v.user,
+      })),
+      artworks: exhibition.artworks.map((ea) => ({
+        id: ea.artwork.id,
+        price: Number(ea.artwork.price),
+        title: ea.artwork.title,
+        medium: ea.artwork.medium,
+      })),
+    };
+
+    return calculateExhibitionAnalytics(rawData);
   }
 }

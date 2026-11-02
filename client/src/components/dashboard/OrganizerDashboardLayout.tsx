@@ -11,6 +11,7 @@ import {
   Plus,
   Compass,
   ExternalLink,
+  TrendingUp,
 } from 'lucide-react';
 import { Exhibition } from '../../types/exhibition';
 import { User } from '../../types/auth';
@@ -21,6 +22,7 @@ interface OrganizerDashboardLayoutProps {
   isLoading: boolean;
   onOpenCreateExhibition: () => void;
   onOpenVipConfig: (exhibition: Exhibition) => void;
+  onOpenAnalytics?: (exhibition: Exhibition) => void;
 }
 
 function formatExhibitionDate(dateStr: string): string {
@@ -48,6 +50,7 @@ export const OrganizerDashboardLayout: React.FC<OrganizerDashboardLayoutProps> =
   isLoading,
   onOpenCreateExhibition,
   onOpenVipConfig,
+  onOpenAnalytics,
 }) => {
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -262,23 +265,32 @@ export const OrganizerDashboardLayout: React.FC<OrganizerDashboardLayoutProps> =
                     </div>
 
                     {/* Action Trigger Buttons */}
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <Link
                         to={`/exhibitions/${exhibition.id}`}
                         id={`view-exhibition-btn-${exhibition.id}`}
-                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs font-semibold uppercase tracking-wider text-on-surface hover:text-white bg-surface hover:bg-on-surface border border-outline/30 rounded transition-all shadow-sm"
+                        className="flex items-center justify-center gap-1.5 py-2 px-2 text-[11px] font-semibold uppercase tracking-wider text-on-surface hover:text-white bg-surface hover:bg-on-surface border border-outline/30 rounded transition-all shadow-sm min-h-[44px]"
                       >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>View Gallery</span>
+                        <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">Gallery</span>
                       </Link>
                       <button
                         type="button"
                         id={`configure-vip-btn-${exhibition.id}`}
                         onClick={() => onOpenVipConfig(exhibition)}
-                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs font-semibold uppercase tracking-wider text-on-surface hover:text-white bg-surface-container hover:bg-on-surface border border-outline/30 rounded transition-all shadow-sm"
+                        className="flex items-center justify-center gap-1.5 py-2 px-2 text-[11px] font-semibold uppercase tracking-wider text-on-surface hover:text-white bg-surface-container hover:bg-on-surface border border-outline/30 rounded transition-all shadow-sm min-h-[44px]"
                       >
-                        <Sparkles className="w-3.5 h-3.5 text-primary group-hover:text-white" />
-                        <span>{isVipConfigured ? 'VIP Window' : 'Set Up VIP'}</span>
+                        <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+                        <span className="truncate">{isVipConfigured ? 'VIP' : 'Setup VIP'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        id={`view-analytics-btn-${exhibition.id}`}
+                        onClick={() => onOpenAnalytics && onOpenAnalytics(exhibition)}
+                        className="flex items-center justify-center gap-1.5 py-2 px-2 text-[11px] font-semibold uppercase tracking-wider text-primary hover:text-white bg-primary/10 hover:bg-primary border border-primary/30 rounded transition-all shadow-sm min-h-[44px]"
+                      >
+                        <TrendingUp className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">Analytics</span>
                       </button>
                     </div>
                   </div>

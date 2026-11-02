@@ -72,3 +72,41 @@ export interface ExhibitionAccessResponse {
   artworks: ExhibitionArtworkBrief[];
   ticket: ExhibitionTicket | null;
 }
+
+export interface CalculatedExhibitionAnalytics {
+  exhibitionId: string;
+  title: string;
+  organizerName: string;
+  generatedAt: string;
+  ticketPricing: {
+    standardPrice: number;
+    vipPrice: number;
+  };
+  revenue: {
+    totalRevenue: number;
+    vipRevenue: number;
+    standardRevenue: number;
+    averageTicketPrice: number;
+  };
+  tickets: {
+    totalTicketsSold: number;
+    vipTicketsCount: number;
+    standardTicketsCount: number;
+    vipTicketPercentage: number;
+  };
+  attendance: {
+    totalVisits: number;
+    uniqueVisitors: number;
+    conversionRate: number;
+    vipWindowVisits: number;
+    generalWindowVisits: number;
+    totalDurationSeconds: number;
+    averageVisitDurationMinutes: number;
+  };
+  collection: {
+    artworksCount: number;
+    totalCollectionValue: number;
+    averageArtworkPrice: number;
+  };
+  reportOutput: string;
+}

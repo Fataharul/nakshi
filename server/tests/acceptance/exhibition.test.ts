@@ -491,4 +491,65 @@ describe('Exhibition & VIP Viewing Schedule Acceptance Tests', () => {
     expect(data.allowed).toBe(true);
     expect(data.accessType).toBe('ORGANIZER');
   });
+
+  describe('GET /api/exhibitions/:id/analytics Acceptance Tests', () => {
+    it('returns 401 Unauthorized when request has no authentication header', async () => {
+      const res = await fetch(`${baseUrl}/api/exhibitions/${exhibitionId}/analytics`);
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 403 Forbidden when accessed by a regular buyer user', async () => {
+      const res = await fetch(`${baseUrl}/api/exhibitions/${exhibitionId}/analytics`, {
+        headers: { Authorization: `Bearer ${buyerToken}` },
+      });
+      expect(res.status).toBe(403);
+    });
+
+    it('returns 403 Forbidden when accessed by a non-owner organizer', async () => {
+      const res = await fetch(`${baseUrl}/api/exhibitions/${exhibitionId}/analytics`, {
+        headers: { Authorization: `Bearer ${otherOrganizerToken}` },
+      });
+      expect(res.status).toBe(403);
+    });
+
+    it('returns 404 Not Found when exhibition does not exist', async () => {
+      const res = await fetch(`${baseUrl}/api/exhibitions/non-existent-uuid/analytics`, {
+        headers: { Authorization: `Bearer ${organizerToken}` },
+      });
+      expect(res.status).toBe(404);
+    });
+
+    it('returns 200 OK with calculated metrics and curatorial report text for creator organizer', async () => {
+      const res = await fetch(`${baseUrl}/api/exhibitions/${exhibitionId}/analytics`, {
+        headers: { Authorization: `Bearer ${organizerToken}` },
+      });
+
+      expect(res.status).toBe(200);
+      const data = (await res.json()) as any;
+      expect(data.analytics).toBeDefined();
+
+      const { analytics } = data;
+      expect(analytics.exhibitionId).toBe(exhibitionId);
+      expect(analytics.title).toBeDefined();
+      expect(analytics.organizerName).toContain('Curator Alpha');
+
+      // Financials
+      expect(typeof analytics.revenue.totalRevenue).toBe('number');
+      expect(typeof analytics.revenue.vipRevenue).toBe('number');
+      expect(typeof analytics.revenue.standardRevenue).toBe('number');
+      expect(analytics.revenue.totalRevenue).toBeGreaterThanOrEqual(0);
+
+      // Tickets
+      expect(analytics.tickets.totalTicketsSold).toBeGreaterThanOrEqual(1);
+
+      // Attendance
+      expect(analytics.attendance.totalVisits).toBeGreaterThanOrEqual(1);
+      expect(typeof analytics.attendance.conversionRate).toBe('number');
+
+      // Curatorial Report Output
+      expect(analytics.reportOutput).toBeDefined();
+      expect(analytics.reportOutput).toContain('NAKSHI VIRTUAL EXHIBITION CURATORIAL ANALYTICS REPORT');
+      expect(analytics.reportOutput).not.toContain('NaN');
+    });
+  });
 });

@@ -221,5 +221,20 @@
   - Eliminates client-side clock tampering by evaluating access strictly against server UTC timestamps.
   - Conforms to internal credit integrity and zero-external-cost architectural tenets.
 
+## 19. Virtual Exhibition Analytics Calculation Engine & Curatorial Report Output
+- **Timestamp**: 2026-11-02 21:50:00 +06:00
+- **Context**: Requirements 1.4, 2.6 (line 116), 2.8, and 3.6 mandate virtual exhibition activity analytics (financial revenue, ticket distribution, attendance/dwell engagement, collection curation valuations) and structured executive curatorial report outputs based strictly on recorded database activity, without fabricated numbers. Metrics must be protected against zero-division errors when no tickets, visits, or artworks exist, and analytics endpoints must be strictly restricted to the exhibition organizer and ADMINs.
+- **Decision**:
+  - Implemented core analytics calculation engine `calculateExhibitionAnalytics` and report formatter `generateCuratorialReportOutput` in `server/src/utils/exhibition.analytics.ts`.
+  - Added Prisma model `ExhibitionVisit` to track virtual gallery entries in remote PostgreSQL.
+  - Automatically logged gallery entries inside `ExhibitionService.enterExhibition` on successful attendee verification.
+  - Added REST endpoint `GET /api/exhibitions/:id/analytics` guarded by `authenticateJWT` and `requireRoles(Role.ORGANIZER, Role.ADMIN)` with strict curator ownership validation.
+  - Built `ExhibitionAnalyticsModal.tsx` on the frontend with 4-card editorial KPI metrics (Total Revenue, Passes Issued, Attendance/Dwell, Collection Value), VIP vs Public traffic split bar, and formatted curatorial report text preview with clipboard copy button (`#copy-curatorial-report-btn`).
+  - Integrated `#view-analytics-btn-${exhibition.id}` trigger into `OrganizerDashboardLayout.tsx` and wired into `DashboardPage.tsx`.
+- **Rationale**:
+  - Authenticity Mandate (Req 2.6): All metrics derive directly from PostgreSQL tables (`ExhibitionTicket`, `ExhibitionVisit`, `ExhibitionArtwork`).
+  - Zero-Division Guarding: Default multipliers and mathematical bounds prevent `NaN` or unhandled exceptions on freshly created exhibitions with zero activity.
+  - Editorial Curatorial Aesthetics: Adheres to `DESIGN.md` Muslin surfaces, Terracotta accents (`#9E4733`), and Playfair Display typography with 44px touch targets.
+
 
 

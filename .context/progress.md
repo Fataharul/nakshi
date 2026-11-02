@@ -400,5 +400,27 @@
   - All 9 Playwright tests passed across all viewports (`e2e/05_exhibition_tickets.spec.ts` & `e2e/vip_viewing_schedule.spec.ts`).
   - Client Vite production build and Server TypeScript build compiled with 0 errors.
 
+## [2026-11-02 21:55:00 +06:00] Milestone: Exhibition Analytics Calculations & Curatorial Report Output Implemented & Verified
+- **Completed**:
+  - Prisma Schema & Activity Recording:
+    - Added model `ExhibitionVisit` in `server/prisma/schema.prisma` tracking virtual gallery entries (`id`, `exhibitionId`, `userId`, `enteredAt`, `lastSeenAt`, `durationSeconds`) mapped to existing remote PostgreSQL schema.
+    - Updated `ExhibitionService.enterExhibition` to automatically record gallery entries into `prisma.exhibitionVisit.create` upon successful attendee evaluation.
+  - Analytics Engine & Report Formatter:
+    - Created `server/src/utils/exhibition.analytics.ts` implementing `calculateExhibitionAnalytics` and `generateCuratorialReportOutput` computing total revenue (with standard vs. VIP breakdowns), ticket sales share, audience dwell time, conversion rates, and curated collection valuations with zero-division protection against empty databases.
+    - Added `ExhibitionService.getExhibitionAnalytics` with strict curator/ADMIN RBAC and database record aggregations.
+    - Mounted `GET /api/exhibitions/:id/analytics` guarded by `authenticateJWT` and `requireRoles(Role.ORGANIZER, Role.ADMIN)`.
+  - Frontend Modal & Dashboard Integration:
+    - Added `CalculatedExhibitionAnalytics` interface to `client/src/types/exhibition.ts`.
+    - Added `getExhibitionAnalytics` method to `client/src/services/exhibition.service.ts`.
+    - Created `client/src/components/exhibition/ExhibitionAnalyticsModal.tsx` conforming to `DESIGN.md` Muslin surfaces and Terracotta accents, featuring 4 KPI metric cards, VIP vs Public traffic distribution bar, and preformatted curatorial text report output with clipboard copy functionality (`#copy-curatorial-report-btn`).
+    - Added `#view-analytics-btn-${exhibition.id}` trigger on each exhibition card in `client/src/components/dashboard/OrganizerDashboardLayout.tsx` and wired into `client/src/pages/DashboardPage.tsx`.
+  - Verification & Automated Tests:
+    - Added unit test suite `server/tests/unit/exhibition.analytics.test.ts` (6 tests passing, validating zero-division safety, financial accuracy, engagement dwell metrics, and curatorial report text format).
+    - Expanded acceptance test suite `server/tests/acceptance/exhibition.test.ts` (23 tests passing, validating 401 Unauthorized, 403 Forbidden for buyers and non-owner organizers, 404 Not Found, and 200 OK with calculated metrics).
+- **Verified**:
+  - All 29 unit and acceptance tests passed (`vitest run tests/unit/exhibition.analytics.test.ts tests/acceptance/exhibition.test.ts`).
+  - All 6 Playwright E2E tests passed across Desktop Chrome, Tablet 768px, and Mobile 360px (`e2e/05_exhibition_tickets.spec.ts`).
+  - Both Server TypeScript (`npm --prefix server run build`) and Client Vite (`npm --prefix client run build`) builds compiled with 0 errors.
+
 
 

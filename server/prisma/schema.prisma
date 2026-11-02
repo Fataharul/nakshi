@@ -65,6 +65,7 @@ model User {
   bids               AuctionBid[]
   exhibitions        Exhibition[]         @relation("OrganizerExhibitions")
   tickets            ExhibitionTicket[]
+  exhibitionVisits   ExhibitionVisit[]
   reviewedFlags      ModerationReview[]   @relation("AdminReviews")
 
   @@index([role])
@@ -208,6 +209,7 @@ model Exhibition {
   organizer   User                @relation("OrganizerExhibitions", fields: [organizerId], references: [id], onDelete: Cascade)
   artworks    ExhibitionArtwork[]
   tickets     ExhibitionTicket[]
+  visits      ExhibitionVisit[]
 
   @@index([organizerId])
   @@index([startTime, endTime])
@@ -242,6 +244,22 @@ model ExhibitionTicket {
   @@index([ticketToken])
   @@index([buyerId])
   @@index([exhibitionId])
+}
+
+model ExhibitionVisit {
+  id              String      @id @default(uuid())
+  exhibitionId    String
+  userId          String?
+  enteredAt       DateTime    @default(now())
+  lastSeenAt      DateTime    @default(now())
+  durationSeconds Int         @default(0)
+
+  exhibition      Exhibition  @relation(fields: [exhibitionId], references: [id], onDelete: Cascade)
+  user            User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([exhibitionId])
+  @@index([userId])
+  @@index([enteredAt])
 }
 
 model ModerationReview {

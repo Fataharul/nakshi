@@ -67,4 +67,12 @@ router.get(
   ExhibitionController.enter
 );
 
+// Exhibition analytics & curatorial reporting (ORGANIZER creator or ADMIN)
+router.get(
+  '/:id/analytics',
+  authenticateJWT,
+  requireRoles(Role.ORGANIZER, Role.ADMIN),
+  ExhibitionController.getAnalytics
+);
+
 export default router;

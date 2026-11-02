@@ -5,6 +5,7 @@ import {
   CreateExhibitionPayload,
   ExhibitionTicket,
   ExhibitionAccessResponse,
+  CalculatedExhibitionAnalytics,
 } from '../types/exhibition';
 
 const API_BASE_URL = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:5000';
@@ -148,5 +149,15 @@ export const exhibitionApi = {
       }
     );
     return res;
+  },
+
+  /**
+   * Retrieves aggregated analytics metrics and formatted curatorial report.
+   */
+  async getExhibitionAnalytics(id: string): Promise<CalculatedExhibitionAnalytics> {
+    const res = await request<{ analytics: CalculatedExhibitionAnalytics }>(
+      `/api/exhibitions/${id}/analytics`
+    );
+    return res.analytics;
   },
 };
