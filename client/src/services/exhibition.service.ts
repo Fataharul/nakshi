@@ -1,6 +1,9 @@
 import { getStoredToken } from './auth.service';
-import { ExhibitionAnalytics } from '../types/exhibitionAnalytics';
-
+import {
+  ExhibitionAnalytics,
+  ExhibitionVisitStart,
+  ExhibitionVisitHeartbeat,
+} from '../types/exhibitionAnalytics';
 const API_BASE_URL = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 class ApiError extends Error {
@@ -178,6 +181,23 @@ export const ExhibitionService = {
       `/api/exhibitions/${exhibitionId}/analytics`,
       { method: 'GET' }
     );
+    
+
     return data.analytics;
+  },
+    startVisit: async (exhibitionId: string): Promise<ExhibitionVisitStart> => {
+    return request<ExhibitionVisitStart>(`/api/exhibitions/${exhibitionId}/visits`, {
+      method: 'POST',
+    });
+  },
+
+  sendVisitHeartbeat: async (
+    exhibitionId: string,
+    visitId: string
+  ): Promise<ExhibitionVisitHeartbeat> => {
+    return request<ExhibitionVisitHeartbeat>(
+      `/api/exhibitions/${exhibitionId}/visits/${visitId}/heartbeat`,
+      { method: 'POST' }
+    );
   },
 };
