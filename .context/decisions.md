@@ -235,5 +235,19 @@
   - Provides a frictionless discovery UX while preventing client DOM bloat and minimizing initial page load payload.
   - Discarding stale out-of-order responses eliminates ghost listings during rapid query updates.
 
+## 21. Flagged Listing Routing & Update Verification Engine
+- **Timestamp**: 2026-11-02 20:06:00 +06:00
+- **Context**: To strictly fulfill Requirement 2.7 & 3.7 ("Route artwork exceeding duplicate threshold to administrator review; hidden from marketplace; similarity failures do not silently bypass duplicate protection"), listings must be consistently routed to the administrator review queue across both creation and update lifecycles, and administrators must be able to flag listings directly from the user interface.
+- **Decision**:
+  - **Listing Update Re-evaluation**: Enhanced `ArtworkService.updateArtwork` to recompute perceptual dHash and evaluate Hamming distance similarity whenever `imageUrl` is modified. If similarity against existing pieces exceeds the 80% threshold (or if image similarity computation encounters an error), the listing's `moderationStatus` is shifted to `FLAGGED` and a `ModerationReview` record is created or updated, immediately hiding the listing from public marketplace search.
+  - **Administrator Flagging Endpoint**: Added `POST /api/moderation/:id/flag` guarded by `authenticateJWT` and `requireRoles(Role.ADMIN)` in `ModerationController` and `ModerationService.flagListing`. This allows platform administrators to flag any suspicious listing, calculate any closest catalogue fingerprint matches, and route it directly to the review queue.
+  - **Orphan Reconciliation in Review Queue**: Updated `ModerationService.getQueue` to detect any `FLAGGED` artwork lacking an active `ModerationReview` record and automatically create a review entry, ensuring 100% of flagged listings appear in the admin queue.
+  - **Editorial Admin UI Controls**: Added an accessible Administrator Console panel in `ArtworkDetailPage.tsx` (`#admin-flag-listing-btn`) adhering to `DESIGN.md` (warm neutral background, high contrast, and terracotta/error action badges) enabling admins to route listings to the review queue directly from the artwork view.
+  - **Queue Fallback Display**: Polished `AdminModerationQueue.tsx` to cleanly handle listings flagged manually or without a paired match ("Direct Review Routing", "Pending Administrative Review").
+- **Rationale**:
+  - Prevents circumvention of duplicate protection via post-creation listing edits.
+  - Enforces Requirement 2.7 resilience constraint: failures during processing do not silently publish unverified listings as approved.
+
+
 
 

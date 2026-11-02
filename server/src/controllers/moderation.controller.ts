@@ -7,6 +7,10 @@ const reviewBodySchema = z.object({
   notes: z.string().max(1000).optional(),
 });
 
+const flagBodySchema = z.object({
+  reason: z.string().max(1000).optional(),
+});
+
 export class ModerationController {
   /**
    * GET /api/moderation/queue
@@ -37,4 +41,22 @@ export class ModerationController {
       next(error);
     }
   }
+
+  /**
+   * POST /api/moderation/:id/flag
+   * Flags an artwork listing and routes it to the administrator review queue.
+   */
+  public static async flagListing(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = req.params.id as string;
+      const validatedData = flagBodySchema.parse(req.body || {});
+      const adminId = req.user!.id;
+
+      const result = await ModerationService.flagListing(id, adminId, validatedData.reason);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
+

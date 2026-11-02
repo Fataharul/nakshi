@@ -1,5 +1,6 @@
 import { prisma } from '../config/prisma';
 import { Role } from '@prisma/client';
+import { calculateSimilarityScore } from '../utils/similarity.util';
 
 export class AppError extends Error {
   statusCode: number;
@@ -18,8 +19,64 @@ export interface ReviewItemInput {
 export class ModerationService {
   /**
    * Retrieves all flagged artwork listings in the moderation review queue.
+   * Automatically discovers and routes any flagged listings lacking an open ModerationReview record.
    */
   public static async getQueue() {
+    // 1. Detect any orphaned FLAGGED artworks that do not currently have an open ModerationReview
+    const orphanedArtworks = await prisma.artwork.findMany({
+      where: {
+        moderationStatus: 'FLAGGED',
+        flaggedAsSource: {
+          none: {
+            actionTaken: null,
+          },
+        },
+      },
+      select: {
+        id: true,
+        imageHash: true,
+      },
+    });
+
+    // Auto-route orphaned flagged artworks to the review queue
+    for (const orphan of orphanedArtworks) {
+      let suspectedMatchId: string | null = null;
+      let maxSimilarity = 80.0;
+
+      if (orphan.imageHash && orphan.imageHash.length === 16) {
+        const potentialMatches = await prisma.artwork.findMany({
+          where: {
+            id: { not: orphan.id },
+            imageHash: { not: null },
+            moderationStatus: { not: 'REJECTED' },
+          },
+          select: { id: true, imageHash: true },
+        });
+
+        for (const match of potentialMatches) {
+          if (match.imageHash && match.imageHash.length === 16) {
+            try {
+              const score = calculateSimilarityScore(orphan.imageHash, match.imageHash);
+              if (score > maxSimilarity) {
+                maxSimilarity = score;
+                suspectedMatchId = match.id;
+              }
+            } catch {}
+          }
+        }
+      }
+
+      await prisma.moderationReview.create({
+        data: {
+          sourceArtworkId: orphan.id,
+          suspectedMatchId,
+          similarityScore: maxSimilarity,
+          actionTaken: null,
+          adminNotes: 'Auto-routed flagged listing to administrator review queue',
+        },
+      });
+    }
+
     const reviews = await prisma.moderationReview.findMany({
       where: {
         OR: [
@@ -198,6 +255,111 @@ export class ModerationService {
         moderationStatus: updatedArtwork.moderationStatus,
       },
       review: updatedReview,
+    };
+  }
+
+  /**
+   * Flags an artwork listing and routes it to the administrator review queue.
+   */
+  public static async flagListing(id: string, adminId: string, reason?: string) {
+    // 1. Verify admin user
+    const admin = await prisma.user.findUnique({
+      where: { id: adminId },
+    });
+
+    if (!admin || admin.role !== Role.ADMIN) {
+      throw new AppError('Forbidden: Only platform administrators are authorized to moderate artwork listings.', 403);
+    }
+
+    // 2. Verify artwork exists
+    const artwork = await prisma.artwork.findUnique({
+      where: { id },
+      include: {
+        artist: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+            bio: true,
+          },
+        },
+      },
+    });
+
+    if (!artwork) {
+      throw new AppError('Artwork listing not found.', 404);
+    }
+
+    // 3. Mark artwork as FLAGGED
+    const updatedArtwork = await prisma.artwork.update({
+      where: { id },
+      data: { moderationStatus: 'FLAGGED' },
+    });
+
+    // 4. Find suspected match if artwork has imageHash
+    let suspectedMatchId: string | null = null;
+    let maxSimilarity = 80.0;
+
+    if (artwork.imageHash && artwork.imageHash.length === 16) {
+      const candidates = await prisma.artwork.findMany({
+        where: {
+          id: { not: id },
+          imageHash: { not: null },
+          moderationStatus: { not: 'REJECTED' },
+        },
+        select: { id: true, imageHash: true, imageUrl: true },
+      });
+
+      for (const cand of candidates) {
+        if (cand.imageHash && cand.imageHash.length === 16) {
+          try {
+            const score = calculateSimilarityScore(artwork.imageHash, cand.imageHash);
+            if (score > maxSimilarity) {
+              maxSimilarity = score;
+              suspectedMatchId = cand.id;
+            }
+          } catch {}
+        }
+      }
+    }
+
+    // 5. Create or update pending ModerationReview record
+    let review = await prisma.moderationReview.findFirst({
+      where: { sourceArtworkId: id, actionTaken: null },
+    });
+
+    if (review) {
+      review = await prisma.moderationReview.update({
+        where: { id: review.id },
+        data: {
+          suspectedMatchId: suspectedMatchId || review.suspectedMatchId,
+          similarityScore: maxSimilarity,
+          adminNotes: reason || review.adminNotes || 'Manually flagged by administrator',
+          adminId,
+        },
+      });
+    } else {
+      review = await prisma.moderationReview.create({
+        data: {
+          sourceArtworkId: id,
+          suspectedMatchId,
+          similarityScore: maxSimilarity,
+          actionTaken: null,
+          adminNotes: reason || 'Manually flagged by administrator',
+          adminId,
+        },
+      });
+    }
+
+    return {
+      message: `Artwork "${artwork.title}" successfully flagged and routed to the administrator review queue.`,
+      artwork: {
+        id: updatedArtwork.id,
+        title: updatedArtwork.title,
+        moderationStatus: updatedArtwork.moderationStatus,
+      },
+      review,
     };
   }
 }

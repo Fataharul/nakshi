@@ -465,3 +465,23 @@
   - `server`: 15 test suites, 142 unit & acceptance tests passed (`npm --prefix server test`).
   - `client`: Production bundle build succeeded cleanly (`npm run --prefix client build`).
   - `server`: TypeScript compilation passed cleanly (`npm run --prefix server build`).
+
+## [2026-11-02 20:07:00 +06:00] Milestone: Flagged Listings Routing to Administrator Review Queue Implemented & Verified
+- **Completed**:
+  - **Listing Update Re-evaluation & Queue Routing**:
+    - Enhanced `ArtworkService.updateArtwork` in `server/src/services/artwork.service.ts` to recompute perceptual dHash and evaluate Hamming similarity when `imageUrl` is modified.
+    - If visual similarity exceeds 80% (or if image similarity computation fails), automatically transitions status to `FLAGGED` and upserts a `ModerationReview` record routing it to the administrator review queue while excluding it from marketplace discovery.
+  - **Administrator Manual Flagging Endpoint**:
+    - Added `POST /api/moderation/:id/flag` endpoint and `ModerationController.flagListing` with RBAC (`ADMIN` only) to flag listings and route them to the queue with administrative notes.
+  - **Review Queue Orphan Discovery & Reconciliation**:
+    - Updated `ModerationService.getQueue` to automatically discover any database listings marked `FLAGGED` lacking an active review record and create a pending `ModerationReview` entry.
+  - **Editorial Artwork Detail Controls**:
+    - Added accessible Administrator Console panel in `client/src/pages/ArtworkDetailPage.tsx` (`#admin-flag-listing-btn`) allowing administrators to flag any listing directly to the review queue.
+    - Polished `AdminModerationQueue.tsx` with clean fallback state representation for directly routed or manual reviews.
+  - **Automated Verification**:
+    - Added test suites in `server/tests/acceptance/moderation.test.ts` verifying duplicate detection on artwork update, manual flag route RBAC & functionality, and orphan reconciliation.
+- **Verified**:
+  - **Backend Acceptance Tests**: 15 test suites, 146 unit & acceptance tests passed with 0 failures (`npm --prefix server test`).
+  - **E2E Playwright Tests**: 6/6 tests passed in `e2e/06_duplicate_moderation.spec.ts` across Desktop Chrome, Tablet 768px, and Mobile 360px viewports.
+  - **Production Builds**: `npm --prefix server run build` and `npm --prefix client run build` both succeeded with 0 errors.
+

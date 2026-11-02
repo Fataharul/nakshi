@@ -159,7 +159,15 @@ export class ArtworkService {
     const imageUrl = input.imageUrl && input.imageUrl.trim().length > 0 ? input.imageUrl.trim() : DEFAULT_ARTWORK_IMAGE;
 
     // 1. Compute perceptual dHash for new artwork
-    const newHash = await this.computeArtworkHash(imageUrl, input.imageHash);
+    let newHash: string;
+    let similarityError = false;
+    try {
+      newHash = await this.computeArtworkHash(imageUrl, input.imageHash);
+    } catch (err) {
+      console.warn('[ArtworkService] Hash calculation error:', err);
+      newHash = crypto.createHash('md5').update(imageUrl || 'default-image').digest('hex').substring(0, 16);
+      similarityError = true;
+    }
 
     // 2. Query existing artworks with an imageHash to evaluate similarity
     const existingArtworks = await prisma.artwork.findMany({
@@ -181,7 +189,7 @@ export class ArtworkService {
     // Do not compare if user is using the default placeholder image
     const isUsingPlaceholder = !input.imageUrl || input.imageUrl.trim() === DEFAULT_ARTWORK_IMAGE;
 
-    if (!isUsingPlaceholder) {
+    if (!isUsingPlaceholder && !similarityError) {
       for (const existing of existingArtworks) {
         // Do not match against listings that use the system default placeholder
         if (existing.imageUrl === DEFAULT_ARTWORK_IMAGE) continue;
@@ -205,7 +213,7 @@ export class ArtworkService {
       ? parseFloat(process.env.SIMILARITY_THRESHOLD)
       : DEFAULT_SIMILARITY_THRESHOLD;
 
-    const isDuplicate = !isUsingPlaceholder && maxSimilarity > threshold;
+    const isDuplicate = (!isUsingPlaceholder && maxSimilarity > threshold) || similarityError;
     const moderationStatus = isDuplicate ? 'FLAGGED' : 'APPROVED';
 
     const artwork = await prisma.artwork.create({
@@ -240,7 +248,7 @@ export class ArtworkService {
       },
     });
 
-    // 4. If flagged as duplicate (> 80%), create ModerationReview record for Admin Review Queue
+    // 4. If flagged as duplicate (> 80%) or error, create ModerationReview record for Admin Review Queue
     if (isDuplicate) {
       await prisma.moderationReview.create({
         data: {
@@ -248,6 +256,7 @@ export class ArtworkService {
           suspectedMatchId,
           similarityScore: maxSimilarity,
           actionTaken: null,
+          adminNotes: similarityError ? 'Processing error during visual similarity check' : null,
         },
       });
     }
@@ -555,6 +564,69 @@ export class ArtworkService {
       throw new AppError('Forbidden: You are not authorized to edit an artwork owned by another artist', 403);
     }
 
+    let newHash = existing.imageHash;
+    let newModerationStatus = existing.moderationStatus;
+    let suspectedMatchId: string | null = null;
+    let maxSimilarity = 0;
+    let isDuplicate = false;
+
+    const isImageChanged =
+      input.imageUrl !== undefined &&
+      input.imageUrl.trim().length > 0 &&
+      input.imageUrl.trim() !== existing.imageUrl;
+
+    if (isImageChanged) {
+      const targetImageUrl = input.imageUrl!.trim();
+      let similarityError = false;
+
+      try {
+        newHash = await this.computeArtworkHash(targetImageUrl, input.imageHash);
+      } catch (err) {
+        console.warn('[ArtworkService] Hash calculation error on update:', err);
+        newHash = crypto.createHash('md5').update(targetImageUrl).digest('hex').substring(0, 16);
+        similarityError = true;
+      }
+
+      const existingArtworks = await prisma.artwork.findMany({
+        where: {
+          id: { not: id },
+          imageHash: { not: null },
+          moderationStatus: { not: 'REJECTED' },
+        },
+        select: {
+          id: true,
+          title: true,
+          imageUrl: true,
+          imageHash: true,
+        },
+      });
+
+      const isUsingPlaceholder = targetImageUrl === DEFAULT_ARTWORK_IMAGE;
+      if (!isUsingPlaceholder && !similarityError) {
+        for (const other of existingArtworks) {
+          if (other.imageUrl === DEFAULT_ARTWORK_IMAGE) continue;
+          if (other.imageHash && other.imageHash.length === 16) {
+            try {
+              const score = calculateSimilarityScore(newHash, other.imageHash);
+              if (score > maxSimilarity) {
+                maxSimilarity = score;
+                suspectedMatchId = other.id;
+              }
+            } catch {
+              // skip invalid hash
+            }
+          }
+        }
+      }
+
+      const threshold = process.env.SIMILARITY_THRESHOLD
+        ? parseFloat(process.env.SIMILARITY_THRESHOLD)
+        : DEFAULT_SIMILARITY_THRESHOLD;
+
+      isDuplicate = (!isUsingPlaceholder && maxSimilarity > threshold) || similarityError;
+      newModerationStatus = isDuplicate ? 'FLAGGED' : 'APPROVED';
+    }
+
     const updated = await prisma.artwork.update({
       where: { id },
       data: {
@@ -570,6 +642,7 @@ export class ArtworkService {
         ...(input.weightUnit !== undefined && { weightUnit: input.weightUnit }),
         ...(input.price !== undefined && { price: input.price }),
         ...(input.imageUrl !== undefined && input.imageUrl.trim().length > 0 && { imageUrl: input.imageUrl.trim() }),
+        ...(isImageChanged && { imageHash: newHash, moderationStatus: newModerationStatus }),
         ...(input.availability !== undefined && { availability: input.availability }),
       },
       include: {
@@ -584,6 +657,33 @@ export class ArtworkService {
         },
       },
     });
+
+    if (isImageChanged && isDuplicate) {
+      const existingReview = await prisma.moderationReview.findFirst({
+        where: { sourceArtworkId: id, actionTaken: null },
+      });
+      if (existingReview) {
+        await prisma.moderationReview.update({
+          where: { id: existingReview.id },
+          data: {
+            suspectedMatchId,
+            similarityScore: maxSimilarity,
+            actionTaken: null,
+            adminNotes: 'Updated listing flagged for duplicate visual similarity review',
+          },
+        });
+      } else {
+        await prisma.moderationReview.create({
+          data: {
+            sourceArtworkId: id,
+            suspectedMatchId,
+            similarityScore: maxSimilarity,
+            actionTaken: null,
+            adminNotes: 'Updated listing flagged for duplicate visual similarity review',
+          },
+        });
+      }
+    }
 
     return this.formatArtwork(updated);
   }

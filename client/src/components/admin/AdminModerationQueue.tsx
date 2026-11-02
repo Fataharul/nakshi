@@ -317,16 +317,20 @@ export const AdminModerationQueue: React.FC = () => {
                     ) : (
                       <div className="text-center py-20 px-4 flex flex-col items-center justify-center">
                         <Layers className="w-10 h-10 text-on-surface-variant mb-2 opacity-40" />
-                        <h4 className="font-serif text-base font-bold text-on-surface mb-1">Catalogue Hash Match</h4>
+                        <h4 className="font-serif text-base font-bold text-on-surface mb-1">
+                          {item.adminNotes ? 'Flagged for Moderation' : 'Catalogue Hash Match'}
+                        </h4>
                         <p className="text-xs text-on-surface-variant max-w-xs leading-relaxed">
-                          This submission exceeded the 80% perceptual dHash threshold against the platform's preserved archive fingerprint database.
+                          {item.adminNotes || 'This submission was flagged and routed to the queue for comparative administrator review.'}
                         </p>
                       </div>
                     )}
 
                     <div className="text-[10px] text-on-surface-variant/80 border-t border-outline/10 pt-2 flex items-center justify-between">
-                      <span>Match Status: Verified Archive Piece</span>
-                      <span className="text-status-valid font-medium">Currently Published</span>
+                      <span>Match Status: {item.suspectedMatchArtwork ? 'Verified Archive Piece' : 'Direct Review Routing'}</span>
+                      <span className={item.suspectedMatchArtwork ? 'text-status-valid font-medium' : 'text-amber-700 font-medium'}>
+                        {item.suspectedMatchArtwork ? 'Currently Published' : 'Pending Administrative Review'}
+                      </span>
                     </div>
                   </div>
                 </div>

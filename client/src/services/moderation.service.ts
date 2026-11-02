@@ -46,4 +46,26 @@ export const moderationApi = {
 
     return await res.json();
   },
+
+  /**
+   * Flags an artwork listing and routes it to the administrator review queue
+   */
+  async flagListing(id: string, reason?: string): Promise<any> {
+    const token = getStoredToken();
+    const res = await fetch(`${API_BASE_URL}/api/moderation/${id}/flag`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ reason }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Failed to flag listing for moderation review');
+    }
+
+    return await res.json();
+  },
 };

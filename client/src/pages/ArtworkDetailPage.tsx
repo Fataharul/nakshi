@@ -18,7 +18,10 @@ import {
   Info,
   Clock,
   User as UserIcon,
+  ShieldCheck,
+  Flag,
 } from 'lucide-react';
+import { moderationApi } from '../services/moderation.service';
 
 export const ArtworkDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -44,6 +47,10 @@ export const ArtworkDetailPage: React.FC = () => {
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
   const [purchaseNotice, setPurchaseNotice] = useState<string | null>(null);
+
+  // Administrative Moderation State
+  const [isFlagging, setIsFlagging] = useState(false);
+  const [adminNotice, setAdminNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -134,6 +141,26 @@ export const ArtworkDetailPage: React.FC = () => {
     setPurchaseNotice(
       `Order #${order.id.slice(0, 8)} successfully completed! You are now the owner of "${order.artwork.title}".`
     );
+  };
+
+  const handleFlagListing = async () => {
+    if (!artwork || isFlagging) return;
+    const reason = window.prompt(
+      'Provide administrative review notes for routing this listing:',
+      'Flagged by administrator for similarity or authenticity review'
+    );
+    if (reason === null) return;
+
+    setIsFlagging(true);
+    try {
+      await moderationApi.flagListing(artwork.id, reason || undefined);
+      setArtwork((prev) => (prev ? { ...prev, moderationStatus: 'FLAGGED' } : null));
+      setAdminNotice('Listing successfully flagged and routed to the Administrator Review Queue.');
+    } catch (err: any) {
+      alert(err.message || 'Failed to flag listing');
+    } finally {
+      setIsFlagging(false);
+    }
   };
 
   if (loading) {
@@ -263,6 +290,68 @@ export const ArtworkDetailPage: React.FC = () => {
                 </span>
               )}
             </div>
+
+            {/* Administrator Moderation Queue Routing Banner */}
+            {user?.role === 'ADMIN' && (
+              <div
+                id="admin-moderation-panel"
+                className="p-4 rounded-xl bg-surface-container-low border border-outline/30 space-y-3 ambient-shadow"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-semibold uppercase tracking-wider text-on-surface">
+                      Administrator Console
+                    </span>
+                  </div>
+                  <span
+                    id="admin-artwork-moderation-status"
+                    className={`px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                      artwork.moderationStatus === 'APPROVED'
+                        ? 'bg-status-valid/15 text-status-valid border border-status-valid/30'
+                        : artwork.moderationStatus === 'FLAGGED'
+                        ? 'bg-amber-500/15 text-amber-700 border border-amber-500/30'
+                        : 'bg-surface-container-high text-on-surface-variant'
+                    }`}
+                  >
+                    Status: {artwork.moderationStatus}
+                  </span>
+                </div>
+
+                <p className="text-xs text-on-surface-variant leading-relaxed">
+                  {artwork.moderationStatus === 'FLAGGED'
+                    ? 'This listing is currently flagged and routed to the Administrator Review Queue.'
+                    : 'Listing is currently active. If this piece infringes provenance or similarity rules, you can route it directly to the review queue.'}
+                </p>
+
+                {adminNotice && (
+                  <div className="p-2.5 rounded bg-status-valid/15 border border-status-valid/30 text-xs text-on-surface">
+                    {adminNotice}
+                  </div>
+                )}
+
+                {artwork.moderationStatus !== 'FLAGGED' && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      id="admin-flag-listing-btn"
+                      type="button"
+                      disabled={isFlagging}
+                      onClick={handleFlagListing}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider bg-error-container/20 text-error hover:bg-error-container/30 border border-error/30 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      <Flag className="w-3.5 h-3.5" />
+                      <span>{isFlagging ? 'Routing...' : 'Route to Review Queue'}</span>
+                    </button>
+                    <Link
+                      to="/dashboard/admin"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider bg-surface-container text-on-surface hover:bg-surface-container-high border border-outline/20 transition-all"
+                    >
+                      <span>Open Review Queue</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Title */}
             <div>

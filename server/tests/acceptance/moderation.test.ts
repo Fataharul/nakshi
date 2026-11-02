@@ -317,4 +317,165 @@ describe('Admin Moderation Queue & Duplicate Detection Acceptance Tests (Phase 4
       expect(ids).not.toContain(rejectedArtworkId);
     });
   });
+
+  describe('5. Duplicate Detection on Artwork Update & Review Queue Routing', () => {
+    it('flags an existing artwork when its image is updated to a duplicate and routes to queue', async () => {
+      // 1. Create a unique approved artwork first
+      const uniqueImage = `https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=800&unique=${uniqueId}`;
+      const createRes = await fetch(`${baseUrl}/api/artworks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${artistToken}`,
+        },
+        body: JSON.stringify({
+          title: `Original Unique Piece ${uniqueId}`,
+          description: 'A genuine unique artwork with distinct photography.',
+          medium: 'Terracotta',
+          price: 450.0,
+          imageUrl: uniqueImage,
+        }),
+      });
+
+      expect(createRes.status).toBe(201);
+      const createData = (await createRes.json()) as any;
+      const editableArtworkId = createData.artwork.id;
+      expect(createData.artwork.moderationStatus).toBe('APPROVED');
+
+      // 2. Artist updates the artwork's image to testImageA (duplicate of originalArtworkId)
+      const updateRes = await fetch(`${baseUrl}/api/artworks/${editableArtworkId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${artistToken}`,
+        },
+        body: JSON.stringify({
+          imageUrl: testImageA,
+        }),
+      });
+
+      expect(updateRes.status).toBe(200);
+      const updateData = (await updateRes.json()) as any;
+      expect(updateData.artwork.moderationStatus).toBe('FLAGGED');
+
+      // 3. Verify it is routed to the Admin Review Queue
+      const queueRes = await fetch(`${baseUrl}/api/moderation/queue`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
+      const queueData = (await queueRes.json()) as any;
+      const item = queueData.queue.find((q: any) => q.sourceArtworkId === editableArtworkId);
+      expect(item).toBeDefined();
+      expect(item.similarityScore).toBeGreaterThanOrEqual(80.0);
+      expect(item.suspectedMatchId).toBe(originalArtworkId);
+    });
+  });
+
+  describe('6. Explicit Flagging & Routing by Administrator (POST /api/moderation/:id/flag)', () => {
+    let pieceToFlagId: string;
+
+    beforeAll(async () => {
+      // Create a fresh approved artwork
+      const pieceRes = await fetch(`${baseUrl}/api/artworks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${artistToken}`,
+        },
+        body: JSON.stringify({
+          title: `Piece For Manual Flagging ${uniqueId}`,
+          description: 'Authentic artwork to test manual admin review routing.',
+          medium: 'Jamdani Weaving',
+          price: 520.0,
+          imageUrl: `https://images.unsplash.com/photo-1582561141315-632938884326?w=800&flag=${uniqueId}`,
+        }),
+      });
+      const data = (await pieceRes.json()) as any;
+      pieceToFlagId = data.artwork.id;
+      expect(data.artwork.moderationStatus).toBe('APPROVED');
+    });
+
+    it('rejects unauthenticated and non-admin requests to flag endpoint', async () => {
+      const anonRes = await fetch(`${baseUrl}/api/moderation/${pieceToFlagId}/flag`, {
+        method: 'POST',
+      });
+      expect(anonRes.status).toBe(401);
+
+      const buyerRes = await fetch(`${baseUrl}/api/moderation/${pieceToFlagId}/flag`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${buyerToken}` },
+      });
+      expect(buyerRes.status).toBe(403);
+    });
+
+    it('allows admin to explicitly flag a listing and route to review queue', async () => {
+      const flagRes = await fetch(`${baseUrl}/api/moderation/${pieceToFlagId}/flag`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({
+          reason: 'Suspicious duplicate flagged by platform administrator',
+        }),
+      });
+
+      expect(flagRes.status).toBe(200);
+      const flagData = (await flagRes.json()) as any;
+      expect(flagData.artwork.moderationStatus).toBe('FLAGGED');
+      expect(flagData.review).toBeDefined();
+      expect(flagData.review.adminNotes).toContain('Suspicious duplicate flagged');
+
+      // Verify the artwork is present in the admin review queue
+      const queueRes = await fetch(`${baseUrl}/api/moderation/queue`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
+      const queueData = (await queueRes.json()) as any;
+      const queueItem = queueData.queue.find((q: any) => q.sourceArtworkId === pieceToFlagId);
+      expect(queueItem).toBeDefined();
+      expect(queueItem.sourceArtwork.moderationStatus).toBe('FLAGGED');
+    });
+  });
+
+  describe('7. Automatic Discovery and Queue Routing of Orphaned Flagged Artworks', () => {
+    it('automatically discovers and creates review records for orphaned FLAGGED artworks', async () => {
+      // Create an artwork directly with FLAGGED status but no ModerationReview record
+      const orphanArtwork = await prisma.artwork.create({
+        data: {
+          artistId,
+          title: `Orphaned Flagged Piece ${uniqueId}`,
+          description: 'An artwork marked FLAGGED without an initial review record.',
+          medium: 'Metalwork',
+          price: 330.0,
+          imageUrl: `https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&orphan=${uniqueId}`,
+          moderationStatus: 'FLAGGED',
+        },
+      });
+
+      // Verify no review record initially exists for it
+      const existingReviews = await prisma.moderationReview.findMany({
+        where: { sourceArtworkId: orphanArtwork.id },
+      });
+      expect(existingReviews.length).toBe(0);
+
+      // Call GET /api/moderation/queue which auto-reconciles orphaned flagged listings
+      const queueRes = await fetch(`${baseUrl}/api/moderation/queue`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
+      expect(queueRes.status).toBe(200);
+      const queueData = (await queueRes.json()) as any;
+
+      const orphanInQueue = queueData.queue.find((q: any) => q.sourceArtworkId === orphanArtwork.id);
+      expect(orphanInQueue).toBeDefined();
+      expect(orphanInQueue.sourceArtwork.id).toBe(orphanArtwork.id);
+      expect(orphanInQueue.actionTaken).toBeNull();
+
+      // Clean up orphan artwork
+      await prisma.moderationReview.deleteMany({
+        where: { sourceArtworkId: orphanArtwork.id },
+      });
+      await prisma.artwork.delete({
+        where: { id: orphanArtwork.id },
+      });
+    });
+  });
 });

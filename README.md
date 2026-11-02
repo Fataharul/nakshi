@@ -164,6 +164,10 @@ npm run dev
   - **WebSocket Events (Socket.IO)**:
     - Client emits: `join_auction`, `leave_auction`.
     - Server emits: `auction:new_bid` (broadcast to room), `user:outbid` (displaced bidder private notification), `auction:ended` (broadcast on settlement).
+- **Admin Moderation & Duplicate Detection (`/api/moderation`)**:
+  - `GET /api/moderation/queue` — Retrieve all flagged artwork listings in the moderation review queue with comparative analysis (`ADMIN` role).
+  - `POST /api/moderation/:id/review` — Administratively approve or reject a flagged artwork listing (`ADMIN` role).
+  - `POST /api/moderation/:id/flag` — Explicitly flag a listing and route it to the administrator review queue with notes (`ADMIN` role).
 
 ---
 
