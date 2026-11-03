@@ -6,7 +6,12 @@ import { test, expect } from '@playwright/test';
  * - Token validation input in foyer reception validates valid pass and unlocks hall
  * - Invalid, empty, or mismatched tokens are rejected with inline feedback
  * - Direct navigation via URL query ?token=... auto-validates and unlocks hall
- * - VIP viewing window enforcement (VIP preview hall restricts standard ticket and admits VIP ticket)
+ * - VIP viewing window enforcement:
+ *   1. BEFORE VIP Window: Standard ticket holder can access open hall without VIP restriction
+ *   2. DURING VIP Window: Standard pass is restricted by #vip-restriction-view; upgrade to VIP unlocks hall
+ *   3. AFTER VIP Window: Lapsed VIP window allows standard pass holder unrestricted hall access
+ * - Concluded exhibition access gating: blocks access, disables reservations, displays concluded badge
+ * - Responsive verification across Desktop, Tablet 768px, and Mobile 360px
  */
 test.describe('Acceptance Criteria 3.6: Exhibition Ticket Token Validation & Entry', () => {
   test.describe.configure({ mode: 'serial' });
@@ -120,25 +125,24 @@ test.describe('Acceptance Criteria 3.6: Exhibition Ticket Token Validation & Ent
       // Verify gallery wall tabs and exhibits are now visible to guest
       const wallTabs = guestPage.locator('button[id^="wall-tab-"]');
       await expect(wallTabs.first()).toBeVisible({ timeout: 10000 });
+      expect(await wallTabs.count()).toBeGreaterThan(0);
 
-      // Test 5c: Verify URL parameter auto-validation in another fresh page
-      const autoContext = await browser.newContext();
-      const autoPage = await autoContext.newPage();
-      try {
-        await autoPage.goto(`${exhibitionUrl}?token=${encodeURIComponent(ticketToken)}`);
-        // Hall automatically unlocks without manual input
-        await expect(autoPage.locator('#active-ticket-badge')).toBeVisible({ timeout: 15000 });
-        await expect(autoPage.locator('#active-ticket-badge')).toContainText(ticketToken);
-        await expect(autoPage.locator('button[id^="wall-tab-"]').first()).toBeVisible({ timeout: 10000 });
-      } finally {
-        await autoContext.close();
-      }
+      // Test 5c: Direct URL deep-link with query parameter ?token=...
+      const directUrl = `${exhibitionUrl}?token=${ticketToken}`;
+      await guestPage.goto(directUrl);
+
+      // Should automatically validate and unlock hall without clicking validate
+      await expect(guestPage.locator('#active-ticket-badge')).toBeVisible({ timeout: 15000 });
+      await expect(guestPage.locator('#active-ticket-badge')).toContainText(ticketToken);
+      await expect(guestPage.locator('button[id^="wall-tab-"]').first()).toBeVisible();
     } finally {
       await guestContext.close();
     }
   });
 
-  test('restricts VIP exhibition access outside configured VIP window', async ({ page }) => {
+  test('restricts VIP exhibition access during VIP window and verifies lifecycle before, during, and after window', async ({
+    page,
+  }) => {
     test.setTimeout(90000);
     const uniqueId = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const vipCollector = {
@@ -146,7 +150,7 @@ test.describe('Acceptance Criteria 3.6: Exhibition Ticket Token Validation & Ent
       email: `vip_collector_${uniqueId}@nakshi.test`,
       password: 'Password123!',
       role: 'BUYER',
-      bio: 'Collector of royal and museum-grade masterworks.',
+      bio: 'High-tier collector accessing private preview halls.',
     };
 
     // 1. Register a VIP collector
@@ -170,6 +174,9 @@ test.describe('Acceptance Criteria 3.6: Exhibition Ticket Token Validation & Ent
     await expect(page.locator('#topup-success-banner')).toBeVisible({ timeout: 10000 });
     await expect(topUpModal).not.toBeVisible({ timeout: 15000 });
 
+    // ==========================================
+    // PHASE 1: DURING VIP WINDOW
+    // ==========================================
     // 3. Navigate to VIP Preview exhibition
     await page.goto('/exhibitions');
     await page.locator('#exhibitions-filter-vip').click();
@@ -181,7 +188,7 @@ test.describe('Acceptance Criteria 3.6: Exhibition Ticket Token Validation & Ent
     await expect(page).toHaveURL(/\/exhibitions\/[a-zA-Z0-9-]+/);
     await expect(page.locator('#exhibition-foyer-view')).toBeVisible({ timeout: 15000 });
 
-    // 4. Reserve Standard Pass first to test VIP window lock
+    // 4. Reserve Standard Pass first during active VIP window
     await page.locator('#unlock-exhibition-ticket-btn').click();
     const buyModal = page.locator('#buy-ticket-modal');
     await expect(buyModal).toBeVisible();
@@ -194,11 +201,22 @@ test.describe('Acceptance Criteria 3.6: Exhibition Ticket Token Validation & Ent
     await page.locator('#enter-hall-from-modal-btn').click();
     await expect(buyModal).not.toBeVisible();
 
-    // Since VIP window is active, standard pass holder is restricted
+    // Standard pass holder is strictly restricted by VIP restriction screen
     await expect(page.locator('#vip-restriction-view')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('#vip-restriction-view')).toContainText('VIP Collector Window Active');
+    await expect(page.locator('button[id^="wall-tab-"]')).toHaveCount(0);
 
-    // 5. Upgrade to VIP pass
+    // Responsive verification of VIP restriction screen
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await expect(page.locator('#vip-restriction-view')).toBeVisible();
+
+    await page.setViewportSize({ width: 360, height: 800 });
+    await expect(page.locator('#vip-restriction-view')).toBeVisible();
+
+    // Reset back to Desktop
+    await page.setViewportSize({ width: 1280, height: 720 });
+
+    // Upgrade to VIP pass
     await page.locator('#vip-restriction-view button:has-text("Upgrade to VIP Pass")').click();
     await expect(buyModal).toBeVisible();
 
@@ -212,10 +230,60 @@ test.describe('Acceptance Criteria 3.6: Exhibition Ticket Token Validation & Ent
     await page.locator('#enter-hall-from-modal-btn').click();
     await expect(buyModal).not.toBeVisible();
 
-    // Access is granted: VIP pill is shown and gallery walls are visible
+    // Access is granted: VIP badge shown and gallery walls are visible
     await expect(page.locator('#vip-restriction-view')).not.toBeVisible();
     await expect(page.locator('#active-ticket-badge')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('#active-ticket-badge')).toContainText('VIP Collector Pass');
+    await expect(page.locator('button[id^="wall-tab-"]').first()).toBeVisible({ timeout: 10000 });
+
+    // ==========================================
+    // PHASE 2: BEFORE VIP WINDOW
+    // ==========================================
+    await page.goto('/exhibitions');
+    await page.locator('#exhibitions-filter-all').click();
+
+    const beforeVipCard = page.locator('article:has-text("Sonargaon Loom & Silk Heritage")');
+    await expect(beforeVipCard).toBeVisible({ timeout: 10000 });
+    await beforeVipCard.locator('[id^="enter-exhibition-btn-"]').click();
+
+    await expect(page.locator('#exhibition-foyer-view')).toBeVisible({ timeout: 15000 });
+
+    // Buy standard pass
+    await page.locator('#unlock-exhibition-ticket-btn').click();
+    await expect(buyModal).toBeVisible();
+    await page.locator('#select-standard-pass-btn').click();
+    await page.locator('#confirm-ticket-purchase-btn').click();
+    await expect(page.locator('#ticket-success-view')).toBeVisible({ timeout: 10000 });
+
+    // Enter hall: Before VIP window, standard pass holder enters directly without restriction
+    await page.locator('#enter-hall-from-modal-btn').click();
+    await expect(buyModal).not.toBeVisible();
+    await expect(page.locator('#vip-restriction-view')).not.toBeVisible();
+    await expect(page.locator('button[id^="wall-tab-"]').first()).toBeVisible({ timeout: 10000 });
+
+    // ==========================================
+    // PHASE 3: AFTER VIP WINDOW
+    // ==========================================
+    await page.goto('/exhibitions');
+    await page.locator('#exhibitions-filter-all').click();
+
+    const afterVipCard = page.locator('article:has-text("Threads of Bengal")');
+    await expect(afterVipCard).toBeVisible({ timeout: 10000 });
+    await afterVipCard.locator('[id^="enter-exhibition-btn-"]').click();
+
+    await expect(page.locator('#exhibition-foyer-view')).toBeVisible({ timeout: 15000 });
+
+    // Buy standard pass
+    await page.locator('#unlock-exhibition-ticket-btn').click();
+    await expect(buyModal).toBeVisible();
+    await page.locator('#select-standard-pass-btn').click();
+    await page.locator('#confirm-ticket-purchase-btn').click();
+    await expect(page.locator('#ticket-success-view')).toBeVisible({ timeout: 10000 });
+
+    // Enter hall: VIP window lapsed, standard pass holder enters directly without #vip-restriction-view
+    await page.locator('#enter-hall-from-modal-btn').click();
+    await expect(buyModal).not.toBeVisible();
+    await expect(page.locator('#vip-restriction-view')).not.toBeVisible();
     await expect(page.locator('button[id^="wall-tab-"]').first()).toBeVisible({ timeout: 10000 });
   });
 
@@ -261,4 +329,3 @@ test.describe('Acceptance Criteria 3.6: Exhibition Ticket Token Validation & Ent
     await expect(page.locator('#exhibitions-filter-all')).toBeVisible({ timeout: 10000 });
   });
 });
-

@@ -366,61 +366,63 @@ export class ExhibitionService {
 
     const ticket = await prisma.$transaction(
       async (tx) => {
-      // Deduct internal credits if ticketPrice > 0
-      if (finalPrice > 0) {
-        const wallet = await tx.wallet.findUnique({ where: { userId } });
-        if (!wallet || Number(wallet.balance) < finalPrice) {
-          throw new AppError(`Insufficient credits. Ticket requires ${finalPrice} Credits. Please top up your wallet.`, 400);
-        }
+        // Deduct internal credits if ticketPrice > 0
+        if (finalPrice > 0) {
+          const wallet = await tx.wallet.findUnique({ where: { userId } });
+          if (!wallet || Number(wallet.balance) < finalPrice) {
+            throw new AppError(`Insufficient credits. Ticket requires ${finalPrice} Credits. Please top up your wallet.`, 400);
+          }
 
-        await tx.wallet.update({
-          where: { id: wallet.id },
-          data: { balance: { decrement: finalPrice } },
-        });
-
-        await tx.creditTransaction.create({
-          data: {
-            walletId: wallet.id,
-            amount: finalPrice,
-            type: TransactionType.EXHIBITION_TICKET,
-            description: `${isVip ? 'VIP' : 'Standard'} Ticket for "${exhibition.title}"`,
-            referenceId: exhibitionId,
-          },
-        });
-
-        // Credit the organizer with the ticket proceeds
-        const organizerWallet = await tx.wallet.findUnique({
-          where: { userId: exhibition.organizerId },
-        });
-        if (organizerWallet) {
           await tx.wallet.update({
-            where: { id: organizerWallet.id },
-            data: { balance: { increment: finalPrice } },
+            where: { id: wallet.id },
+            data: { balance: { decrement: finalPrice } },
           });
 
           await tx.creditTransaction.create({
             data: {
-              walletId: organizerWallet.id,
+              walletId: wallet.id,
               amount: finalPrice,
-              type: TransactionType.SALE_CREDIT,
-              description: `Ticket revenue from "${exhibition.title}"`,
+              type: TransactionType.EXHIBITION_TICKET,
+              description: `${isVip ? 'VIP' : 'Standard'} Ticket for "${exhibition.title}"`,
               referenceId: exhibitionId,
             },
           });
+
+          // Credit the organizer with the ticket proceeds
+          const organizerWallet = await tx.wallet.findUnique({
+            where: { userId: exhibition.organizerId },
+          });
+          if (organizerWallet) {
+            await tx.wallet.update({
+              where: { id: organizerWallet.id },
+              data: { balance: { increment: finalPrice } },
+            });
+
+            await tx.creditTransaction.create({
+              data: {
+                walletId: organizerWallet.id,
+                amount: finalPrice,
+                type: TransactionType.SALE_CREDIT,
+                description: `Ticket revenue from "${exhibition.title}"`,
+                referenceId: exhibitionId,
+              },
+            });
+          }
         }
-      }
 
-      const createdTicket = await tx.exhibitionTicket.create({
-        data: {
-          ticketToken,
-          exhibitionId,
-          buyerId: userId,
-          isVip,
-        },
-      });
+        const createdTicket = await tx.exhibitionTicket.create({
+          data: {
+            ticketToken,
+            exhibitionId,
+            buyerId: userId,
+            isVip,
+          },
+        });
 
-      return createdTicket;
-    }, { maxWait: 10000, timeout: 20000 });
+        return createdTicket;
+      },
+      { maxWait: 10000, timeout: 20000 }
+    );
 
     return ticket;
   }
@@ -485,7 +487,7 @@ export class ExhibitionService {
       }
     }
 
-    // If exhibition has closed
+// If exhibition has closed
     if (now > end && !isOrganizer) {
       throw new AppError('This exhibition has concluded its viewing schedule', 400);
     }

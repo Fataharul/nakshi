@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ExhibitionService, Exhibition } from '../services/exhibition.service';
 import { getArtworkImageUrl, DEFAULT_ARTWORK_IMAGE } from '../utils/image.util';
@@ -21,28 +21,36 @@ export const ExhibitionsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState<Date>(new Date());
+  const currentFilterRef = useRef<StatusFilter>(selectedFilter);
+  currentFilterRef.current = selectedFilter;
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  const fetchExhibitions = async () => {
+  const fetchExhibitions = async (filterToFetch: StatusFilter = selectedFilter) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await ExhibitionService.getExhibitions(selectedFilter);
-      setExhibitions(data);
+      const data = await ExhibitionService.getExhibitions(filterToFetch);
+      if (currentFilterRef.current === filterToFetch) {
+        setExhibitions(data);
+      }
     } catch (err: any) {
-      console.error('Failed to load exhibitions:', err);
-      setError('Unable to load exhibitions catalog. Please refresh.');
+      if (currentFilterRef.current === filterToFetch) {
+        console.error('Failed to load exhibitions:', err);
+        setError('Unable to load exhibitions catalog. Please refresh.');
+      }
     } finally {
-      setLoading(false);
+      if (currentFilterRef.current === filterToFetch) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    fetchExhibitions();
+    fetchExhibitions(selectedFilter);
   }, [selectedFilter]);
 
   const getCountdownString = (exh: Exhibition) => {
@@ -162,7 +170,7 @@ export const ExhibitionsPage: React.FC = () => {
               <p className="text-sm font-medium">{error}</p>
             </div>
             <button
-              onClick={fetchExhibitions}
+              onClick={() => fetchExhibitions(selectedFilter)}
               className="text-xs font-bold uppercase underline hover:opacity-80"
             >
               Retry

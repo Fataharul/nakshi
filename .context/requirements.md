@@ -275,8 +275,8 @@ A feature/task is considered complete only when the relevant functional behavior
 - [ ] The ticket is persisted and associated with the correct user and exhibition.
 - [ ] Invalid tickets are rejected.
 - [ ] Expired tickets are rejected.
-- [ ] Tickets cannot bypass configured exhibition access rules.
-- [ ] VIP access is restricted to its configured time window.
+- [x] Tickets cannot bypass configured exhibition access rules.
+- [x] VIP access is restricted to its configured time window.
 - [ ] Exhibition visitor/viewing activity is recorded for analytics.
 
 ### 3.7 Duplicate Detection & Moderation

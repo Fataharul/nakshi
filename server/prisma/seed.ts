@@ -310,7 +310,7 @@ async function main() {
         },
       },
       {
-        title: 'Ancient Kantha & Silk Archive (Concluded)',
+title: 'Ancient Kantha & Silk Archive (Concluded)',
         description: 'Archived heritage exhibition showcasing 19th-century Rajshahi silk tapestries and ceremonial quilts.',
         bannerUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=80',
         ticketPrice: 40.0,
@@ -319,6 +319,20 @@ async function main() {
         layoutConfig: {
           curatorNote: 'Archived historical showcase. Viewing period has concluded.',
           walls: ['Historical Pavilion', 'Archived Gallery'],
+        },
+      },
+      {
+        title: 'Sonargaon Loom & Silk Heritage',
+        description: 'Living heritage exhibition with upcoming VIP collector preview.',
+        bannerUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
+        ticketPrice: 45.0,
+        startTime: new Date(now.getTime() - 86400000 * 2),
+        endTime: new Date(now.getTime() + 86400000 * 12),
+        vipStartTime: new Date(now.getTime() + 86400000 * 2),
+        vipEndTime: new Date(now.getTime() + 86400000 * 4),
+        layoutConfig: {
+          curatorNote: 'General hall open; VIP preview window starts soon.',
+          walls: ['Silk Pavilion', 'Loom Gallery'],
         },
       },
     ];

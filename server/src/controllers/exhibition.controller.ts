@@ -50,7 +50,7 @@ export class ExhibitionController {
     try {
       const id = req.params.id as string;
       const currentUserId = (req as any).user?.id;
-      const ticketToken = (req.query.token as string) || (req.headers['x-ticket-token'] as string);
+      const ticketToken = (req.query.token as string) || (req.query.ticketToken as string) || (req.headers['x-ticket-token'] as string);
       const room = await ExhibitionService.getRoom(id, currentUserId, ticketToken);
       res.status(200).json(room);
     } catch (error) {
