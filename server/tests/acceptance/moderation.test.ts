@@ -321,7 +321,7 @@ describe('Admin Moderation Queue & Duplicate Detection Acceptance Tests (Phase 4
   describe('5. Duplicate Detection on Artwork Update & Review Queue Routing', () => {
     it('flags an existing artwork when its image is updated to a duplicate and routes to queue', async () => {
       // 1. Create a unique approved artwork first
-      const uniqueImage = `https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=800&unique=${uniqueId}`;
+      const uniqueImage = `https://images.unsplash.com/photo-1579783901586-d88db74b4fe4?w=800&unique=${uniqueId}`;
       const createRes = await fetch(`${baseUrl}/api/artworks`, {
         method: 'POST',
         headers: {

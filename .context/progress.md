@@ -658,3 +658,16 @@
     - Server build: `npm --prefix server run build` completed with code 0.
 
 
+
+## [2026-11-03 22:15:00 +06:00] Milestone: Harmonized Batch Integration of Remote PRs (#36, #37, #38, #39, #40, #41, #43, #44, #45)
+- **Completed**:
+  - Integrated 9 valid remote pull requests on dedicated task branch `integrate/open-prs-batch`:
+    - **Lineage A (PRs #36, #37, #39, #43, #44)**: Routed flagged listings to administrator review queue, added comprehensive threshold handling acceptance tests, implemented administrator moderation console & comparison inspection UI, established exhibition ticket token validation with cross-hall reuse protection, and gated expired exhibition viewing.
+    - **Lineage B (PRs #38, #40, #41)**: Integrated exhibition visitor traffic & viewing-time collection hook (`useExhibitionVisitTracking`), hardened auction expiration with post-close bid rejection, and added full ticket entry validation acceptance and unit suites.
+    - **PR #45**: Harmonized complete VIP access window temporal lifecycle acceptance test suite (`exhibition_vip_access.test.ts`), preselected VIP upgrade in modal, and verified before/during/after VIP scheduling.
+    - **PR #42**: Safely excluded (obsolete, 37 commits behind main, destructive diff).
+  - Cleaned and harmonized overlapping additions across `ExhibitionRoomPage.tsx`, `BuyTicketModal.tsx`, `exhibition.service.ts`, `moderation.service.ts`, and test fixtures.
+- **Verified**:
+  - **Full Vitest Suite**: 25/25 test files passed (233 unit and acceptance tests passed with 0 failures) (`npm --prefix server test`).
+  - **Server Production Build**: TypeScript compiled cleanly with code 0 (`npm run --prefix server build`).
+  - **Client Production Build**: Vite bundle compiled cleanly with code 0 (`npm run --prefix client build`).

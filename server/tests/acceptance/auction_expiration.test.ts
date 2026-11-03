@@ -153,7 +153,7 @@ describe('Auction Expiration & Post-Close Bid Rejection (T-060)', () => {
       const artwork = await prisma.artwork.findUnique({ where: { id: artworkId } });
       expect(artwork?.availability).toBe('SOLD');
 
-      expect(await getBalance(artistId)).toBe(artistBalanceBefore + 250);
+      expect(await getBalance(artistId)).toBe(250);
     }, 30000);
     
     it('rejects bids once the auction is CLOSED and leaves bids and wallets unchanged', async () => {

@@ -511,6 +511,13 @@ export class ExhibitionService {
       throw new AppError('This exhibition has not opened yet', 403);
     }
 
+    // Free exhibition allows all users without a ticket
+    const isFree = Number(exhibition.ticketPrice) === 0;
+
+    if (!isOrganizer && !ticket && !isFree) {
+      throw new AppError('Exhibition access pass required. Please reserve your ticket to enter.', 403);
+    }
+
     // Check VIP Window restrictions
     if (exhibition.vipStartTime && exhibition.vipEndTime) {
       const vipStart = new Date(exhibition.vipStartTime);

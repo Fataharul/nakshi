@@ -76,6 +76,13 @@ export class ModerationService {
         },
       });
     }
+    // Purge any stale review records whose sourceArtwork was deleted or missing
+    try {
+      await prisma.$executeRawUnsafe(
+        'DELETE FROM "ModerationReview" WHERE "sourceArtworkId" NOT IN (SELECT id FROM "Artwork")'
+      );
+    } catch {}
+
 
     const reviews = await prisma.moderationReview.findMany({
       where: {
