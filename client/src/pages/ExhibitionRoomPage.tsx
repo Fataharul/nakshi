@@ -9,6 +9,7 @@ import {
 import { getArtworkImageUrl, DEFAULT_ARTWORK_IMAGE } from '../utils/image.util';
 import { BuyTicketModal } from '../components/exhibition/BuyTicketModal';
 import { useAuth } from '../context/AuthContext';
+import { useExhibitionVisitTracking } from '../hooks/useExhibitionVisitTracking';
 import {
   Sparkles,
   Ticket,
@@ -65,6 +66,16 @@ export const ExhibitionRoomPage: React.FC = () => {
   useEffect(() => {
     loadExhibition();
   }, [id, user?.id]);
+    // T-081: record visitor traffic and viewing time.
+  // Curators and admins previewing the hall are not counted as visitors.
+  const canTrackVisit = Boolean(
+    exhibition &&
+      exhibition.status !== 'CLOSED' &&
+      user?.id !== exhibition.organizer.id &&
+      user?.role !== 'ADMIN' &&
+      (exhibition.userTicket || Number(exhibition.ticketPrice) === 0)
+  );
+  useExhibitionVisitTracking(id, canTrackVisit);
 
   const handleValidateToken = async (overrideToken?: string) => {
     const token = (overrideToken ?? tokenInput).trim();

@@ -6,3 +6,11 @@ export interface ExhibitionAnalytics {
   ticketsSold: number;
   totalTicketRevenue: number;
 }
+export interface ExhibitionVisitStart {
+  visitId: string;
+  enteredAt: string;
+}
+
+export interface ExhibitionVisitHeartbeat {
+  durationSeconds: number;
+}
