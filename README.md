@@ -117,8 +117,9 @@ VITE_API_BASE_URL=http://localhost:5000
 # 1. Install dependencies
 npm install
 
-# 2. Setup Prisma Database Schema
+# 2. Setup Prisma Database Schema & Seed Presentation Data
 npm --prefix server run prisma:migrate
+npm run seed
 
 # 3. Start development servers concurrently
 npm run dev

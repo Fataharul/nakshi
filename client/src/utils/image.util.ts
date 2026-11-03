@@ -15,7 +15,12 @@ export const getArtworkImageUrl = (url?: string | null): string => {
   const trimmed = url.trim();
 
   // If mock/example url that does not exist on the web
-  if (trimmed.includes('example.com') || trimmed.includes('via.placeholder.com')) {
+  if (
+    trimmed.includes('example.com') ||
+    trimmed.includes('via.placeholder.com') ||
+    trimmed.includes('socket-test') ||
+    trimmed.includes('photo-test-lot')
+  ) {
     return DEFAULT_ARTWORK_IMAGE;
   }
 

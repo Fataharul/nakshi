@@ -328,7 +328,7 @@ export const LoginPage: React.FC = () => {
           <div className="mt-6 pt-6 border-t border-surface-container">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] uppercase tracking-wider font-semibold text-on-surface-variant flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-primary" /> Demo Quick Login:
+                <Sparkles className="w-3 h-3 text-primary" /> Quick Role Switch:
               </span>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -338,7 +338,7 @@ export const LoginPage: React.FC = () => {
                 onClick={() => handleDemoFill('buyer@nakshi.test')}
                 className="py-1.5 px-2 bg-surface-container-low hover:bg-surface-container text-on-surface text-[11px] font-medium rounded border border-outline/20 transition-colors text-center"
               >
-                Buyer
+                Buyer (Tanvir)
               </button>
               <button
                 type="button"
@@ -346,7 +346,7 @@ export const LoginPage: React.FC = () => {
                 onClick={() => handleDemoFill('artist@nakshi.test')}
                 className="py-1.5 px-2 bg-surface-container-low hover:bg-surface-container text-on-surface text-[11px] font-medium rounded border border-outline/20 transition-colors text-center"
               >
-                Artist
+                Artist (Rokeya)
               </button>
               <button
                 type="button"
@@ -354,7 +354,7 @@ export const LoginPage: React.FC = () => {
                 onClick={() => handleDemoFill('organizer@nakshi.test')}
                 className="py-1.5 px-2 bg-surface-container-low hover:bg-surface-container text-on-surface text-[11px] font-medium rounded border border-outline/20 transition-colors text-center"
               >
-                Organizer
+                Curator (Naveed)
               </button>
               <button
                 type="button"
@@ -362,7 +362,7 @@ export const LoginPage: React.FC = () => {
                 onClick={() => handleDemoFill('admin@nakshi.test')}
                 className="py-1.5 px-2 bg-surface-container-low hover:bg-surface-container text-on-surface text-[11px] font-medium rounded border border-outline/20 transition-colors text-center"
               >
-                Admin
+                Platform Admin
               </button>
             </div>
           </div>

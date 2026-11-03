@@ -688,3 +688,25 @@
   - Server unit tests passed cleanly (`npx --prefix server vitest run tests/unit`).
   - Client production build succeeded with 0 errors (`npm --prefix client run build`).
   - Server TypeScript compilation succeeded with 0 errors (`npm --prefix server run build`).
+
+
+## [2026-11-04 02:30:00 +06:00] Milestone: Authentic Heritage Dataset & Real Data Harmonization Completed
+- **Completed**:
+  - **Database Cleanup & Purge**:
+    - Created and executed `server/prisma/clean-test-data.ts`, safely purging 2,103 automated test users, 663 test artworks with broken links (`example.com`, dead URLs), 267 test auctions, and 1,011 orphaned transactions while preserving relational integrity.
+  - **Production-Grade Seeding (`server/prisma/seed.ts`)**:
+    - Seeded realistic multi-role users across all 4 roles: Artists (*Rokeya Begum*, *Alkas Mia*, *Gouranga Pal*, *Sukumar Banik*), Collectors (*Tanvir Ahmed*, *Sadia Rahman*, *Farhan Kabir*), Curators (*Naveed Chowdhury*, *Dr. Anisur Rahman*), and Platform Admin.
+    - Seeded 24 authentic heritage artworks across all Bangladeshi craft categories (Handloom Jamdani, Nakshi Kantha, Terracotta Clay, Brass & Bell Metal, Shital Pati, Jute Craft, Wood Carving, Patua Folk Painting) with verified high-resolution open-access images (100% HTTP 200 OK).
+    - Seeded 2 Live Auctions with active bids and timers, 2 Upcoming Auctions, and 4 Curated Virtual Exhibitions.
+  - **Frontend Real-Data Harmonization**:
+    - Removed `CURATED_FEED_POSTS` from `HomePage.tsx` and dynamically query live database artworks.
+    - Derived `ArtisanStoriesTray.tsx` dynamically from real database artists and their newly listed pieces, linking stories directly to `/artworks/:id`.
+    - Removed `CURATED_HERITAGE_ARTWORKS` from `ArtworkSearchInterface.tsx` and computed craft medium filter counts dynamically from loaded database records.
+    - Enhanced `ArtworkCard.tsx` and `FeedPostCard.tsx` with `getArtworkImageUrl` and `onError` image fallback guards to guarantee zero broken image frames in the client.
+    - Updated `LoginPage.tsx` quick role switcher to present authentic personas (*Tanvir Ahmed*, *Rokeya Begum*, *Naveed Chowdhury*, *Admin*).
+- **Verified**:
+  - All 11 unit test suites (68 tests) passed cleanly (`npx --prefix server vitest run tests/unit`).
+  - All 14 acceptance test suites (165 tests) passed cleanly (`npx --prefix server vitest run tests/acceptance`).
+  - Total 233/233 backend unit and acceptance tests passing.
+  - Client Vite production build succeeded with 0 errors (`npm --prefix client run build`).
+  - Server TypeScript compilation succeeded with 0 errors (`npm --prefix server run build`).

@@ -13,6 +13,7 @@ import {
 import { artworkApi } from '../../services/artwork.service';
 import { useAuth } from '../../context/AuthContext';
 import { ArtworkDetailModal, FeedArtworkDetail } from './ArtworkDetailModal';
+import { getArtworkImageUrl, DEFAULT_ARTWORK_IMAGE } from '../../utils/image.util';
 
 export interface FeedComment {
   id: string;
@@ -162,6 +163,10 @@ export const FeedPostCard: React.FC<FeedPostCardProps> = ({
           <div className="relative">
             <img
               src={post.artistAvatar}
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                target.src = 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80';
+              }}
               alt={post.artistName}
               className="w-11 h-11 rounded-full object-cover ring-2 ring-primary/20"
             />
@@ -203,7 +208,13 @@ export const FeedPostCard: React.FC<FeedPostCardProps> = ({
         onDoubleClick={handleDoubleClick}
       >
         <img
-          src={post.imageUrl}
+          src={getArtworkImageUrl(post.imageUrl)}
+          onError={(e) => {
+            const target = e.currentTarget as HTMLImageElement;
+            if (target.src !== DEFAULT_ARTWORK_IMAGE) {
+              target.src = DEFAULT_ARTWORK_IMAGE;
+            }
+          }}
           alt={post.title}
           className="w-full max-h-[580px] object-cover"
         />

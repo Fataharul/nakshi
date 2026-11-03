@@ -16,133 +16,6 @@ import { ArtworkCard, SearchableArtwork } from './ArtworkCard';
 
 export type { SearchableArtwork };
 
-// Curated authentic Bangladeshi craft demonstration collection
-const CURATED_HERITAGE_ARTWORKS: SearchableArtwork[] = [
-  {
-    id: 'art-001',
-    title: 'Sonargaon Heritage Jamdani Saree',
-    artistName: 'Alkas Mia',
-    artistRegion: 'Narayanganj',
-    medium: 'Handloom Jamdani',
-    style: 'Floral Motifs',
-    description: 'Authentic 200-count handloom muslin Jamdani woven with pure zari floral jaal motifs.',
-    dimensions: '5.5 meters x 1.2 meters',
-    weight: '0.85 kg',
-    price: 1250.0,
-    imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
-    availability: 'AVAILABLE',
-    createdAt: '2026-09-28T10:00:00Z',
-    featured: true,
-  },
-  {
-    id: 'art-002',
-    title: 'Mayurpakkhi Heirloom Nakshi Kantha',
-    artistName: 'Rokeya Begum',
-    artistRegion: 'Jessore',
-    medium: 'Nakshi Kantha',
-    style: 'Traditional Folk',
-    description: 'Traditional quilt featuring intricate run-stitch peacocks, lotus pond medallions, and village folklore.',
-    dimensions: '72 x 54 inches',
-    weight: '1.4 kg',
-    price: 850.0,
-    imageUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=800&q=80',
-    availability: 'AVAILABLE',
-    createdAt: '2026-09-27T14:30:00Z',
-    featured: true,
-  },
-  {
-    id: 'art-003',
-    title: 'Terracotta Folk Horse Sculpture',
-    artistName: 'Gouranga Pal',
-    artistRegion: 'Panchagarh',
-    medium: 'Terracotta Clay',
-    style: 'Sculptural & Relic',
-    description: 'Hand-molded kiln-fired terracotta folk artifact embodying ancient North Bengal sacrificial horse motifs.',
-    dimensions: '35 x 22 x 12 cm',
-    weight: '2.8 kg',
-    price: 450.0,
-    imageUrl: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=800&q=80',
-    availability: 'AVAILABLE',
-    createdAt: '2026-09-26T09:15:00Z',
-  },
-  {
-    id: 'art-004',
-    title: 'Dhamrai Bell Metal Royal Kansa Urn',
-    artistName: 'Sukumar Banik',
-    artistRegion: 'Dhamrai',
-    medium: 'Brass & Bell Metal',
-    style: 'Royal Heritage',
-    description: 'Hand-beaten high-resonance lost-wax cast bell metal ceremonial vessel polished with natural clay.',
-    dimensions: '28 x 28 x 38 cm',
-    weight: '4.2 kg',
-    price: 920.0,
-    imageUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80',
-    availability: 'AVAILABLE',
-    createdAt: '2026-09-25T16:45:00Z',
-  },
-
-  {
-    id: 'art-006',
-    title: 'Sylhet Imperial Murta Cane Shital Pati',
-    artistName: 'Binoy Das',
-    artistRegion: 'Sylhet',
-    medium: 'Shital Pati Cane Weave',
-    style: 'Geometric Jaal',
-    description: 'Master-grade cold mat handwoven from strips of green Murta reed featuring geometric diamond weave.',
-    dimensions: '84 x 60 inches',
-    weight: '1.2 kg',
-    price: 640.0,
-    imageUrl: 'https://images.unsplash.com/photo-1606744824163-985d376605aa?auto=format&fit=crop&w=800&q=80',
-    availability: 'SOLD',
-    createdAt: '2026-09-23T08:10:00Z',
-  },
-  {
-    id: 'art-007',
-    title: 'Golden Fiber Embroidered Jute Tapestry',
-    artistName: 'Fatema Khatun',
-    artistRegion: 'Faridpur',
-    medium: 'Jute Fiber Craft',
-    style: 'Contemporary Heritage',
-    description: 'Naturally dyed spun golden jute fibers braided and cross-stitched into an expansive wall tapestry.',
-    dimensions: '40 x 30 inches',
-    weight: '1.5 kg',
-    price: 360.0,
-    imageUrl: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80',
-    availability: 'AVAILABLE',
-    createdAt: '2026-09-22T13:00:00Z',
-  },
-  {
-    id: 'art-008',
-    title: 'Chittagong Carved Sheesham Wood Casket',
-    artistName: 'Ranjit Barua',
-    artistRegion: 'Chittagong',
-    medium: 'Wood Carving & Inlay',
-    style: 'Floral Motifs',
-    description: 'Seasoned solid rosewood chest adorned with deep relief floral carvings and brass wire inlays.',
-    dimensions: '30 x 20 x 15 cm',
-    weight: '2.1 kg',
-    price: 780.0,
-    imageUrl: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80',
-    availability: 'AVAILABLE',
-    createdAt: '2026-09-21T15:20:00Z',
-  },
-  {
-    id: 'art-009',
-    title: 'Rajshahi Glazed Heritage Clay Pitcher',
-    artistName: 'Bipul Kumar',
-    artistRegion: 'Rajshahi',
-    medium: 'Ceramic & Traditional Pottery',
-    style: 'Traditional Folk',
-    description: 'Wheel-thrown red river silt vessel wood-fired with natural terracotta slip and glazed neck.',
-    dimensions: '25 x 25 x 32 cm',
-    weight: '1.9 kg',
-    price: 320.0,
-    imageUrl: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=800&q=80',
-    availability: 'AVAILABLE',
-    createdAt: '2026-09-20T10:40:00Z',
-  },
-];
-
 type SortOption = 'LATEST' | 'PRICE_ASC' | 'PRICE_DESC' | 'TITLE_ASC';
 
 const ITEMS_PER_PAGE = 48;
@@ -385,11 +258,11 @@ export const ArtworkSearchInterface: React.FC = () => {
                 : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface border border-outline/20'
             }`}
           >
-            All Crafts ({CURATED_HERITAGE_ARTWORKS.length})
+            All Crafts ({totalCount > 0 ? totalCount : apiArtworks.length})
           </button>
 
           {CRAFT_MEDIUMS.map((medium) => {
-            const count = CURATED_HERITAGE_ARTWORKS.filter((a) => a.medium === medium).length;
+            const count = apiArtworks.filter((a) => a.medium === medium).length;
             const isSelected = selectedMedium === medium;
             return (
               <button

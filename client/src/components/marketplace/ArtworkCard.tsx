@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, MapPin, Sparkles } from 'lucide-react';
 import { artworkApi } from '../../services/artwork.service';
+import { getArtworkImageUrl, DEFAULT_ARTWORK_IMAGE } from '../../utils/image.util';
 
 export interface SearchableArtwork {
   id: string;
@@ -81,7 +82,13 @@ export const ArtworkCard: React.FC<ArtworkCardProps> = ({
       {/* Image Frame */}
       <div className="h-60 bg-surface-container-high relative overflow-hidden">
         <img
-          src={artwork.imageUrl}
+          src={getArtworkImageUrl(artwork.imageUrl)}
+          onError={(e) => {
+            const target = e.currentTarget as HTMLImageElement;
+            if (target.src !== DEFAULT_ARTWORK_IMAGE) {
+              target.src = DEFAULT_ARTWORK_IMAGE;
+            }
+          }}
           alt={artwork.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />

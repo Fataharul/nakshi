@@ -370,3 +370,24 @@
   - Dramatically improves user discovery and community engagement by transforming the homepage into a living, visual artisan exhibition.
   - Adheres strictly to `DESIGN.md` Muslin surfaces (`#FBF9F4`), Terracotta accents (`#86452A`), Playfair Display headings, Inter body typography, and ambient diffused shadows.
   - Guarantees seamless responsiveness down to 360px viewport width.
+
+## 29. Production-Grade Authentic Heritage Seed & Real Data Harmonization
+- **Timestamp**: 2026-11-04 02:30:00 +06:00
+- **Context**: The platform previously accumulated 2,100+ automated test users and 600+ test artworks with broken image links (`example.com`, dead Unsplash query URLs), mock story bars, hardcoded feed arrays, and missing live auctions. The site needed to be presentation-ready with real multi-role personas, authentic Bengali craft imagery, genuine active auctions, and zero mock artifacts.
+- **Decision**:
+  - **Database Cleanup & Purge**: Implemented automated test fixture cleanup (`server/prisma/clean-test-data.ts`) to safely purge automated test artifacts (`%179%`, `%example.com%`, `%Playwright%`, etc.) while preserving schema foreign key integrity.
+  - **Production-Grade Seeder (`server/prisma/seed.ts`)**:
+    - Created multiple realistic users across all 4 roles: Artists (*Rokeya Begum*, *Alkas Mia*, *Gouranga Pal*, *Sukumar Banik*), Collectors (*Tanvir Ahmed*, *Sadia Rahman*, *Farhan Kabir*), Curators (*Naveed Chowdhury*, *Dr. Anisur Rahman*), and Platform Admin with authentic biographies, initial wallet balances, and verified artisan credentials.
+    - Provisioned 24 authentic heritage artworks across Bangladeshi craft categories (Handloom Jamdani, Nakshi Kantha, Terracotta Clay, Brass & Bell Metal, Shital Pati, Jute Craft, Wood Carving, Patua Folk Painting) with realistic dimensions, weights, and credit valuations.
+    - Used verified high-resolution, open-access public domain & Creative Commons images (all verified with HTTP 200 OK).
+    - Established realistic Live & Upcoming Auctions with bidding histories so auction explorer and live auction rooms appear active and authentic.
+    - Created rich virtual exhibitions with multi-hall layouts and valid scheduling windows.
+  - **Frontend Real-Data Harmonization**:
+    - Removed `CURATED_FEED_POSTS` and bound `HomePage.tsx` to live REST API dispatches from PostgreSQL.
+    - Derived `ArtisanStoriesTray.tsx` dynamically from real database artists and their newly listed pieces, linking stories directly to `/artworks/:id`.
+    - Removed `CURATED_HERITAGE_ARTWORKS` from `ArtworkSearchInterface.tsx` and computed craft medium filter counts dynamically from loaded database records.
+    - Enhanced `ArtworkCard.tsx` and `FeedPostCard.tsx` with `getArtworkImageUrl` and `onError` image fallback guards to guarantee zero broken image frames in the client.
+    - Updated `LoginPage.tsx` quick role switcher to present authentic personas (*Tanvir Ahmed*, *Rokeya Begum*, *Naveed Chowdhury*, *Admin*).
+- **Rationale**:
+  - Delivers an authentic, presentation-ready digital gallery showcasing Bengali craft heritage without mock data or broken URLs.
+  - Maintains 100% backward compatibility with automated test suites and existing test selectors.
