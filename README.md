@@ -6,6 +6,7 @@ A full-stack digital gallery and marketplace celebrating Bangladeshi arts, texti
 
 ## Features
 
+- **Social Gallery Feed**: Instagram & Facebook style discovery feed on the homepage with artisan studio stories, craft category filtering, double-tap heart likes, real-time patron discussions, and detailed piece inspection.
 - **Multi-Vendor Marketplace**: Artist storefronts, artwork listings, categorization, search & filtering.
 - **Internal Credit-Based Transactions**: Secure fictional credits with atomic ledger transactions, race-condition protection, and simulated dummy top-ups (zero external payment gateway costs).
 - **Admin-Managed Live Auctions**: Real-time bidding via WebSockets (Socket.IO), countdown synchronization, outbid alerts, and automated winner settlement.

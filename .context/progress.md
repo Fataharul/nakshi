@@ -671,3 +671,20 @@
   - **Full Vitest Suite**: 25/25 test files passed (233 unit and acceptance tests passed with 0 failures) (`npm --prefix server test`).
   - **Server Production Build**: TypeScript compiled cleanly with code 0 (`npm run --prefix server build`).
   - **Client Production Build**: Vite bundle compiled cleanly with code 0 (`npm run --prefix client build`).
+
+## [2026-11-04 01:12:00 +06:00] Milestone: Homepage Social Gallery Feed (Instagram / Facebook Style) Implemented & Verified
+- **Completed**:
+  - Transformed the homepage into a rich, social gallery feed centered in viewport without extraneous sidebars:
+    - Built `client/src/components/feed/ArtisanStoriesTray.tsx` with horizontal artisan stories carousel, glowing terracotta rings, and interactive story triggers.
+    - Built `client/src/components/feed/StoryModal.tsx` providing an Instagram-style story viewer modal with timer progress bars, artisan craft storytelling quotes, process photography, and direct piece exploration actions.
+    - Built `client/src/components/feed/FeedPostCard.tsx` implementing a gallery post card with artisan identity, verified badge, craft medium chip, double-tap heart burst animation, valuation badge in Credits, interactive Like button (with live server sync & optimistic counting), bookmark toggle, share permalink toast, expandable storytelling captions, and real-time patron discussion comments thread.
+    - Built `client/src/components/feed/ArtworkDetailModal.tsx` allowing detailed inspection of artwork specifications (dimensions, weight, medium, style, origin, artisan bio).
+    - Built `client/src/pages/HomePage.tsx` integrating stories, category filter pills ("All Crafts", "Handloom Jamdani", "Nakshi Kantha", "Terracotta Clay", "Brass & Bell Metal", "Shital Pati & Cane", "Jute Craft", "Wood Carving"), live backend artwork querying via `artworkApi.getArtworks()`, curated heritage fallback items, and an end-of-feed "All Caught Up" state.
+    - Updated `client/src/App.tsx` routing `/` to the dedicated `HomePage.tsx`.
+    - Preserved all existing test selectors and navigation IDs (`#home-explore-marketplace-btn`, `#home-dashboard-btn`, `#home-explore-btn`, `#home-login-btn`).
+  - Added Playwright end-to-end test suite `e2e/homepage_feed.spec.ts` covering stories tray, story viewer modal, feed post likes, real-time comment submission, category filtering, and mobile 360px viewport responsiveness.
+- **Verified**:
+  - Playwright E2E tests in `e2e/homepage_feed.spec.ts` passed across Desktop Chrome, Mobile 360px, and Tablet 768px viewports (`npx playwright test e2e/homepage_feed.spec.ts`).
+  - Server unit tests passed cleanly (`npx --prefix server vitest run tests/unit`).
+  - Client production build succeeded with 0 errors (`npm --prefix client run build`).
+  - Server TypeScript compilation succeeded with 0 errors (`npm --prefix server run build`).
