@@ -356,3 +356,17 @@
   - Eliminates UI flicker and out-of-order response bugs during rapid catalog browsing.
 
 
+
+## 28. Social Gallery Feed Homepage Architecture
+- **Timestamp**: 2026-11-04 01:10:00 +06:00
+- **Context**: The Nakshi homepage previously contained only a basic placeholder hero with static text and navigation buttons. The requirement was to evolve it into an engaging social feed inspired by Instagram and Facebook (stories tray, scrollable post stream, interactive likes, comments, and story modals), while maintaining strict visual consistency with the cultural heritage design tokens from `DESIGN.md` and `DESIGN_DIRECTION.md` without cluttering sidebars.
+- **Decision**:
+  - Implemented `HomePage.tsx` hosting a clean, focused, centered scrollable feed stream (`max-w-xl md:max-w-2xl mx-auto`):
+    1. **Artisan Stories Tray (`ArtisanStoriesTray.tsx` & `StoryModal.tsx`)**: Horizontally scrollable circular story avatars with glowing terracotta/amber rings representing artisan studio processes and lore. Clicking an avatar opens an Instagram-style interactive story modal with auto-advancing progress timers, artisan quote, process imagery, and piece exploration CTA.
+    2. **Category Filter Pills**: Horizontally scrollable craft medium chips ("All Crafts", "Handloom Jamdani", "Nakshi Kantha", "Terracotta Clay", "Brass & Bell Metal", etc.) providing instant client-side filtering.
+    3. **Instagram/Facebook-Style Artwork Feed Cards (`FeedPostCard.tsx`)**: Featuring artisan header with verified mark and medium pill, high-resolution media with double-tap heart burst animation, valuation overlay, interactive Like button (with live counter and backend sync), expandable comment discussions with real-time patron commenting, share toast, bookmark toggle, and detailed inspection modal (`ArtworkDetailModal.tsx`).
+    4. **Backward Compatibility**: Preserved all existing navigation DOM IDs (`#home-explore-marketplace-btn`, `#home-dashboard-btn`, `#home-explore-btn`, `#home-login-btn`) within an elegant welcome header banner.
+- **Rationale**:
+  - Dramatically improves user discovery and community engagement by transforming the homepage into a living, visual artisan exhibition.
+  - Adheres strictly to `DESIGN.md` Muslin surfaces (`#FBF9F4`), Terracotta accents (`#86452A`), Playfair Display headings, Inter body typography, and ambient diffused shadows.
+  - Guarantees seamless responsiveness down to 360px viewport width.
