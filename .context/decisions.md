@@ -436,4 +436,17 @@
   - Enforces `DESIGN_DIRECTION.md` and `DESIGN.md` gallery presentation principles: newly visited pages always render from their prominent header, matted hero image, and breadcrumb navigation.
   - Verified across all viewports (Desktop Chrome, Tablet 768px, Mobile 360px) via automated Playwright test suite `e2e/scroll_to_top.spec.ts`.
 
+## 33. Streamlined Homepage Discovery Feed & Removal of Stories Tray
+- **Timestamp**: 2026-11-04 19:30:00 +06:00
+- **Context**: The homepage previously rendered an artisan stories tray above the craft category filter pills. To streamline user exploration and focus immediately on the living heritage artwork feed without secondary avatar chrome, the stories tray was removed from the homepage view.
+- **Decision**:
+  - Removed `<ArtisanStoriesTray />` and its dynamic memoization hook from [`client/src/pages/HomePage.tsx`](file:///e:/Nakshi/client/src/pages/HomePage.tsx).
+  - Kept the underlying component files ([`ArtisanStoriesTray.tsx`](file:///e:/Nakshi/client/src/components/feed/ArtisanStoriesTray.tsx) and [`StoryModal.tsx`](file:///e:/Nakshi/client/src/components/feed/StoryModal.tsx)) intact in `client/src/components/feed/` to preserve code modularity.
+  - Positioned the Craft Category filter pills (`All Crafts`, `Handloom Jamdani`, `Nakshi Kantha`, etc.) directly beneath the welcome banner, leading immediately into the artwork post stream.
+  - Updated automated Playwright test suite [`e2e/homepage_feed.spec.ts`](file:///e:/Nakshi/e2e/homepage_feed.spec.ts) to verify the absence of the stories tray and proper category filtering.
+- **Rationale**:
+  - Fulfills the "Art-First Minimalism" principle from `DESIGN_DIRECTION.md`: eliminates visual clutter and puts authentic Bengali craft pieces front and center upon page load.
+  - Reduces initial homepage JavaScript bundle size from 613.2 kB to 602.7 kB.
+
+
 

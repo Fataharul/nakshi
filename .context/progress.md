@@ -765,3 +765,16 @@
   - Client Vite production build compiled cleanly with 0 errors (`npm --prefix client run build`).
   - Server TypeScript compilation passed with 0 errors (`npm --prefix server run build`).
   - All 11 backend unit test suites (68/68 tests) passing cleanly (`npx --prefix server vitest run tests/unit`).
+## [2026-11-04 19:30:00 +06:00] Milestone: Artisan Stories Tray Removed from Homepage
+- **Completed**:
+  - Removed `<ArtisanStoriesTray />` and its dynamic memoization logic from `client/src/pages/HomePage.tsx`.
+  - Cleaned up unused imports (`ArtisanStoriesTray`, `ArtisanStory`) in `HomePage.tsx`.
+  - Positioned Craft Category filter pills directly beneath the welcome banner.
+  - Kept modular story component files intact in `client/src/components/feed/` for architectural stability.
+  - Updated `e2e/homepage_feed.spec.ts` Playwright test suite to assert the absence of the stories tray and verify category filtering against live artwork records.
+- **Verified**:
+  - Playwright E2E test suite `e2e/homepage_feed.spec.ts` passed across all 3 viewports: Desktop Chrome, Tablet 768px, and Mobile 360px (9/9 tests passing).
+  - Playwright E2E test suite `e2e/scroll_to_top.spec.ts` passed across all 3 viewports (3/3 tests passing).
+  - Client Vite production build succeeded with 0 errors (`npm --prefix client run build`).
+  - Server TypeScript compilation passed with 0 errors (`npm --prefix server run build`).
+  - All 11 backend unit test suites (68/68 tests) passing cleanly (`npx --prefix server vitest run tests/unit`).

@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ArtisanStoriesTray } from '../components/feed/ArtisanStoriesTray';
-import { ArtisanStory } from '../components/feed/StoryModal';
 import { FeedPostCard, FeedPostData } from '../components/feed/FeedPostCard';
 import { artworkApi } from '../services/artwork.service';
 import { Artwork } from '../types/artwork';
@@ -85,34 +83,6 @@ export const HomePage: React.FC = () => {
     };
   }, []);
 
-  // Derive artisan stories dynamically from live database posts
-  const artisanStories: ArtisanStory[] = useMemo(() => {
-    const seen = new Set<string>();
-    const list: ArtisanStory[] = [];
-    for (const post of posts) {
-      if (post.artistName && !seen.has(post.artistName) && post.artistName !== 'Master Artisan') {
-        seen.add(post.artistName);
-        list.push({
-          id: `story-${post.id}`,
-          artisanName: post.artistName,
-          artisanAvatar: post.artistAvatar,
-          region: post.artistRegion || 'Bengal Workshop',
-          craftMedium: post.medium,
-          title: post.title,
-          caption:
-            post.description.length > 130
-              ? `${post.description.slice(0, 130)}...`
-              : post.description,
-          imageUrl: post.imageUrl,
-          timeAgo: post.timeAgo,
-          artworkLink: `/artworks/${post.id}`,
-          price: post.price,
-        });
-      }
-    }
-    return list;
-  }, [posts]);
-
   // Filter posts based on selected category pill
   const filteredPosts = useMemo(() => {
     if (selectedCategory === 'All Crafts') return posts;
@@ -187,10 +157,7 @@ export const HomePage: React.FC = () => {
           </div>
         </section>
 
-        {/* 1. Artisan Stories Bar (Dynamic stories derived from real database artisans) */}
-        <ArtisanStoriesTray stories={artisanStories.length > 0 ? artisanStories : undefined} />
-
-        {/* 2. Category Filter Pills */}
+        {/* Category Filter Pills */}
         <section aria-label="Craft Categories" className="mb-5">
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none no-scrollbar">
             {CRAFT_CATEGORIES.map((category) => {
