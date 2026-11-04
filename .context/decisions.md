@@ -404,3 +404,23 @@
   - **Purged Legacy Uploads**: Enhanced `clean-test-data.ts` to purge broken `/uploads/` artifacts and legacy test accounts (`rokeya@gmail.com`, `sama@gmail.com`).
 - **Rationale**:
   - Ensures 100% cultural accuracy, zero broken links, and a presentation-grade visual experience across all pages (Marketplace, Auctions, Admin Moderation, and Discovery Feed).
+
+## 31. Perceptual dHash Duplicate Detection Pipeline & Multi-Case Moderation Queue Harmonization
+- **Timestamp**: 2026-11-04 19:00:00 +06:00
+- **Context**: The duplicate detection pipeline had an issue where duplicate artwork listings (such as Sukumar Banik's brass ritual plate pieces) were uploaded but did not appear in the Admin Moderation Queue. Additionally, the admin dashboard only contained a single flagged artwork listing, leaving the moderation queue underpopulated for presentations.
+- **Root Cause**:
+  1. `ArtworkService.resolveImageBuffer` only handled `http://`, `https://`, and `/uploads/` paths. It could not resolve local static heritage assets (`/images/heritage/...`) from the client public directory. When Sharp failed to locate the file, the service fell back to an MD5 hash of the URL string.
+  2. Because the seed script inserted artworks directly via `prisma.artwork.create()` without computing hashes, seeded artworks had `imageHash: null` or mismatched MD5 fallbacks. Comparing a real 64-bit Sharp dHash against an MD5 fallback yielded a Hamming distance similarity of ~40%, failing the 80% duplicate detection threshold.
+- **Decision**:
+  - **Local Static Image Buffer Resolution**: Enhanced `ArtworkService.resolveImageBuffer` to look up `/images/` paths directly in `client/public/` so uploaded artworks referencing bundled heritage imagery are resolved and processed via Sharp native libvips.
+  - **Authentic 64-bit Sharp dHashes for Dataset**: Generated real 64-bit Sharp dHashes for all 18 bundled heritage assets and mapped them via `HERITAGE_IMAGE_HASHES` in `server/prisma/seed.ts`. Every seeded artwork in PostgreSQL now possesses an authentic perceptual hash.
+  - **Multi-Case Moderation Queue Experience**: Seeded 4 distinct PENDING moderation review cases for the admin presentation view:
+    1. *Padma Phul Kantha Tapestry (Variant Edition)* vs *Padma Medallion Heirloom Kantha* (88.4% match)
+    2. *Dhamrai Bell-Metal Temple Gong & Mallet* vs *Hand-Chiseled Kansa Bell-Metal Ritual Thali* by Sukumar Banik (100% match)
+    3. *Old Dhaka Floral Rickshaw Hood Panel* vs *Vibrant Dhaka Rickshaw Tinplate Art* by Rokeya Begum (100% match)
+    4. *Noakhali Golden Jute Braided Floor Rug* vs *Golden Fiber Braided Jute Wall Hanging* by Rokeya Begum (100% match)
+  - **Preserved Historical Moderation Audit Logs**: Maintained 2 realistic resolved reviews (1 APPROVED authentic pit-loom variation, 1 REJECTED duplicate clay miniature trio) with curator notes and timestamps.
+- **Rationale**:
+  - Completely resolves duplicate upload detection: new live uploads of identical or visually similar images are accurately detected at 100% (or >80%) similarity and automatically routed to the Admin Moderation Queue with status `FLAGGED`.
+  - Delivers a rich, multi-item moderation console for presentation and admin evaluation.
+

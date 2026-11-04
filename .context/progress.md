@@ -727,3 +727,27 @@
   - Client Vite production build passed with 0 errors (`npm --prefix client run build`).
   - Server TypeScript compilation passed with 0 errors (`npm --prefix server run build`).
   - Backend unit test suite passed (68/68 tests passing).
+
+## [2026-11-04 19:05:00 +06:00] Milestone: Duplicate Detection Pipeline Resolved & Multi-Case Admin Moderation Queue Verified
+- **Completed**:
+  - **Identified & Resolved Duplicate Detection Bug**:
+    - Discovered root cause: `ArtworkService.resolveImageBuffer` could not resolve `/images/heritage/...` paths from the client public directory to the filesystem, causing Sharp dHash to fail and fall back to MD5 string hashing.
+    - Updated `ArtworkService.resolveImageBuffer` to resolve `/images/` paths relative to `client/public/`, ensuring Sharp libvips processes local heritage files into true 64-bit dHashes.
+    - Added `HERITAGE_IMAGE_HASHES` mapping in `server/prisma/seed.ts` providing true 64-bit Sharp dHashes for all 18 bundled craft images.
+    - Ensured all 24 seeded artworks in PostgreSQL possess authentic 64-bit dHashes instead of null or MD5 fallbacks.
+  - **Sukumar Banik Duplicate Detection Verified**:
+    - Verified that Sukumar Banik's duplicate bell-metal pieces (*Dhamrai Bell-Metal Temple Gong & Mallet* and *Hand-Chiseled Kansa Bell-Metal Ritual Thali*, both using `brass-ritual-plate.jpg`) now share identical 64-bit hashes (`0f0f070f4f6b1f8e`).
+    - Verified via live creation test that uploading an artwork with this image triggers an instant 100% similarity match against the existing Thali listing, marks the listing `FLAGGED`, and generates a `ModerationReview`.
+  - **Populated Multi-Case Admin Moderation Queue for Presentation**:
+    - Seeded 4 pending duplicate moderation cases in the Admin Moderation Queue:
+      1. *Padma Phul Kantha Tapestry (Variant Edition)* vs *Padma Medallion Heirloom Kantha* (88.4%)
+      2. *Dhamrai Bell-Metal Temple Gong & Mallet* vs *Hand-Chiseled Kansa Bell-Metal Ritual Thali* (100% duplicate by Sukumar Banik)
+      3. *Old Dhaka Floral Rickshaw Hood Panel* vs *Vibrant Dhaka Rickshaw Tinplate Art (Peacock & Lotus)* (100% duplicate by Rokeya Begum)
+      4. *Noakhali Golden Jute Braided Floor Rug* vs *Golden Fiber Braided Jute Wall Hanging* (100% duplicate by Rokeya Begum)
+    - Preserved 2 historical reviews (1 APPROVED authentic pit-loom variation, 1 REJECTED duplicate clay miniature trio).
+    - Verified `ModerationService.getStats()` returns `pendingCount: 4`, `approvedCount: 1`, `rejectedCount: 1`, and `averageSimilarity: 94.2%`.
+- **Verified**:
+  - Executed verification scripts confirming 4 FLAGGED artworks, 4 pending reviews, 2 historical reviews, and live upload duplicate intercept.
+  - Server unit tests (68/68 passing) across all 11 test suites (`npx --prefix server vitest run tests/unit`).
+  - Server TypeScript build succeeded with 0 errors (`npm --prefix server run build`).
+  - Client Vite production build succeeded with 0 errors (`npm --prefix client run build`).

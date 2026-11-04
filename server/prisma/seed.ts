@@ -44,6 +44,28 @@ const HERITAGE_IMAGES = {
   },
 };
 
+// Authentic 64-bit Sharp dHash mappings for all heritage images
+const HERITAGE_IMAGE_HASHES: Record<string, string> = {
+  [HERITAGE_IMAGES.artworks.bambooLamp]: '76775f9e16523d95',
+  [HERITAGE_IMAGES.artworks.brassPeacockLamp]: '0f0f0f07336b0f0f',
+  [HERITAGE_IMAGES.artworks.brassRitualPlate]: '0f0f070f4f6b1f8e',
+  [HERITAGE_IMAGES.artworks.folkRickshawArt]: '0e8fcf971a9d1515',
+  [HERITAGE_IMAGES.artworks.jamdaniNilambari]: '8be7676773f2fa5f',
+  [HERITAGE_IMAGES.artworks.jamdaniSaree]: '979791832321b123',
+  [HERITAGE_IMAGES.artworks.jamdaniSonargaon]: '7976c0498f1e1943',
+  [HERITAGE_IMAGES.artworks.juteTapestry]: '3e6c7878746c787c',
+  [HERITAGE_IMAGES.artworks.kanthaLotusVariant]: '0716322a2b331717',
+  [HERITAGE_IMAGES.artworks.kanthaLotus]: '0716322a2b331717',
+  [HERITAGE_IMAGES.artworks.kanthaMayurpakkhi]: '3171133b31171523',
+  [HERITAGE_IMAGES.artworks.kanthaQuilt]: 'e9bcf1c10fcffd73',
+  [HERITAGE_IMAGES.artworks.patuaScrollPainting]: '19a9b3968ea69621',
+  [HERITAGE_IMAGES.artworks.shitalPatiMat]: '0f0f17170f1f0f03',
+  [HERITAGE_IMAGES.artworks.terracottaHorse]: '787c78786a684b03',
+  [HERITAGE_IMAGES.artworks.terracottaPitcher]: '717175fdcc494907',
+  [HERITAGE_IMAGES.artworks.terracottaTemplePlaque]: '0f0f038e070f0fcc',
+  [HERITAGE_IMAGES.artworks.woodCarvedPanel]: '3f3ffdffdf8f8f0f',
+};
+
 async function main() {
   console.log('[Seed] Starting production-grade authentic heritage dataset seeding...');
 
@@ -356,7 +378,6 @@ async function main() {
       weightUnit: 'kg',
       price: 850.0,
       imageUrl: HERITAGE_IMAGES.artworks.kanthaLotus,
-      imageHash: '2f1ad002ac7b3b00', // MD5 fallback hash for kantha-lotus.jpg
       like: 41,
       availability: ArtworkAvailability.AVAILABLE,
       moderationStatus: ModerationStatus.APPROVED,
@@ -375,7 +396,6 @@ async function main() {
       weightUnit: 'kg',
       price: 840.0,
       imageUrl: HERITAGE_IMAGES.artworks.kanthaLotusVariant,
-      imageHash: 'accc11f8db67b92d', // MD5 fallback hash for kantha-lotus-variant.jpg
       like: 12,
       availability: ArtworkAvailability.AVAILABLE,
       moderationStatus: ModerationStatus.FLAGGED, // Flagged for duplicate review (88.4% match)
@@ -506,7 +526,6 @@ async function main() {
       weightUnit: 'kg',
       price: 440.0,
       imageUrl: HERITAGE_IMAGES.artworks.brassRitualPlate,
-      imageHash: '625ea2a4e1244250', // MD5 fallback hash for brass-ritual-plate.jpg
       like: 31,
       availability: ArtworkAvailability.AVAILABLE,
       moderationStatus: ModerationStatus.APPROVED,
@@ -525,7 +544,6 @@ async function main() {
       weightUnit: 'kg',
       price: 490.0,
       imageUrl: HERITAGE_IMAGES.artworks.brassRitualPlate,
-      imageHash: '625ea2a4e1244250', // MD5 fallback hash for brass-ritual-plate.jpg (matches Ritual Thali => duplicate)
       like: 29,
       availability: ArtworkAvailability.AVAILABLE,
       moderationStatus: ModerationStatus.FLAGGED, // Duplicate of Hand-Chiseled Kansa Bell-Metal Ritual Thali
@@ -584,7 +602,6 @@ async function main() {
       weightUnit: 'kg',
       price: 210.0,
       imageUrl: HERITAGE_IMAGES.artworks.juteTapestry,
-      imageHash: '1938fad7c339323c', // MD5 fallback hash for jute-tapestry.jpg
       like: 38,
       availability: ArtworkAvailability.AVAILABLE,
       moderationStatus: ModerationStatus.APPROVED,
@@ -603,7 +620,6 @@ async function main() {
       weightUnit: 'kg',
       price: 240.0,
       imageUrl: HERITAGE_IMAGES.artworks.juteTapestry,
-      imageHash: '1938fad7c339323c', // MD5 fallback hash for jute-tapestry.jpg (matches Wall Hanging => duplicate)
       like: 33,
       availability: ArtworkAvailability.AVAILABLE,
       moderationStatus: ModerationStatus.FLAGGED, // Duplicate of Golden Fiber Braided Jute Wall Hanging
@@ -644,7 +660,6 @@ async function main() {
       weightUnit: 'kg',
       price: 310.0,
       imageUrl: HERITAGE_IMAGES.artworks.folkRickshawArt,
-      imageHash: '8c68394a141bee22', // MD5 fallback hash for folk-rickshaw-art.jpg
       like: 92,
       availability: ArtworkAvailability.AVAILABLE,
       moderationStatus: ModerationStatus.APPROVED,
@@ -663,7 +678,6 @@ async function main() {
       weightUnit: 'kg',
       price: 220.0,
       imageUrl: HERITAGE_IMAGES.artworks.folkRickshawArt,
-      imageHash: '8c68394a141bee22', // MD5 fallback hash for folk-rickshaw-art.jpg (matches Peacock & Lotus => duplicate)
       like: 44,
       availability: ArtworkAvailability.AVAILABLE,
       moderationStatus: ModerationStatus.FLAGGED, // Duplicate of Vibrant Dhaka Rickshaw Tinplate Art
@@ -692,6 +706,11 @@ async function main() {
   const artworkMap = new Map<string, any>();
 
   for (const art of rawArtworks) {
+    const artworkPayload = {
+      ...art,
+      imageHash: art.imageHash || HERITAGE_IMAGE_HASHES[art.imageUrl] || null,
+    };
+
     const existing = await prisma.artwork.findFirst({
       where: { title: art.title, artistId: art.artistId },
     });
@@ -700,12 +719,12 @@ async function main() {
     if (existing) {
       record = await prisma.artwork.update({
         where: { id: existing.id },
-        data: art,
+        data: artworkPayload,
       });
       console.log(`[Seed] Updated artwork: "${art.title}"`);
     } else {
       record = await prisma.artwork.create({
-        data: art,
+        data: artworkPayload,
       });
       console.log(`[Seed] Created artwork: "${art.title}"`);
     }
