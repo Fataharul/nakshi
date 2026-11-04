@@ -424,3 +424,16 @@
   - Completely resolves duplicate upload detection: new live uploads of identical or visually similar images are accurately detected at 100% (or >80%) similarity and automatically routed to the Admin Moderation Queue with status `FLAGGED`.
   - Delivers a rich, multi-item moderation console for presentation and admin evaluation.
 
+## 32. Route Scroll Restoration & Navigation Viewport Reset
+- **Timestamp**: 2026-11-04 19:20:00 +06:00
+- **Context**: In the React SPA, navigating from a scrolled-down page to any other route retained the user's previous vertical scroll position instead of landing them at the top of the new page. This disrupted the art-first digital gallery browsing experience when navigating from feed items to marketplace catalogs, artwork details, or dashboards.
+- **Decision**:
+  - Created [`client/src/components/common/ScrollToTop.tsx`](file:///e:/Nakshi/client/src/components/common/ScrollToTop.tsx) observing `pathname`, `search`, and `hash` via `useLocation()`.
+  - On route change, immediately resets `window.scrollTo({ top: 0, left: 0, behavior: 'instant' })` and sets `document.documentElement.scrollTop = 0` / `document.body.scrollTop = 0`.
+  - Added support for in-page anchor fragments (e.g., `#reviews` or `#specifications`), smoothly scrolling directly to the target element if a hash is present.
+  - Mounted `<ScrollToTop />` inside `<BrowserRouter>` in [`client/src/App.tsx`](file:///e:/Nakshi/client/src/App.tsx).
+- **Rationale**:
+  - Enforces `DESIGN_DIRECTION.md` and `DESIGN.md` gallery presentation principles: newly visited pages always render from their prominent header, matted hero image, and breadcrumb navigation.
+  - Verified across all viewports (Desktop Chrome, Tablet 768px, Mobile 360px) via automated Playwright test suite `e2e/scroll_to_top.spec.ts`.
+
+

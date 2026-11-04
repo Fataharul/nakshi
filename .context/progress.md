@@ -751,3 +751,17 @@
   - Server unit tests (68/68 passing) across all 11 test suites (`npx --prefix server vitest run tests/unit`).
   - Server TypeScript build succeeded with 0 errors (`npm --prefix server run build`).
   - Client Vite production build succeeded with 0 errors (`npm --prefix client run build`).
+## [2026-11-04 19:20:00 +06:00] Milestone: Route Scroll Restoration & Navigation Viewport Reset Implemented
+- **Completed**:
+  - Created `client/src/components/common/ScrollToTop.tsx`:
+    - Automatically resets window scroll offset to (0, 0) upon any route transition via `useLocation()`.
+    - Provides instant scroll restoration without jumpy transitions.
+    - Gracefully handles fragment anchor navigation (e.g. `#reviews`) via `scrollIntoView({ behavior: 'smooth' })`.
+    - Resets root container fallbacks (`document.documentElement.scrollTop` and `document.body.scrollTop`).
+  - Mounted `<ScrollToTop />` inside `<BrowserRouter>` in `client/src/App.tsx`.
+  - Added automated end-to-end acceptance test suite in `e2e/scroll_to_top.spec.ts` covering multi-page transitions.
+- **Verified**:
+  - Playwright E2E test suite `e2e/scroll_to_top.spec.ts` passed across all 3 viewports: Desktop Chrome, Tablet 768px, and Mobile 360px (3/3 tests passing).
+  - Client Vite production build compiled cleanly with 0 errors (`npm --prefix client run build`).
+  - Server TypeScript compilation passed with 0 errors (`npm --prefix server run build`).
+  - All 11 backend unit test suites (68/68 tests) passing cleanly (`npx --prefix server vitest run tests/unit`).
