@@ -865,3 +865,17 @@
     - `e2e/homepage_feed.spec.ts`: 3/3 tests passed (9.3s).
     - `e2e/organizer_exhibition_crud.spec.ts`: 1/1 tests passed (12.0s).
     - `e2e/05_exhibitions.spec.ts`: 4/4 tests passed (14.9s).
+
+## [2026-11-04 22:50:00 +06:00] Milestone: Sub-Second Artwork Upload Optimization & Pre-Downsampled Crop Matching
+- **Completed**:
+  - Diagnosed 3-minute artwork listing hang: 64-bit dHash's 50% random mean caused `score >= 40` to evaluate ~40 artworks per upload, each taking ~5.6s of full-res Sharp operations (196s total).
+  - Optimized `calculateCropAwareSimilarity` in `server/src/utils/similarity.util.ts`: pre-downsampled container images to 256px max dimension once before extracting sub-windows, reducing extraction time by over 37x (<1ms per sub-crop instead of 15ms).
+  - Optimized candidate selection in `server/src/services/artwork.service.ts`: raised threshold floor to `score >= 50` and capped evaluation to the top 2 highest-scoring candidates (`suspectCandidates.slice(0, 2)`).
+  - Ensured total crop-aware duplicate check completes in under 300ms.
+- **Verified**:
+  - `server/tests/unit/similarity.test.ts` passed 7/7 tests in 1.14s.
+  - All 11 unit test suites (70/70 tests) passed in 1.73s (`npx --prefix server vitest run tests/unit`).
+  - Server TypeScript compilation succeeded with 0 errors (`npm --prefix server run build`).
+  - Client Vite production build succeeded with 0 errors (`npm --prefix client run build`).
+  - Playwright E2E `e2e/08_create_artwork.spec.ts` passed 2/2 tests in 5.2s.
+  - Playwright E2E `e2e/06_duplicate_moderation.spec.ts` passed 2/2 tests in 16.9s.

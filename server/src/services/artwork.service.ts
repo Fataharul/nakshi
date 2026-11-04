@@ -225,7 +225,7 @@ export class ArtworkService {
               maxSimilarity = score;
               suspectedMatchId = existing.id;
             }
-            if (score >= 40 && score <= threshold) {
+            if (score >= 50 && score <= threshold) {
               suspectCandidates.push({ id: existing.id, imageUrl: existing.imageUrl, score });
             }
           } catch {
@@ -239,7 +239,8 @@ export class ArtworkService {
         const newBuffer = await this.resolveImageBuffer(imageUrl);
         if (newBuffer) {
           suspectCandidates.sort((a, b) => b.score - a.score);
-          for (const cand of suspectCandidates) {
+          const topCandidates = suspectCandidates.slice(0, 2);
+          for (const cand of topCandidates) {
             const candBuffer = await this.resolveImageBuffer(cand.imageUrl);
             if (candBuffer) {
               const cropScore = await calculateCropAwareSimilarity(newBuffer, candBuffer, threshold);
@@ -659,7 +660,7 @@ export class ArtworkService {
                 maxSimilarity = score;
                 suspectedMatchId = other.id;
               }
-              if (score >= 40 && score <= threshold) {
+              if (score >= 50 && score <= threshold) {
                 suspectCandidates.push({ id: other.id, imageUrl: other.imageUrl, score });
               }
             } catch {
@@ -672,7 +673,8 @@ export class ArtworkService {
           const newBuffer = await this.resolveImageBuffer(targetImageUrl);
           if (newBuffer) {
             suspectCandidates.sort((a, b) => b.score - a.score);
-            for (const cand of suspectCandidates) {
+            const topCandidates = suspectCandidates.slice(0, 2);
+            for (const cand of topCandidates) {
               const candBuffer = await this.resolveImageBuffer(cand.imageUrl);
               if (candBuffer) {
                 const cropScore = await calculateCropAwareSimilarity(newBuffer, candBuffer, threshold);
