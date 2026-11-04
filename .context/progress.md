@@ -879,3 +879,32 @@
   - Client Vite production build succeeded with 0 errors (`npm --prefix client run build`).
   - Playwright E2E `e2e/08_create_artwork.spec.ts` passed 2/2 tests in 5.2s.
   - Playwright E2E `e2e/06_duplicate_moderation.spec.ts` passed 2/2 tests in 16.9s.
+
+## [2026-11-05 01:30:00 +06:00] Milestone: Formal Software Engineering Final Project Report in DOCX Format Generated & Verified
+- **Completed**:
+  - Authored automated document compilation script [`scripts/generate_final_report_doc.py`](file:///e:/Nakshi/scripts/generate_final_report_doc.py) using `python-docx` with XML styling adhering to `.context/DESIGN.md` (Terracotta `#86452A`, Muslin `#FBF9F4`, charcoal typography, padded borders, and standardized headers/footers).
+  - Extracted and integrated all 9 official architectural diagrams from the SDS and SRS documents into high-resolution PNGs:
+    1. Figure 4.1: System Architecture Diagram
+    2. Figure 4.1b: Cloud Deployment Architecture Diagram
+    3. Figure 4.2: System Use Case Diagram
+    4. Figure 4.3a: Context Level Data Flow Diagram (DFD Level 0)
+    5. Figure 4.3b: Data Flow Diagram (DFD Level 1)
+    6. Figure 4.3c: UML Sequence Diagram - Artist Workflow
+    7. Figure 4.3d: UML Sequence Diagram - Buyer Workflow
+    8. Figure 4.3e: UML Sequence Diagram - Exhibition Organizer Workflow
+    9. Figure 4.4: Entity Relationship Diagram (ERD)
+  - Populated all required chapters and sections from the final report template:
+    - Cover page with UAP emblem and team metadata.
+    - Chapter 1: Introduction, Problem Statement, Objectives, Scope, and CEP Analysis table.
+    - Chapter 2: Project Management Plan, WBS Gantt schedule, Cost Estimation ($0 budget), and Risk Management table.
+    - Chapter 3: Requirement Analysis, 20 Functional Requirements, Non-Functional Requirements (360px usability), Hardware/Software requirements.
+    - Chapter 4: System Design, Architecture, Diagrams, and full Database Data Dictionary (16 entities).
+    - Chapter 5: Implementation, Module Breakdown, Technology Stack, and Agile Scrum methodology.
+    - Chapter 6: Development Process, 12-Week CEP Tracking table, 6 Sprint details, and algorithmic implementations (dHash, sliding crop deduplication, concurrency locking).
+    - Chapter 7: Testing Strategy, 12 Test Cases and Results (100% Pass), and Green/Social/Economic Sustainability.
+    - Chapter 8: Results & Discussion, Output Highlights, Performance Benchmarks, and 6 Issues Encountered & Solutions.
+    - Chapter 9: Conclusion, What Was Achieved, Learning Outcomes, and Future Improvements.
+    - Acknowledgements and Appendices A through D.
+  - Generated output document: [`Nakshi_Final_Project_Report.docx`](file:///e:/Nakshi/Nakshi_Final_Project_Report.docx).
+- **Verified**:
+  - Programmatic verification passed: 1,072,895 bytes (1.07 MB), 218 paragraphs, 22 tables, 9 high-resolution diagrams embedded, 56 headings, and zero missing sections.
