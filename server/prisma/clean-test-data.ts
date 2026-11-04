@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('[Cleanup] Starting safe cleanup of test and dummy data...');
 
-  // 1. Identify test users
+  // 1. Identify test users to remove
   const testUsers = await prisma.user.findMany({
     where: {
       OR: [
@@ -16,6 +16,8 @@ async function main() {
         { email: { contains: 'shilpi_' } },
         { email: { contains: 'google_user_' } },
         { email: { contains: 'test_err' } },
+        { email: 'rokeya@gmail.com' },
+        { email: 'sama@gmail.com' },
         { name: { contains: 'Test' } },
         { name: { contains: 'Acceptance' } },
         { name: { contains: 'Playwright' } },
@@ -26,9 +28,9 @@ async function main() {
   });
 
   const testUserIds = testUsers.map((u) => u.id);
-  console.log(`[Cleanup] Identified ${testUserIds.length} automated test users.`);
+  console.log(`[Cleanup] Identified ${testUserIds.length} automated test / legacy accounts.`);
 
-  // 2. Identify test artworks
+  // 2. Identify test and broken artworks
   const testArtworks = await prisma.artwork.findMany({
     where: {
       OR: [
@@ -40,17 +42,29 @@ async function main() {
         { title: { contains: '179' } },
         { title: { contains: 'Socket' } },
         { title: { contains: 'Bidding' } },
+        { title: 'Heritage craft' },
+        { title: 'Heritage craft123' },
+        { title: 'Flow' },
+        { title: 'hairloom' },
+        { title: 'Giana' },
+        { title: 'Wildflowers Sway' },
         { imageUrl: { contains: 'example.com' } },
         { imageUrl: { contains: 'placeholder' } },
         { imageUrl: { contains: 'socket-test' } },
         { imageUrl: { contains: 'photo-test-lot' } },
+        { imageUrl: { contains: '/uploads/' } },
+        { imageUrl: { contains: 'images.unsplash.com' } },
+        { imageUrl: '/images/nakshi-kantha-quilt.jpg' },
+        { imageUrl: '/images/jamdani-saree.jpg' },
+        { imageUrl: '/images/terracotta-horse.jpg' },
+        { imageUrl: '/images/bamboo-lamp.jpg' },
       ],
     },
     select: { id: true, title: true },
   });
 
   const testArtworkIds = testArtworks.map((a) => a.id);
-  console.log(`[Cleanup] Identified ${testArtworkIds.length} test artworks.`);
+  console.log(`[Cleanup] Identified ${testArtworkIds.length} test or broken artworks.`);
 
   // 3. Delete dependent records in order to respect FK constraints
   // Delete bids on test auctions or by test users
@@ -96,13 +110,14 @@ async function main() {
   });
   console.log(`[Cleanup] Deleted ${deletedTickets.count} test exhibition tickets.`);
 
-  // Delete moderation reviews on test artworks
+  // Delete all moderation reviews referencing test artworks or test users
   const deletedReviews = await prisma.moderationReview.deleteMany({
     where: {
       OR: [
         { sourceArtworkId: { in: testArtworkIds } },
         { suspectedMatchId: { in: testArtworkIds } },
         { adminId: { in: testUserIds } },
+        { similarityScore: 100 }, // Clean up legacy 100% duplicate test records
       ],
     },
   });

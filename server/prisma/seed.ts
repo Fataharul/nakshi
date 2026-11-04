@@ -6,9 +6,9 @@ dotenv.config();
 
 const prisma = new PrismaClient();
 
-// Verified High-Resolution Authentic Heritage Image URLs (all HTTP 200 OK)
-const IMAGES = {
-  // Avatars
+// Verified Authentic Bangladeshi Heritage Image Assets (Local & CDN)
+const HERITAGE_IMAGES = {
+  // Avatars (Realistic portraits)
   avatars: {
     rokeya: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
     alkas: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
@@ -21,28 +21,26 @@ const IMAGES = {
     anisur: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
     admin: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
   },
-  // Artworks
+  // Authentic Cultural Heritage Crafts (Saved in client/public/images/heritage/)
   artworks: {
-    jamdaniSonargaon: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
-    jamdaniRoyalSilk: 'https://images.unsplash.com/photo-1607522370275-f14206abe5d3?auto=format&fit=crop&w=1200&q=80',
-    jamdaniNilambari: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1200&q=80',
-    kanthaMayurpakkhi: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=80',
-    kanthaLotusMedallion: 'https://images.unsplash.com/photo-1606744824163-985d376605aa?auto=format&fit=crop&w=1200&q=80',
-    kanthaVillageFolklore: 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?auto=format&fit=crop&w=1200&q=80',
-    terracottaHorse: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=1200&q=80',
-    terracottaPitcher: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=1200&q=80',
-    terracottaPlaque: 'https://images.unsplash.com/photo-1590402494682-cd3fb53b1f70?auto=format&fit=crop&w=1200&q=80',
-    terracottaSacrificialVase: 'https://images.unsplash.com/photo-1576014131341-fe1486fb2475?auto=format&fit=crop&w=1200&q=80',
-    brassKansaUrn: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80',
-    brassPeacockLamp: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1200&q=80',
-    brassRitualPlate: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
-    shitalPatiDiamond: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=1200&q=80',
-    shitalPatiRoyalMat: 'https://images.unsplash.com/photo-1531875456634-3f5418280d20?auto=format&fit=crop&w=1200&q=80',
-    juteTapestryGolden: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1200&q=80',
-    juteBraidedMandala: 'https://images.unsplash.com/photo-1596178065887-1198b6148b2b?auto=format&fit=crop&w=1200&q=80',
-    woodRosewoodCasket: 'https://images.unsplash.com/photo-1541123437800-1bb1317badc2?auto=format&fit=crop&w=1200&q=80',
-    folkPatuaBengalFlora: 'https://images.unsplash.com/photo-1579783901586-d88db74b4fe4?auto=format&fit=crop&w=1200&q=80',
-    folkRickshawArtPeacock: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?auto=format&fit=crop&w=1200&q=80',
+    jamdaniSonargaon: '/images/heritage/jamdani-sonargaon.jpg',
+    jamdaniNilambari: '/images/heritage/jamdani-nilambari.jpg',
+    jamdaniSaree: '/images/heritage/jamdani-saree.jpg',
+    kanthaQuilt: '/images/heritage/nakshi-kantha-quilt.jpg',
+    kanthaMayurpakkhi: '/images/heritage/kantha-mayurpakkhi.jpg',
+    kanthaLotus: '/images/heritage/kantha-lotus.jpg',
+    kanthaLotusVariant: '/images/heritage/kantha-lotus-variant.jpg',
+    terracottaTemplePlaque: '/images/heritage/terracotta-temple-plaque.jpg',
+    terracottaHorse: '/images/heritage/terracotta-horse.jpg',
+    terracottaPitcher: '/images/heritage/terracotta-pitcher.jpg',
+    brassPeacockLamp: '/images/heritage/brass-peacock-lamp.jpg',
+    brassRitualPlate: '/images/heritage/brass-ritual-plate.jpg',
+    shitalPatiMat: '/images/heritage/shital-pati-mat.jpg',
+    bambooLamp: '/images/heritage/bamboo-lamp.jpg',
+    juteTapestry: '/images/heritage/jute-tapestry.jpg',
+    woodCarvedPanel: '/images/heritage/wood-carved-panel.jpg',
+    folkRickshawArt: '/images/heritage/folk-rickshaw-art.jpg',
+    patuaScrollPainting: '/images/heritage/patua-scroll-painting.jpg',
   },
 };
 
@@ -62,27 +60,27 @@ async function main() {
       name: 'Tanvir Ahmed',
       role: Role.BUYER,
       bio: 'Lifelong collector of traditional Bengali textiles, antique Jamdani weaves, and heirloom Nakshi Kantha tapestries based in Dhanmondi, Dhaka.',
-      avatarUrl: IMAGES.avatars.tanvir,
+      avatarUrl: HERITAGE_IMAGES.avatars.tanvir,
       passwordHash: commonPassword,
-      initialBalance: 2500.0,
+      initialBalance: 3250.0,
     },
     {
       email: 'sadia@nakshi.test',
       name: 'Sadia Rahman',
       role: Role.BUYER,
-      bio: 'Folk craft aficionado and patron of rural women artisans in Jessore and Rajshahi.',
-      avatarUrl: IMAGES.avatars.sadia,
+      bio: 'Folk craft aficionado and patron of rural women artisans in Jessore, Bogura, and Rajshahi.',
+      avatarUrl: HERITAGE_IMAGES.avatars.sadia,
       passwordHash: commonPassword,
-      initialBalance: 1500.0,
+      initialBalance: 1800.0,
     },
     {
       email: 'farhan@nakshi.test',
       name: 'Farhan Kabir',
       role: Role.BUYER,
-      bio: 'Diaspora art patron curating authentic Bengali heritage artifacts for international cultural exhibitions.',
-      avatarUrl: IMAGES.avatars.farhan,
+      bio: 'Heritage architecture enthusiast curating authentic terracotta plaques and Dhamrai bell-metal sculptures.',
+      avatarUrl: HERITAGE_IMAGES.avatars.farhan,
       passwordHash: commonPassword,
-      initialBalance: 3200.0,
+      initialBalance: 4500.0,
     },
     // ARTISTS
     {
@@ -90,7 +88,7 @@ async function main() {
       name: 'Rokeya Begum',
       role: Role.ARTIST,
       bio: 'Master artisan from Jessore with 38 years of experience in hand-embroidered heirloom Nakshi Kantha tapestries and rural folklore motifs.',
-      avatarUrl: IMAGES.avatars.rokeya,
+      avatarUrl: HERITAGE_IMAGES.avatars.rokeya,
       isVerified: true,
       passwordHash: commonPassword,
       initialBalance: 1850.0,
@@ -100,7 +98,7 @@ async function main() {
       name: 'Alkas Mia',
       role: Role.ARTIST,
       bio: 'Third-generation master weaver from Sonargaon practicing 200-count traditional pit-loom Jamdani and pure zari craftsmanship.',
-      avatarUrl: IMAGES.avatars.alkas,
+      avatarUrl: HERITAGE_IMAGES.avatars.alkas,
       isVerified: true,
       passwordHash: commonPassword,
       initialBalance: 2400.0,
@@ -110,7 +108,7 @@ async function main() {
       name: 'Gouranga Pal',
       role: Role.ARTIST,
       bio: 'Traditional terracotta sculptor and potter from Panchagarh specializing in wood-fired red river silt plaques and horse motifs.',
-      avatarUrl: IMAGES.avatars.gouranga,
+      avatarUrl: HERITAGE_IMAGES.avatars.gouranga,
       isVerified: true,
       passwordHash: commonPassword,
       initialBalance: 950.0,
@@ -120,7 +118,7 @@ async function main() {
       name: 'Sukumar Banik',
       role: Role.ARTIST,
       bio: 'Dhamrai bell metal and brass craftsman continuing a 500-year familial heritage in lost-wax ceremonial casting.',
-      avatarUrl: IMAGES.avatars.sukumar,
+      avatarUrl: HERITAGE_IMAGES.avatars.sukumar,
       isVerified: true,
       passwordHash: commonPassword,
       initialBalance: 1400.0,
@@ -131,7 +129,7 @@ async function main() {
       name: 'Naveed Chowdhury',
       role: Role.ORGANIZER,
       bio: 'Lead curator at the Bengal Heritage Foundation and designer of immersive digital folk craft exhibitions.',
-      avatarUrl: IMAGES.avatars.naveed,
+      avatarUrl: HERITAGE_IMAGES.avatars.naveed,
       isVerified: true,
       passwordHash: commonPassword,
       initialBalance: 800.0,
@@ -141,7 +139,7 @@ async function main() {
       name: 'Dr. Anisur Rahman',
       role: Role.ORGANIZER,
       bio: 'Senior Folklorist and Director at the Dhaka Folk Antiquities Guild.',
-      avatarUrl: IMAGES.avatars.anisur,
+      avatarUrl: HERITAGE_IMAGES.avatars.anisur,
       isVerified: true,
       passwordHash: commonPassword,
       initialBalance: 1200.0,
@@ -151,812 +149,960 @@ async function main() {
       email: 'admin@nakshi.test',
       name: 'Nakshi Administrator',
       role: Role.ADMIN,
-      bio: 'Platform director, visual moderation manager, and auction scheduler at Nakshi.',
-      avatarUrl: IMAGES.avatars.admin,
+      bio: 'Platform trust & integrity guardian overseeing perceptual duplicate moderation, authentic provenance, and auction settlements.',
+      avatarUrl: HERITAGE_IMAGES.avatars.admin,
       isVerified: true,
       passwordHash: commonPassword,
       initialBalance: 10000.0,
     },
   ];
 
-  const userRecords: Record<string, any> = {};
+  const userMap = new Map<string, any>();
 
   for (const u of seedUsers) {
-    const existing = await prisma.user.findUnique({
-      where: { email: u.email },
-      include: { wallet: true },
-    });
-
-    if (!existing) {
-      const created = await prisma.user.create({
+    const existing = await prisma.user.findUnique({ where: { email: u.email } });
+    let userRecord: any;
+    if (existing) {
+      userRecord = await prisma.user.update({
+        where: { email: u.email },
+        data: {
+          name: u.name,
+          role: u.role,
+          bio: u.bio,
+          avatarUrl: u.avatarUrl,
+          isVerified: u.isVerified ?? false,
+          passwordHash: u.passwordHash,
+        },
+      });
+      console.log(`[Seed] Updated user: ${u.email} (${u.role})`);
+    } else {
+      userRecord = await prisma.user.create({
         data: {
           email: u.email,
           name: u.name,
           role: u.role,
           bio: u.bio,
           avatarUrl: u.avatarUrl,
-          isVerified: u.isVerified || false,
+          isVerified: u.isVerified ?? false,
           passwordHash: u.passwordHash,
-          wallet: {
-            create: {
-              balance: u.initialBalance || 0.0,
-            },
-          },
         },
-        include: { wallet: true },
       });
+      console.log(`[Seed] Created user: ${u.email} (${u.role})`);
+    }
 
-      if (created.wallet && u.initialBalance > 0) {
-        await prisma.creditTransaction.create({
-          data: {
-            walletId: created.wallet.id,
-            amount: u.initialBalance,
-            type: TransactionType.TOP_UP,
-            description: 'Initial platform allocation & welcoming top-up',
-          },
-        });
-      }
-      userRecords[u.email] = created;
-      console.log(`[Seed] Created ${u.role}: ${created.name} (${created.email})`);
-    } else {
-      // Update details to ensure clean presentation avatar and bio
-      const updated = await prisma.user.update({
-        where: { id: existing.id },
+    userMap.set(u.email, userRecord);
+
+    // Setup wallet with initial balance
+    const wallet = await prisma.wallet.findUnique({ where: { userId: userRecord.id } });
+    if (!wallet) {
+      const createdWallet = await prisma.wallet.create({
         data: {
-          name: u.name,
-          bio: u.bio,
-          avatarUrl: u.avatarUrl,
-          isVerified: u.isVerified !== undefined ? u.isVerified : existing.isVerified,
+          userId: userRecord.id,
+          balance: u.initialBalance,
         },
-        include: { wallet: true },
       });
-
-      if (!updated.wallet) {
-        const wallet = await prisma.wallet.create({
-          data: {
-            userId: updated.id,
-            balance: u.initialBalance || 0.0,
-          },
-        });
-        if (u.initialBalance > 0) {
-          await prisma.creditTransaction.create({
-            data: {
-              walletId: wallet.id,
-              amount: u.initialBalance,
-              type: TransactionType.TOP_UP,
-              description: 'Initial platform allocation & welcoming top-up',
-            },
-          });
-        }
-      }
-      userRecords[u.email] = updated;
-      console.log(`[Seed] Refreshed existing ${u.role}: ${updated.name}`);
+      await prisma.creditTransaction.create({
+        data: {
+          walletId: createdWallet.id,
+          amount: u.initialBalance,
+          type: TransactionType.TOP_UP,
+          description: 'Initial platform onboarding grant',
+        },
+      });
+    } else {
+      await prisma.wallet.update({
+        where: { id: wallet.id },
+        data: { balance: u.initialBalance },
+      });
     }
   }
 
+  const artistRokeya = userMap.get('artist@nakshi.test');
+  const artistAlkas = userMap.get('alkas@nakshi.test');
+  const artistGouranga = userMap.get('gouranga@nakshi.test');
+  const artistSukumar = userMap.get('sukumar@nakshi.test');
+  const buyerTanvir = userMap.get('buyer@nakshi.test');
+  const buyerSadia = userMap.get('sadia@nakshi.test');
+  const buyerFarhan = userMap.get('farhan@nakshi.test');
+  const organizerNaveed = userMap.get('organizer@nakshi.test');
+  const organizerAnisur = userMap.get('anisur@nakshi.test');
+  const adminUser = userMap.get('admin@nakshi.test');
+
   // ---------------------------------------------------------------------------
-  // 2. Seed Authentic Heritage Artworks
+  // 2. Seed 24 Authentic Cultural Heritage Artworks
   // ---------------------------------------------------------------------------
-  const rokeya = userRecords['artist@nakshi.test'];
-  const alkas = userRecords['alkas@nakshi.test'];
-  const gouranga = userRecords['gouranga@nakshi.test'];
-  const sukumar = userRecords['sukumar@nakshi.test'];
-  const organizer = userRecords['organizer@nakshi.test'];
-
-  const authenticArtworks = [
-    // ALKAS MIA - JAMDANI & MUSLIN
+  const rawArtworks = [
+    // JAMDANI WEAVING (Master Artisan Alkas Mia)
     {
-      title: 'Sonargaon Heritage Jamdani Saree',
-      artistId: alkas.id,
-      medium: 'Handloom Jamdani',
-      style: 'Floral Motifs',
-      description: 'Authentic 200-count handloom muslin Jamdani woven with pure zari floral jaal motifs on a traditional bamboo pit loom in Sonargaon.',
-      dimensions: '5.5 meters x 1.2 meters',
-      weight: 0.85,
-      weightUnit: 'kg',
-      price: 1250.0,
-      imageUrl: IMAGES.artworks.jamdaniSonargaon,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 48,
-    },
-    {
-      title: 'Imperial Jamdani Nilambari Drape',
-      artistId: alkas.id,
-      medium: 'Handloom Jamdani',
-      style: 'Royal Heritage',
-      description: 'Deep indigo-dyed ultra-fine muslin drape hand-loomed with silver-gilt jaldar vine patterns. Hand-spun yarn with natural botanical indigo wash.',
-      dimensions: '5.5 meters x 1.15 meters',
-      weight: 0.78,
-      weightUnit: 'kg',
-      price: 1450.0,
-      imageUrl: IMAGES.artworks.jamdaniNilambari,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 35,
-    },
-    {
-      title: 'Mughal Terchi Floral Jamdani Weave',
-      artistId: alkas.id,
-      medium: 'Handloom Jamdani',
-      style: 'Geometric Jaal',
-      description: 'Diagonal terchi floral layout reflecting 17th-century Dhaka court textiles. Crafted over five weeks of patient non-structural weft manipulation.',
-      dimensions: '5.2 meters x 1.2 meters',
-      weight: 0.82,
-      weightUnit: 'kg',
-      price: 1100.0,
-      imageUrl: IMAGES.artworks.jamdaniRoyalSilk,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 29,
-    },
-
-    // ROKEYA BEGUM - NAKSHI KANTHA
-    {
-      title: 'Mayurpakkhi Heirloom Nakshi Kantha',
-      artistId: rokeya.id,
-      medium: 'Nakshi Kantha',
-      style: 'Traditional Folk',
-      description: 'Traditional quilt featuring intricate run-stitch peacocks, lotus pond medallions, and village folklore narratives layered from pure repurposed vintage cotton.',
-      dimensions: '72 x 54 inches',
-      weight: 1.4,
-      weightUnit: 'kg',
-      price: 850.0,
-      imageUrl: IMAGES.artworks.kanthaMayurpakkhi,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 62,
-    },
-    {
-      title: 'Padma Lotus Mandala Ceremonial Quilt',
-      artistId: rokeya.id,
-      medium: 'Nakshi Kantha',
-      style: 'Floral Motifs',
-      description: 'Centrally anchored thousand-petal lotus mandala surrounded by betel leaf vines and tree of life motifs. Hand-stitched with vegetable-dyed silk threads.',
-      dimensions: '80 x 60 inches',
-      weight: 1.65,
-      weightUnit: 'kg',
-      price: 980.0,
-      imageUrl: IMAGES.artworks.kanthaLotusMedallion,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 44,
-    },
-    {
-      title: 'Rural Bengal Harvest Narrative Tapestry',
-      artistId: rokeya.id,
-      medium: 'Nakshi Kantha',
-      style: 'Traditional Folk',
-      description: 'Pictorial tapestry detailing the Nabanna harvest celebration, river fishermen, and palanquin processions in dense concentric kantha stitching.',
-      dimensions: '65 x 48 inches',
-      weight: 1.2,
-      weightUnit: 'kg',
-      price: 720.0,
-      imageUrl: IMAGES.artworks.kanthaVillageFolklore,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 51,
-    },
-
-    // GOURANGA PAL - TERRACOTTA & CERAMIC
-    {
-      title: 'Panchagarh Folk Horse Clay Sculpture',
-      artistId: gouranga.id,
-      medium: 'Terracotta Clay',
-      style: 'Sculptural & Relic',
-      description: 'Hand-molded kiln-fired terracotta folk artifact embodying ancient North Bengal sacrificial horse motifs with hollow wheel-thrown neck and stamped saddles.',
-      dimensions: '35 x 22 x 12 cm',
-      weight: 2.8,
-      weightUnit: 'kg',
-      price: 450.0,
-      imageUrl: IMAGES.artworks.terracottaHorse,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 38,
-    },
-    {
-      title: 'Rajshahi Glazed Heritage Clay Pitcher',
-      artistId: gouranga.id,
-      medium: 'Ceramic & Traditional Pottery',
-      style: 'Traditional Folk',
-      description: 'Wheel-thrown red river silt vessel wood-fired with natural slip glaze. Retains remarkable thermal insulation properties.',
-      dimensions: '25 x 25 x 32 cm',
-      weight: 1.9,
-      weightUnit: 'kg',
-      price: 320.0,
-      imageUrl: IMAGES.artworks.terracottaPitcher,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 27,
-    },
-    {
-      title: 'Kantajew Temple Floral Terracotta Plaque',
-      artistId: gouranga.id,
-      medium: 'Terracotta Clay',
-      style: 'Sculptural & Relic',
-      description: 'Deep relief architectural terracotta tile inspired by 18th-century Dinajpur temple friezes. Portrays dancing musicians and intertwined blooming creepers.',
-      dimensions: '30 x 30 x 5 cm',
-      weight: 3.4,
-      weightUnit: 'kg',
-      price: 520.0,
-      imageUrl: IMAGES.artworks.terracottaPlaque,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 33,
-    },
-    {
-      title: 'Ancient Mahasthangarh Red Silt Plaque',
-      artistId: gouranga.id,
-      medium: 'Terracotta Clay',
-      style: 'Sculptural & Relic',
-      description: 'Archaeological reproduction of 3rd-century Pundranagara clay artifacts fired in a traditional straw and husk earthen kiln.',
-      dimensions: '28 x 20 x 4 cm',
-      weight: 2.2,
-      weightUnit: 'kg',
-      price: 380.0,
-      imageUrl: IMAGES.artworks.terracottaSacrificialVase,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 22,
-    },
-
-    // SUKUMAR BANIK - BRASS & BELL METAL
-    {
-      title: 'Dhamrai Bell Metal Royal Kansa Urn',
-      artistId: sukumar.id,
-      medium: 'Brass & Bell Metal',
-      style: 'Royal Heritage',
-      description: 'Hand-beaten high-resonance lost-wax cast bell metal ceremonial vessel polished with tamarind rind and natural river sand.',
-      dimensions: '28 x 28 x 38 cm',
-      weight: 4.2,
-      weightUnit: 'kg',
-      price: 920.0,
-      imageUrl: IMAGES.artworks.brassKansaUrn,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 42,
-    },
-    {
-      title: 'Ceremonial Brass Peacock Oil Lamp',
-      artistId: sukumar.id,
-      medium: 'Brass & Bell Metal',
-      style: 'Royal Heritage',
-      description: 'Seven-tiered standing oil lamp crowned by a majestic lost-wax cast peacock with articulated plumage and lotus reservoir.',
-      dimensions: '20 x 20 x 45 cm',
-      weight: 3.8,
-      weightUnit: 'kg',
-      price: 840.0,
-      imageUrl: IMAGES.artworks.brassPeacockLamp,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 37,
-    },
-    {
-      title: 'Engraved Dhamrai Kansa Offering Thali',
-      artistId: sukumar.id,
-      medium: 'Brass & Bell Metal',
-      style: 'Geometric Jaal',
-      description: 'Solid bell metal ritual platter with concentric geometric chiseled bands that produce harmonic resonance when struck.',
-      dimensions: '36 x 36 x 4 cm',
-      weight: 2.6,
-      weightUnit: 'kg',
-      price: 610.0,
-      imageUrl: IMAGES.artworks.brassRitualPlate,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 19,
-    },
-
-    // ADDITIONAL HERITAGE MEDIUMS (SHITAL PATI, JUTE, WOOD, FOLK PAINTING)
-    {
-      title: 'Sylhet Imperial Murta Cane Shital Pati',
-      artistId: rokeya.id,
-      medium: 'Shital Pati Cane Weave',
-      style: 'Geometric Jaal',
-      description: 'Master-grade cold mat handwoven from slender green Murta reed fibers. Naturally cool to the touch even during peak Bengal summers.',
-      dimensions: '84 x 60 inches',
-      weight: 1.2,
-      weightUnit: 'kg',
-      price: 640.0,
-      imageUrl: IMAGES.artworks.shitalPatiDiamond,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 31,
-    },
-    {
-      title: 'Royal Sikku Weave Cane Prayer Mat',
-      artistId: rokeya.id,
-      medium: 'Shital Pati Cane Weave',
-      style: 'Contemporary Heritage',
-      description: 'Fine-grain Murta pith fiber mat woven with subtle diamond step patterns and hemmed with vegetable-tanned cotton twill.',
-      dimensions: '48 x 30 inches',
-      weight: 0.75,
-      weightUnit: 'kg',
-      price: 420.0,
-      imageUrl: IMAGES.artworks.shitalPatiRoyalMat,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 18,
-    },
-    {
-      title: 'Golden Fiber Embroidered Jute Tapestry',
-      artistId: rokeya.id,
-      medium: 'Jute Fiber Craft',
-      style: 'Contemporary Heritage',
-      description: 'Naturally dyed spun golden jute fibers braided and cross-stitched into an expansive wall tapestry celebrating Bengal’s river delta ecology.',
-      dimensions: '40 x 30 inches',
-      weight: 1.5,
-      weightUnit: 'kg',
-      price: 360.0,
-      imageUrl: IMAGES.artworks.juteTapestryGolden,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 25,
-    },
-    {
-      title: 'Braided Jute Mandala Wall Hanging',
-      artistId: rokeya.id,
-      medium: 'Jute Fiber Craft',
-      style: 'Geometric Jaal',
-      description: 'Hand-coiled natural raw jute rope woven into concentric sunburst ripples with madder-root dyed accents.',
-      dimensions: '32 x 32 inches',
-      weight: 1.1,
-      weightUnit: 'kg',
-      price: 290.0,
-      imageUrl: IMAGES.artworks.juteBraidedMandala,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 21,
-    },
-    {
-      title: 'Chittagong Carved Sheesham Wood Casket',
-      artistId: sukumar.id,
-      medium: 'Wood Carving & Inlay',
-      style: 'Floral Motifs',
-      description: 'Solid seasoned rosewood heirloom chest featuring deep hand-carved floral relief panels and delicate brass wire inlay.',
-      dimensions: '30 x 20 x 15 cm',
-      weight: 2.1,
-      weightUnit: 'kg',
-      price: 780.0,
-      imageUrl: IMAGES.artworks.woodRosewoodCasket,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      like: 34,
-    },
-    {
-      title: 'Bengal Kalighat Patua Flora & Bird Scroll',
-      artistId: rokeya.id,
-      medium: 'Folk Painting & Patua',
-      style: 'Traditional Folk',
-      description: 'Fluid natural pigment gouache on handmade rag paper depicting nightingales nestled in kadamba branches. Traditional Patua brushwork.',
-      dimensions: '28 x 20 inches',
+      title: 'Sonargaon Royal Red-Gold Zari Jamdani',
+      description: 'Handwoven on an indigenous pit-loom in Sonargaon using 200-count fine cotton muslin. Features supplementary-weft gold zari in traditional panna hazar (thousand emeralds) and kalka (paisley) patterns across the sheer crimson-red body.',
+      medium: 'Jamdani Weaving',
+      style: 'Traditional Geometric Pit-Loom',
+      dimensions: '5.5m x 1.2m',
+      height: 550,
+      width: 120,
+      depth: 0.1,
       weight: 0.45,
       weightUnit: 'kg',
-      price: 540.0,
-      imageUrl: IMAGES.artworks.folkPatuaBengalFlora,
+      price: 1250.0,
+      imageUrl: HERITAGE_IMAGES.artworks.jamdaniSonargaon,
+      like: 48,
       availability: ArtworkAvailability.AVAILABLE,
       moderationStatus: ModerationStatus.APPROVED,
-      like: 40,
+      artistId: artistAlkas.id,
     },
     {
-      title: 'Traditional Rickshaw Art Floral Medallion',
-      artistId: rokeya.id,
-      medium: 'Folk Painting & Patua',
-      style: 'Contemporary Heritage',
-      description: 'Enamel paint on pressed tin plate featuring high-contrast iconic Dhaka rickshaw flora, peacocks, and cinematic cinema scrolls.',
-      dimensions: '24 x 18 inches',
-      weight: 0.9,
+      title: 'Nilambari Midnight-Indigo Jamdani Saree',
+      description: 'Draped in natural indigo dye with fine silver-toned floral vine (tercha) needlework motifs. An heirloom ceremonial piece celebrated across Old Dhaka wedding ceremonies.',
+      medium: 'Jamdani Weaving',
+      style: 'Nilambari Floral Border',
+      dimensions: '5.5m x 1.15m',
+      height: 550,
+      width: 115,
+      depth: 0.1,
+      weight: 0.42,
       weightUnit: 'kg',
-      price: 410.0,
-      imageUrl: IMAGES.artworks.folkRickshawArtPeacock,
+      price: 980.0,
+      imageUrl: HERITAGE_IMAGES.artworks.jamdaniNilambari,
+      like: 34,
       availability: ArtworkAvailability.AVAILABLE,
       moderationStatus: ModerationStatus.APPROVED,
-      like: 55,
+      artistId: artistAlkas.id,
+    },
+    {
+      title: 'Peacock-Teal Dhakai Silk Jamdani',
+      description: 'Exquisite teal silk blend handloom with antique gold zari border. Combines geometric jaal patterns with traditional peacock crests along the pallu.',
+      medium: 'Jamdani Weaving',
+      style: 'Royal Zari Weave',
+      dimensions: '5.5m x 1.2m',
+      height: 550,
+      width: 120,
+      depth: 0.1,
+      weight: 0.48,
+      weightUnit: 'kg',
+      price: 1450.0,
+      imageUrl: HERITAGE_IMAGES.artworks.jamdaniSaree,
+      like: 62,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistAlkas.id,
+    },
+    {
+      title: 'Sonargaon Rose-Petal Fine Muslin Scarf',
+      description: 'Delicate lightweight artisanal stole woven from pure combed cotton with hand-inserted floral butidar motifs.',
+      medium: 'Jamdani Weaving',
+      style: 'Butidar Muslin',
+      dimensions: '2.0m x 0.7m',
+      height: 200,
+      width: 70,
+      depth: 0.1,
+      weight: 0.15,
+      weightUnit: 'kg',
+      price: 320.0,
+      imageUrl: HERITAGE_IMAGES.artworks.jamdaniSonargaon,
+      like: 19,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistAlkas.id,
     },
 
-    // ORGANIZER COLLECTION ARTWORKS (FOR EXHIBITIONS)
+    // NAKSHI KANTHA (Master Artisan Rokeya Begum)
     {
-      title: 'Sonargaon Heirloom Nakshi Kantha Quilt',
-      artistId: organizer.id,
+      title: 'Gram Bangla Heirloom Nakshi Kantha',
+      description: 'Monumental hand-quilted cotton tapestry from Jessore capturing daily rural village folklore: peasant life, paddy harvesting, river boats, elephants, and Bengal flora stitched with multicolored cotton threads.',
       medium: 'Nakshi Kantha',
-      style: 'Traditional Folk',
-      description: 'Multi-layered antique quilt embroidered with traditional lotus mandala and rural folklore narratives from the Bengal Heritage collection.',
-      dimensions: '75 x 55 inches',
-      weight: 1.5,
+      style: 'Rural Village Folklore',
+      dimensions: '210cm x 150cm',
+      height: 210,
+      width: 150,
+      depth: 0.8,
+      weight: 1.85,
       weightUnit: 'kg',
-      price: 950.0,
-      imageUrl: IMAGES.artworks.kanthaMayurpakkhi,
+      price: 1100.0,
+      imageUrl: HERITAGE_IMAGES.artworks.kanthaQuilt,
+      like: 79,
       availability: ArtworkAvailability.AVAILABLE,
       moderationStatus: ModerationStatus.APPROVED,
-      like: 32,
+      artistId: artistRokeya.id,
     },
     {
-      title: 'Ancient Mahasthangarh Red Silt Temple Plaque',
-      artistId: organizer.id,
-      medium: 'Terracotta Clay',
-      style: 'Sculptural & Relic',
-      description: 'Hand-carved temple architectural motif depicting tree of life in natural kiln-fired clay from North Bengal.',
-      dimensions: '30 x 25 x 6 cm',
-      weight: 3.1,
+      title: 'Mayurpakkhi Peacock Boat Quilted Tapestry',
+      description: 'Pictorial kantha depicting the legendary Mayurpakkhi royal peacock boat gliding over river waves, surrounded by undulating lotus vines and running kantha ripple stitches.',
+      medium: 'Nakshi Kantha',
+      style: 'Riverine Peacock Motif',
+      dimensions: '180cm x 135cm',
+      height: 180,
+      width: 135,
+      depth: 0.6,
+      weight: 1.4,
       weightUnit: 'kg',
-      price: 680.0,
-      imageUrl: IMAGES.artworks.terracottaPlaque,
+      price: 750.0,
+      imageUrl: HERITAGE_IMAGES.artworks.kanthaMayurpakkhi,
+      like: 53,
       availability: ArtworkAvailability.AVAILABLE,
       moderationStatus: ModerationStatus.APPROVED,
-      like: 28,
+      artistId: artistRokeya.id,
     },
     {
-      title: 'Royal Muslin Jamdani Nilambari Retrospective',
-      artistId: organizer.id,
-      medium: 'Handloom Jamdani',
-      style: 'Royal Heritage',
-      description: 'Indigo-dyed fine muslin hand-loomed with silver-gilt floral jaldar designs from the private collection of Bengal Heritage Foundation.',
-      dimensions: '5.5 meters x 1.2 meters',
+      title: 'Padma Medallion Heirloom Kantha',
+      description: 'Classical central lotus medallion (Padma phul) with radiating concentric floral needlework, framed by geometric calculated borders and corner paisleys.',
+      medium: 'Nakshi Kantha',
+      style: 'Concentric Lotus Needlework',
+      dimensions: '160cm x 160cm',
+      height: 160,
+      width: 160,
+      depth: 0.5,
+      weight: 1.25,
+      weightUnit: 'kg',
+      price: 850.0,
+      imageUrl: HERITAGE_IMAGES.artworks.kanthaLotus,
+      like: 41,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistRokeya.id,
+    },
+    {
+      title: 'Padma Phul Kantha Tapestry (Variant Edition)',
+      description: 'Second-edition embroidered kantha wall piece with rust-orange and sage green thread palette, matching the archival Padma lotus medallion layout.',
+      medium: 'Nakshi Kantha',
+      style: 'Concentric Lotus Needlework',
+      dimensions: '160cm x 160cm',
+      height: 160,
+      width: 160,
+      depth: 0.5,
+      weight: 1.25,
+      weightUnit: 'kg',
+      price: 840.0,
+      imageUrl: HERITAGE_IMAGES.artworks.kanthaLotusVariant,
+      like: 12,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.PENDING, // Flagged for duplicate review (88.4% match)
+      artistId: artistRokeya.id,
+    },
+    {
+      title: 'Rajshahi Silk-Embroidered Paisley Runner',
+      description: 'Table runner crafted with pure Rajshahi silk base and Jessore running kantha embroidery in crimson and gold.',
+      medium: 'Nakshi Kantha',
+      style: 'Running Stitch Table Runner',
+      dimensions: '140cm x 40cm',
+      height: 140,
+      width: 40,
+      depth: 0.3,
+      weight: 0.35,
+      weightUnit: 'kg',
+      price: 290.0,
+      imageUrl: HERITAGE_IMAGES.artworks.kanthaQuilt,
+      like: 27,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistRokeya.id,
+    },
+
+    // TERRACOTTA POTTERY & RELIEF ART (Master Sculptor Gouranga Pal)
+    {
+      title: 'Kantajew Temple Classical Terracotta Plaque',
+      description: 'Museum-displayed architectural relief tile inspired by the 18th-century Kantaji Temple in Dinajpur. Molded from alluvial burnt river clay depicting classical dancers, floral vines, and rural Bengali motifs.',
+      medium: 'Terracotta Pottery',
+      style: '18th Century Temple Relief',
+      dimensions: '45cm x 35cm x 5cm',
+      height: 45,
+      width: 35,
+      depth: 5,
+      weight: 4.8,
+      weightUnit: 'kg',
+      price: 520.0,
+      imageUrl: HERITAGE_IMAGES.artworks.terracottaTemplePlaque,
+      like: 67,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistGouranga.id,
+    },
+    {
+      title: 'Bengal Riverbank Terracotta Horse Sculpture',
+      description: 'Hand-sculpted Bankura-style votive terracotta horse figurine created with natural river clay from the Karatoya riverbed. Features distinctive erect ears, ornate neck rosettes, and sun-baked earthen finish.',
+      medium: 'Terracotta Pottery',
+      style: 'Traditional Clay Figurine',
+      dimensions: '38cm x 22cm x 12cm',
+      height: 38,
+      width: 22,
+      depth: 12,
+      weight: 2.9,
+      weightUnit: 'kg',
+      price: 360.0,
+      imageUrl: HERITAGE_IMAGES.artworks.terracottaHorse,
+      like: 45,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistGouranga.id,
+    },
+    {
+      title: 'Carved Red Clay Water Pitcher (Kolshi)',
+      description: 'Wheel-thrown red terracotta water vessel with hand-incised geometric fluting around the shoulder and a polished riverstone burnish.',
+      medium: 'Terracotta Pottery',
+      style: 'Hand-Etched Red Silt',
+      dimensions: '32cm x 26cm x 26cm',
+      height: 32,
+      width: 26,
+      depth: 26,
+      weight: 2.1,
+      weightUnit: 'kg',
+      price: 180.0,
+      imageUrl: HERITAGE_IMAGES.artworks.terracottaPitcher,
+      like: 23,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistGouranga.id,
+    },
+    {
+      title: 'Panchagarh Clay Miniature Horse Trio',
+      description: 'Set of three miniature votive clay horses with traditional folk slip decoration.',
+      medium: 'Terracotta Pottery',
+      style: 'Miniature Folk Sculptures',
+      dimensions: '18cm x 12cm x 6cm',
+      height: 18,
+      width: 12,
+      depth: 6,
+      weight: 1.1,
+      weightUnit: 'kg',
+      price: 140.0,
+      imageUrl: HERITAGE_IMAGES.artworks.terracottaHorse,
+      like: 16,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.REJECTED, // Flagged & rejected duplicate review test case
+      artistId: artistGouranga.id,
+    },
+
+    // BELL METAL & BRASS CRAFT (Master Craftsman Sukumar Banik)
+    {
+      title: 'Dhamrai Lost-Wax Brass Peacock Oil Lamp',
+      description: 'Ceremonial Mayur Deepam cast using a 500-year-old familial lost-wax technique in Dhamrai. Features a sculpted peacock crowning the oil reservoir with tiered wick spouts on a flared pedestaled base.',
+      medium: 'Bell Metal Craft',
+      style: 'Ceremonial Mayur Deepam',
+      dimensions: '52cm x 24cm x 24cm',
+      height: 52,
+      width: 24,
+      depth: 24,
+      weight: 5.4,
+      weightUnit: 'kg',
+      price: 780.0,
+      imageUrl: HERITAGE_IMAGES.artworks.brassPeacockLamp,
+      like: 58,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistSukumar.id,
+    },
+    {
+      title: 'Hand-Chiseled Kansa Bell-Metal Ritual Thali',
+      description: 'Heavy bronze/kansa circular serving platter with hand-chiseled concentric lotus petal motifs and traditional scrollwork. Resonant acoustic bell-metal alloy.',
+      medium: 'Bell Metal Craft',
+      style: 'Traditional Engraved Bronze',
+      dimensions: '36cm x 36cm x 3.5cm',
+      height: 36,
+      width: 36,
+      depth: 3.5,
+      weight: 3.2,
+      weightUnit: 'kg',
+      price: 440.0,
+      imageUrl: HERITAGE_IMAGES.artworks.brassRitualPlate,
+      like: 31,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistSukumar.id,
+    },
+    {
+      title: 'Dhamrai Bell-Metal Temple Gong & Mallet',
+      description: 'Cast bronze meditation gong with rich overtones, finished with an antique burnished rim and carved rosewood mallet.',
+      medium: 'Bell Metal Craft',
+      style: 'Temple Acoustic Bronze',
+      dimensions: '40cm x 40cm x 6cm',
+      height: 40,
+      width: 40,
+      depth: 6,
+      weight: 4.1,
+      weightUnit: 'kg',
+      price: 490.0,
+      imageUrl: HERITAGE_IMAGES.artworks.brassRitualPlate,
+      like: 29,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistSukumar.id,
+    },
+
+    // SHITAL PATI & CANE CRAFT
+    {
+      title: 'Sylhet Murta Cane Diamond Weave Shital Pati',
+      description: 'Traditional cooling mat woven from Murta cane strips (Schumannianthus dichotomus) in Balaganj, Sylhet. Smooth, cool-to-touch surface featuring diagonal diamond chechan weave patterns.',
+      medium: 'Shital Pati',
+      style: 'Chechan Diamond Weave',
+      dimensions: '190cm x 130cm',
+      height: 190,
+      width: 130,
+      depth: 0.2,
+      weight: 0.95,
+      weightUnit: 'kg',
+      price: 380.0,
+      imageUrl: HERITAGE_IMAGES.artworks.shitalPatiMat,
+      like: 47,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistRokeya.id,
+    },
+    {
+      title: 'Handcrafted Bamboo Lattice Pendant Lamp',
+      description: 'Contemporary overhead ceiling light woven with fine bamboo lattice strips, emitting warm ambient honey rays across modern living spaces.',
+      medium: 'Bamboo & Cane Craft',
+      style: 'Contemporary Woven Cane',
+      dimensions: '42cm x 38cm x 38cm',
+      height: 42,
+      width: 38,
+      depth: 38,
       weight: 0.8,
       weightUnit: 'kg',
-      price: 1550.0,
-      imageUrl: IMAGES.artworks.jamdaniNilambari,
+      price: 260.0,
+      imageUrl: HERITAGE_IMAGES.artworks.bambooLamp,
+      like: 71,
       availability: ArtworkAvailability.AVAILABLE,
       moderationStatus: ModerationStatus.APPROVED,
-      like: 45,
+      artistId: artistRokeya.id,
+    },
+
+    // JUTE CRAFT
+    {
+      title: 'Golden Fiber Braided Jute Wall Hanging',
+      description: 'Artisan wall hanging hand-knotted from unbleached golden jute fiber of Chandpur. Features geometric chevron macramé and cascading fringe tassels.',
+      medium: 'Jute Craft',
+      style: 'Hand-Knotted Macramé Tapestry',
+      dimensions: '110cm x 65cm',
+      height: 110,
+      width: 65,
+      depth: 2,
+      weight: 1.1,
+      weightUnit: 'kg',
+      price: 210.0,
+      imageUrl: HERITAGE_IMAGES.artworks.juteTapestry,
+      like: 38,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistRokeya.id,
+    },
+    {
+      title: 'Noakhali Golden Jute Braided Floor Rug',
+      description: 'Durable circular braided jute area rug woven with spiral concentric coils from natural Bangladeshi jute.',
+      medium: 'Jute Craft',
+      style: 'Spiral Braided Floor Mat',
+      dimensions: '150cm x 150cm',
+      height: 150,
+      width: 150,
+      depth: 1.5,
+      weight: 3.4,
+      weightUnit: 'kg',
+      price: 240.0,
+      imageUrl: HERITAGE_IMAGES.artworks.juteTapestry,
+      like: 33,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistRokeya.id,
+    },
+
+    // TRADITIONAL WOOD CARVING
+    {
+      title: 'Carved Teakwood Floral Relief Panel',
+      description: 'Deep architectural wood relief carved from aged Chittagong teak. Showcases blooming lotus medallions and botanical jali arches with a satin natural oil polish.',
+      medium: 'Wood Carving',
+      style: 'Deep Relief Botanical Jali',
+      dimensions: '75cm x 45cm x 4cm',
+      height: 75,
+      width: 45,
+      depth: 4,
+      weight: 4.5,
+      weightUnit: 'kg',
+      price: 640.0,
+      imageUrl: HERITAGE_IMAGES.artworks.woodCarvedPanel,
+      like: 55,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistSukumar.id,
+    },
+
+    // RICKSHAW & PATUA FOLK ART
+    {
+      title: 'Vibrant Dhaka Rickshaw Tinplate Art (Peacock & Lotus)',
+      description: 'Hand-painted enamel Rickshaw art on tin plate by Old Dhaka master ustad. Bold, electric colors depicting a royal peacock resting on lotus blossoms with heart and floral filigree borders.',
+      medium: 'Rickshaw & Folk Art',
+      style: 'Dhaka Enamel Street Folk Art',
+      dimensions: '50cm x 40cm',
+      height: 50,
+      width: 40,
+      depth: 0.2,
+      weight: 0.6,
+      weightUnit: 'kg',
+      price: 310.0,
+      imageUrl: HERITAGE_IMAGES.artworks.folkRickshawArt,
+      like: 92,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistRokeya.id,
+    },
+    {
+      title: 'Old Dhaka Floral Rickshaw Hood Panel',
+      description: 'Painted vinyl rickshaw canopy panel featuring vibrant folk floral bouquets and decorative crests.',
+      medium: 'Rickshaw & Folk Art',
+      style: 'Enamel Rickshaw Canopy',
+      dimensions: '60cm x 45cm',
+      height: 60,
+      width: 45,
+      depth: 0.3,
+      weight: 0.5,
+      weightUnit: 'kg',
+      price: 220.0,
+      imageUrl: HERITAGE_IMAGES.artworks.folkRickshawArt,
+      like: 44,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistRokeya.id,
+    },
+    {
+      title: 'Bengal Patachitra Folk Scroll (Baul Dancers)',
+      description: 'Traditional Kalighat/Patachitra scroll painted on handmade cloth-backed paper using organic natural pigments. Depicts rural Baul mystical singers and dancers under a sacred banyan tree.',
+      medium: 'Patua Folk Painting',
+      style: 'Kalighat Organic Pigment Scroll',
+      dimensions: '90cm x 55cm',
+      height: 90,
+      width: 55,
+      depth: 0.2,
+      weight: 0.4,
+      weightUnit: 'kg',
+      price: 410.0,
+      imageUrl: HERITAGE_IMAGES.artworks.patuaScrollPainting,
+      like: 68,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistRokeya.id,
     },
   ];
 
-  const artworkRecords: Record<string, any> = {};
+  const artworkMap = new Map<string, any>();
 
-  for (const art of authenticArtworks) {
+  for (const art of rawArtworks) {
     const existing = await prisma.artwork.findFirst({
-      where: { title: art.title },
+      where: { title: art.title, artistId: art.artistId },
     });
 
-    if (!existing) {
-      const created = await prisma.artwork.create({
+    let record: any;
+    if (existing) {
+      record = await prisma.artwork.update({
+        where: { id: existing.id },
         data: art,
       });
-      artworkRecords[art.title] = created;
-      console.log(`[Seed] Created artwork: "${created.title}" (${created.medium})`);
+      console.log(`[Seed] Updated artwork: "${art.title}"`);
     } else {
-      const updated = await prisma.artwork.update({
-        where: { id: existing.id },
-        data: {
-          imageUrl: art.imageUrl,
-          price: art.price,
-          description: art.description,
-          dimensions: art.dimensions,
-          weight: art.weight,
-          medium: art.medium,
-          style: art.style,
-          availability: art.availability,
-          moderationStatus: art.moderationStatus,
-        },
+      record = await prisma.artwork.create({
+        data: art,
       });
-      artworkRecords[art.title] = updated;
-      console.log(`[Seed] Updated artwork: "${updated.title}"`);
+      console.log(`[Seed] Created artwork: "${art.title}"`);
     }
+
+    artworkMap.set(art.title, record);
   }
 
   // ---------------------------------------------------------------------------
-  // 3. Seed Realistic Live & Upcoming Auctions
+  // 3. Seed Authentic Auctions (Active, Upcoming, and Closed with NO duplicates)
   // ---------------------------------------------------------------------------
   const now = new Date();
-  const tanvir = userRecords['buyer@nakshi.test'];
-  const sadia = userRecords['sadia@nakshi.test'];
-  const farhan = userRecords['farhan@nakshi.test'];
+  const threeDaysAhead = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const fiveDaysAhead = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
+  const oneDayAgo = new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000);
+  const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
+  const twoDaysAhead = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
+  const fourDaysAhead = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000);
 
-  // Prepare auction artworks
-  const auction1Art = artworkRecords['Sonargaon Heritage Jamdani Saree'];
-  const auction2Art = artworkRecords['Ceremonial Brass Peacock Oil Lamp'];
-  const auction3Art = artworkRecords['Kantajew Temple Floral Terracotta Plaque'];
-  const auction4Art = artworkRecords['Mayurpakkhi Heirloom Nakshi Kantha'];
+  const sonargaonJamdani = artworkMap.get('Sonargaon Royal Red-Gold Zari Jamdani');
+  const brassLamp = artworkMap.get('Dhamrai Lost-Wax Brass Peacock Oil Lamp');
+  const terracottaPlaque = artworkMap.get('Kantajew Temple Classical Terracotta Plaque');
+  const mayurpakkhiKantha = artworkMap.get('Mayurpakkhi Peacock Boat Quilted Tapestry');
+  const terracottaHorse = artworkMap.get('Bengal Riverbank Terracotta Horse Sculpture');
+  const bambooLamp = artworkMap.get('Handcrafted Bamboo Lattice Pendant Lamp');
+  const tealJamdani = artworkMap.get('Peacock-Teal Dhakai Silk Jamdani');
 
-  if (auction1Art) {
-    // 1. Live Auction (Ending in 3 days, active bids)
-    let a1 = await prisma.auction.findFirst({
-      where: { artworkId: auction1Art.id },
-    });
-    if (!a1) {
-      a1 = await prisma.auction.create({
-        data: {
-          artworkId: auction1Art.id,
-          startingBid: 800.0,
-          currentHighestBid: 1150.0,
-          minIncrement: 50.0,
-          startTime: new Date(now.getTime() - 86400000 * 2), // Started 2 days ago
-          endTime: new Date(now.getTime() + 86400000 * 3),   // Ends in 3 days
-          status: AuctionStatus.ACTIVE,
-          winnerId: tanvir.id,
-        },
-      });
-      // Mark artwork as RESERVED
-      await prisma.artwork.update({
-        where: { id: auction1Art.id },
-        data: { availability: ArtworkAvailability.RESERVED },
-      });
-
-      // Add realistic bidding history
-      await prisma.auctionBid.createMany({
-        data: [
-          { auctionId: a1.id, bidderId: sadia.id, amount: 800.0, createdAt: new Date(now.getTime() - 86400000 * 1.8) },
-          { auctionId: a1.id, bidderId: farhan.id, amount: 950.0, createdAt: new Date(now.getTime() - 86400000 * 1.2) },
-          { auctionId: a1.id, bidderId: tanvir.id, amount: 1050.0, createdAt: new Date(now.getTime() - 86400000 * 0.8) },
-          { auctionId: a1.id, bidderId: farhan.id, amount: 1100.0, createdAt: new Date(now.getTime() - 86400000 * 0.4) },
-          { auctionId: a1.id, bidderId: tanvir.id, amount: 1150.0, createdAt: new Date(now.getTime() - 3600000 * 3) },
-        ],
-      });
-      console.log(`[Seed] Created LIVE Auction: ${auction1Art.title} (Highest bid: 1,150.00 Credits)`);
-    } else {
-      await prisma.auction.update({
-        where: { id: a1.id },
-        data: {
-          startTime: new Date(now.getTime() - 86400000 * 2),
-          endTime: new Date(now.getTime() + 86400000 * 3),
-          status: AuctionStatus.ACTIVE,
-        },
-      });
-    }
-  }
-
-  if (auction2Art) {
-    // 2. Live Auction (Ending in 5 days)
-    let a2 = await prisma.auction.findFirst({
-      where: { artworkId: auction2Art.id },
-    });
-    if (!a2) {
-      a2 = await prisma.auction.create({
-        data: {
-          artworkId: auction2Art.id,
-          startingBid: 600.0,
-          currentHighestBid: 780.0,
-          minIncrement: 30.0,
-          startTime: new Date(now.getTime() - 86400000 * 1),
-          endTime: new Date(now.getTime() + 86400000 * 5),
-          status: AuctionStatus.ACTIVE,
-          winnerId: sadia.id,
-        },
-      });
-      await prisma.artwork.update({
-        where: { id: auction2Art.id },
-        data: { availability: ArtworkAvailability.RESERVED },
-      });
-      await prisma.auctionBid.createMany({
-        data: [
-          { auctionId: a2.id, bidderId: farhan.id, amount: 600.0, createdAt: new Date(now.getTime() - 86400000 * 0.9) },
-          { auctionId: a2.id, bidderId: sadia.id, amount: 680.0, createdAt: new Date(now.getTime() - 86400000 * 0.5) },
-          { auctionId: a2.id, bidderId: tanvir.id, amount: 720.0, createdAt: new Date(now.getTime() - 86400000 * 0.2) },
-          { auctionId: a2.id, bidderId: sadia.id, amount: 780.0, createdAt: new Date(now.getTime() - 3600000 * 2) },
-        ],
-      });
-      console.log(`[Seed] Created LIVE Auction: ${auction2Art.title} (Highest bid: 780.00 Credits)`);
-    } else {
-      await prisma.auction.update({
-        where: { id: a2.id },
-        data: {
-          startTime: new Date(now.getTime() - 86400000 * 1),
-          endTime: new Date(now.getTime() + 86400000 * 5),
-          status: AuctionStatus.ACTIVE,
-        },
-      });
-    }
-  }
-
-  if (auction3Art) {
-    // 3. Upcoming Auction (Starting in 3 days)
-    let a3 = await prisma.auction.findFirst({
-      where: { artworkId: auction3Art.id },
-    });
-    if (!a3) {
-      a3 = await prisma.auction.create({
-        data: {
-          artworkId: auction3Art.id,
-          startingBid: 400.0,
-          currentHighestBid: 400.0,
-          minIncrement: 25.0,
-          startTime: new Date(now.getTime() + 86400000 * 3),
-          endTime: new Date(now.getTime() + 86400000 * 10),
-          status: AuctionStatus.UPCOMING,
-        },
-      });
-      console.log(`[Seed] Created UPCOMING Auction: ${auction3Art.title}`);
-    } else {
-      await prisma.auction.update({
-        where: { id: a3.id },
-        data: {
-          startTime: new Date(now.getTime() + 86400000 * 3),
-          endTime: new Date(now.getTime() + 86400000 * 10),
-          status: AuctionStatus.UPCOMING,
-        },
-      });
-    }
-  }
-
-  if (auction4Art) {
-    // 4. Upcoming Auction (Starting in 5 days)
-    let a4 = await prisma.auction.findFirst({
-      where: { artworkId: auction4Art.id },
-    });
-    if (!a4) {
-      a4 = await prisma.auction.create({
-        data: {
-          artworkId: auction4Art.id,
-          startingBid: 650.0,
-          currentHighestBid: 650.0,
-          minIncrement: 50.0,
-          startTime: new Date(now.getTime() + 86400000 * 5),
-          endTime: new Date(now.getTime() + 86400000 * 14),
-          status: AuctionStatus.UPCOMING,
-        },
-      });
-      console.log(`[Seed] Created UPCOMING Auction: ${auction4Art.title}`);
-    } else {
-      await prisma.auction.update({
-        where: { id: a4.id },
-        data: {
-          startTime: new Date(now.getTime() + 86400000 * 5),
-          endTime: new Date(now.getTime() + 86400000 * 14),
-          status: AuctionStatus.UPCOMING,
-        },
-      });
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // 4. Seed Exhibitions with Verified Working Images & Schedules
-  // ---------------------------------------------------------------------------
-  const exhibitionList = [
+  const auctionSeeds = [
+    // 1. ACTIVE AUCTION 1
     {
-      title: 'Threads of Bengal: Sacred Folk Tapestries',
-      description: 'An immersive virtual curation celebrating heirloom Nakshi Kantha quilts and hand-spun rural tapestries from Sonargaon and Rajshahi.',
-      bannerUrl: IMAGES.artworks.kanthaMayurpakkhi,
-      ticketPrice: 50.0,
-      startTime: new Date(now.getTime() - 86400000 * 2), // Open now
-      endTime: new Date(now.getTime() + 86400000 * 14),
-      vipStartTime: new Date(now.getTime() - 86400000 * 2),
-      vipEndTime: new Date(now.getTime() - 86400000 * 1), // VIP concluded, now general admission
-      layoutConfig: {
-        curatorNote: 'Walk through the 3 ceremonial halls to experience centuries of indigenous needlework traditions.',
-        walls: ['North Hall: Heirloom Quilts', 'East Hall: Zari Borders', 'South Hall: Contemporary Interpretations'],
-      },
+      artworkId: sonargaonJamdani.id,
+      startingBid: 800.0,
+      currentHighestBid: 1150.0,
+      minIncrement: 50.0,
+      startTime: oneDayAgo,
+      endTime: threeDaysAhead,
+      status: AuctionStatus.ACTIVE,
+      winnerId: null,
+      bids: [
+        { bidderId: buyerTanvir.id, amount: 850.0, createdAt: new Date(now.getTime() - 18 * 3600 * 1000) },
+        { bidderId: buyerFarhan.id, amount: 950.0, createdAt: new Date(now.getTime() - 14 * 3600 * 1000) },
+        { bidderId: buyerTanvir.id, amount: 1050.0, createdAt: new Date(now.getTime() - 8 * 3600 * 1000) },
+        { bidderId: buyerFarhan.id, amount: 1150.0, createdAt: new Date(now.getTime() - 2 * 3600 * 1000) },
+      ],
     },
+    // 2. ACTIVE AUCTION 2
     {
-      title: 'Royal Muslin & Masterpiece Jamdani Retrospective',
-      description: 'VIP Collector Exclusive exhibition spotlighting 200-count geometric Jamdani sarees and Mughal royal court weaves.',
-      bannerUrl: IMAGES.artworks.jamdaniSonargaon,
-      ticketPrice: 75.0,
-      startTime: new Date(now.getTime() - 3600000 * 4),
-      endTime: new Date(now.getTime() + 86400000 * 7),
-      vipStartTime: new Date(now.getTime() - 3600000 * 4),
-      vipEndTime: new Date(now.getTime() + 86400000 * 2), // VIP active now!
-      layoutConfig: {
-        curatorNote: 'VIP Collector Preview: Early access to private collection heirlooms.',
-        walls: ['Royal Pavilion: Floral Jaal', 'Weavers Studio: Historical Looms'],
-      },
+      artworkId: brassLamp.id,
+      startingBid: 600.0,
+      currentHighestBid: 780.0,
+      minIncrement: 40.0,
+      startTime: oneDayAgo,
+      endTime: fiveDaysAhead,
+      status: AuctionStatus.ACTIVE,
+      winnerId: null,
+      bids: [
+        { bidderId: buyerSadia.id, amount: 640.0, createdAt: new Date(now.getTime() - 16 * 3600 * 1000) },
+        { bidderId: buyerTanvir.id, amount: 720.0, createdAt: new Date(now.getTime() - 10 * 3600 * 1000) },
+        { bidderId: buyerSadia.id, amount: 780.0, createdAt: new Date(now.getTime() - 3 * 3600 * 1000) },
+      ],
     },
+    // 3. UPCOMING AUCTION 1
     {
-      title: 'Dhaka Terracotta & Archaeological Clay Relics',
-      description: 'Exploring archaeological red clay vessels, temple plaques, and wood-fired folk motifs from ancient Bengal dynasties.',
-      bannerUrl: IMAGES.artworks.terracottaPlaque,
-      ticketPrice: 35.0,
-      startTime: new Date(now.getTime() + 86400000 * 3), // Upcoming
-      endTime: new Date(now.getTime() + 86400000 * 20),
-      vipStartTime: new Date(now.getTime() + 86400000 * 2),
-      vipEndTime: new Date(now.getTime() + 86400000 * 3),
-      layoutConfig: {
-        curatorNote: 'A tactile virtual walkthrough of ancient riverine clay craftsmanship.',
-        walls: ['Main Gallery: Ancient Plaques', 'West Gallery: Ritual Vessels'],
-      },
+      artworkId: terracottaPlaque.id,
+      startingBid: 450.0,
+      currentHighestBid: null,
+      minIncrement: 30.0,
+      startTime: twoDaysAhead,
+      endTime: fiveDaysAhead,
+      status: AuctionStatus.UPCOMING,
+      winnerId: null,
+      bids: [],
     },
+    // 4. UPCOMING AUCTION 2
     {
-      title: 'Ancient Kantha & Silk Archive (19th Century)',
-      description: 'Archived historical showcase of 19th-century Rajshahi silk tapestries and ceremonial folk quilts.',
-      bannerUrl: IMAGES.artworks.kanthaVillageFolklore,
-      ticketPrice: 40.0,
-      startTime: new Date(now.getTime() - 86400000 * 40),
-      endTime: new Date(now.getTime() - 86400000 * 2), // Concluded
-      layoutConfig: {
-        curatorNote: 'Archived historical showcase. Viewing period has concluded.',
-        walls: ['Historical Pavilion', 'Archived Gallery'],
-      },
+      artworkId: mayurpakkhiKantha.id,
+      startingBid: 700.0,
+      currentHighestBid: null,
+      minIncrement: 50.0,
+      startTime: threeDaysAhead,
+      endTime: fourDaysAhead,
+      status: AuctionStatus.UPCOMING,
+      winnerId: null,
+      bids: [],
+    },
+    // 5. CLOSED AUCTION 1 (Unique artwork)
+    {
+      artworkId: terracottaHorse.id,
+      startingBid: 300.0,
+      currentHighestBid: 520.0,
+      minIncrement: 25.0,
+      startTime: fiveDaysAgo,
+      endTime: oneDayAgo,
+      status: AuctionStatus.CLOSED,
+      winnerId: buyerTanvir.id,
+      bids: [
+        { bidderId: buyerSadia.id, amount: 350.0, createdAt: new Date(now.getTime() - 4 * 24 * 3600 * 1000) },
+        { bidderId: buyerTanvir.id, amount: 520.0, createdAt: new Date(now.getTime() - 2 * 24 * 3600 * 1000) },
+      ],
+    },
+    // 6. CLOSED AUCTION 2 (Unique artwork)
+    {
+      artworkId: bambooLamp.id,
+      startingBid: 200.0,
+      currentHighestBid: 320.0,
+      minIncrement: 20.0,
+      startTime: fiveDaysAgo,
+      endTime: oneDayAgo,
+      status: AuctionStatus.CLOSED,
+      winnerId: buyerSadia.id,
+      bids: [
+        { bidderId: buyerTanvir.id, amount: 240.0, createdAt: new Date(now.getTime() - 4 * 24 * 3600 * 1000) },
+        { bidderId: buyerSadia.id, amount: 320.0, createdAt: new Date(now.getTime() - 2 * 24 * 3600 * 1000) },
+      ],
+    },
+    // 7. CLOSED AUCTION 3 (Unique artwork)
+    {
+      artworkId: tealJamdani.id,
+      startingBid: 1200.0,
+      currentHighestBid: 1550.0,
+      minIncrement: 50.0,
+      startTime: fiveDaysAgo,
+      endTime: oneDayAgo,
+      status: AuctionStatus.CLOSED,
+      winnerId: buyerFarhan.id,
+      bids: [
+        { bidderId: buyerTanvir.id, amount: 1350.0, createdAt: new Date(now.getTime() - 4 * 24 * 3600 * 1000) },
+        { bidderId: buyerFarhan.id, amount: 1550.0, createdAt: new Date(now.getTime() - 2 * 24 * 3600 * 1000) },
+      ],
     },
   ];
 
-  const organizerArtworks = await prisma.artwork.findMany({
-    where: { artistId: organizer.id },
-  });
-
-  for (const exh of exhibitionList) {
-    let existingExh = await prisma.exhibition.findFirst({
-      where: { title: exh.title },
+  for (const auc of auctionSeeds) {
+    const existingAuc = await prisma.auction.findFirst({
+      where: { artworkId: auc.artworkId },
     });
 
-    if (!existingExh) {
-      existingExh = await prisma.exhibition.create({
+    let createdAuc: any;
+    if (existingAuc) {
+      createdAuc = await prisma.auction.update({
+        where: { id: existingAuc.id },
         data: {
-          ...exh,
-          organizerId: organizer.id,
+          startingBid: auc.startingBid,
+          currentHighestBid: auc.currentHighestBid,
+          minIncrement: auc.minIncrement,
+          startTime: auc.startTime,
+          endTime: auc.endTime,
+          status: auc.status,
+          winnerId: auc.winnerId,
         },
       });
+      console.log(`[Seed] Updated auction for artwork: ${auc.artworkId} (${auc.status})`);
+    } else {
+      createdAuc = await prisma.auction.create({
+        data: {
+          artworkId: auc.artworkId,
+          startingBid: auc.startingBid,
+          currentHighestBid: auc.currentHighestBid,
+          minIncrement: auc.minIncrement,
+          startTime: auc.startTime,
+          endTime: auc.endTime,
+          status: auc.status,
+          winnerId: auc.winnerId,
+        },
+      });
+      console.log(`[Seed] Created auction for artwork: ${auc.artworkId} (${auc.status})`);
+    }
 
-      // Attach artworks
-      for (let i = 0; i < organizerArtworks.length; i++) {
-        await prisma.exhibitionArtwork.create({
+    // Seed bids
+    for (const bid of auc.bids) {
+      const existingBid = await prisma.auctionBid.findFirst({
+        where: { auctionId: createdAuc.id, bidderId: bid.bidderId, amount: bid.amount },
+      });
+      if (!existingBid) {
+        await prisma.auctionBid.create({
           data: {
-            exhibitionId: existingExh.id,
-            artworkId: organizerArtworks[i].id,
-            wallPosition: i + 1,
-            posX: (i % 3) * 30 + 15,
-            posY: Math.floor(i / 3) * 40 + 20,
+            auctionId: createdAuc.id,
+            bidderId: bid.bidderId,
+            amount: bid.amount,
+            createdAt: bid.createdAt,
           },
         });
       }
-      console.log(`[Seed] Created Exhibition: ${exh.title}`);
-    } else {
-      await prisma.exhibition.update({
-        where: { id: existingExh.id },
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 4. Seed Authentic Moderation Reviews (Duplicate Detection Console)
+  // ---------------------------------------------------------------------------
+  const kanthaLotus = artworkMap.get('Padma Medallion Heirloom Kantha');
+  const kanthaVariant = artworkMap.get('Padma Phul Kantha Tapestry (Variant Edition)');
+  const scarfPiece = artworkMap.get('Sonargaon Rose-Petal Fine Muslin Scarf');
+  const miniatureTrio = artworkMap.get('Panchagarh Clay Miniature Horse Trio');
+
+  // Clear any existing stale moderation records
+  await prisma.moderationReview.deleteMany({});
+
+  // 1. PENDING REVIEW: Intricate 88.4% match for the Admin Queue
+  await prisma.moderationReview.create({
+    data: {
+      sourceArtworkId: kanthaVariant.id,
+      suspectedMatchId: kanthaLotus.id,
+      similarityScore: 88.4,
+      adminId: null,
+      actionTaken: null,
+      adminNotes: null,
+      createdAt: new Date(now.getTime() - 2 * 3600 * 1000), // 2 hours ago
+      reviewedAt: null,
+    },
+  });
+  console.log('[Seed] Created Pending Duplicate Moderation Review: Padma Phul Kantha Variant vs Heirloom Kantha (88.4%)');
+
+  // 2. HISTORICAL APPROVED REVIEW: Verified authentic variation
+  await prisma.moderationReview.create({
+    data: {
+      sourceArtworkId: scarfPiece.id,
+      suspectedMatchId: sonargaonJamdani.id,
+      similarityScore: 82.1,
+      adminId: adminUser.id,
+      actionTaken: 'APPROVED',
+      adminNotes: 'Authentic pit-loom motif variation verified by Bengal Heritage Guild curator.',
+      createdAt: new Date(now.getTime() - 26 * 3600 * 1000),
+      reviewedAt: new Date(now.getTime() - 24 * 3600 * 1000),
+    },
+  });
+  console.log('[Seed] Created History Approved Moderation Review: Sonargaon Muslin Scarf vs Jamdani Saree (82.1%)');
+
+  // 3. HISTORICAL REJECTED REVIEW: Intercepted duplicate upload
+  await prisma.moderationReview.create({
+    data: {
+      sourceArtworkId: miniatureTrio.id,
+      suspectedMatchId: terracottaHorse.id,
+      similarityScore: 94.7,
+      adminId: adminUser.id,
+      actionTaken: 'REJECTED',
+      adminNotes: 'Duplicate listing attempt intercepted by perceptual dHash engine.',
+      createdAt: new Date(now.getTime() - 50 * 3600 * 1000),
+      reviewedAt: new Date(now.getTime() - 48 * 3600 * 1000),
+    },
+  });
+  console.log('[Seed] Created History Rejected Moderation Review: Clay Horse Trio vs Terracotta Horse (94.7%)');
+
+  // ---------------------------------------------------------------------------
+  // 5. Seed Curated Exhibitions & Issued Ticket
+  // ---------------------------------------------------------------------------
+  const exhibitionsData = [
+    {
+      title: 'Bengal Threads & Looms: The Living Heritage of Jamdani',
+      description: 'An immersive digital retrospective spotlighting the UNESCO-inscribed masterweavers of the Shitalakshya river basin and royal Mughal pit-loom traditions.',
+      theme: 'Handloom Textiles & Royal Heritage',
+      bannerUrl: HERITAGE_IMAGES.artworks.jamdaniSonargaon,
+      ticketPrice: 75.0,
+      startTime: oneDayAgo,
+      endTime: fiveDaysAhead,
+      vipStartTime: new Date(now.getTime() - 36 * 3600 * 1000),
+      organizerId: organizerNaveed.id,
+      artworks: [sonargaonJamdani.id, artworkMap.get('Nilambari Midnight-Indigo Jamdani Saree').id, tealJamdani.id],
+    },
+    {
+      title: 'Sacred Soil: Terracotta Architecture of Ancient Bengal',
+      description: 'A virtual walk through Kantaji Temple terracotta friezes, Paharpur Buddhist Vihara relief art, and historic burnt-clay iconography.',
+      bannerUrl: HERITAGE_IMAGES.artworks.terracottaTemplePlaque,
+      ticketPrice: 90.0,
+      startTime: new Date(now.getTime() + 12 * 3600 * 1000),
+      endTime: new Date(now.getTime() + 6 * 24 * 3600 * 1000),
+      vipStartTime: oneDayAgo, // Currently in VIP Preview window!
+      organizerId: organizerAnisur.id,
+      artworks: [terracottaPlaque.id, terracottaHorse.id, artworkMap.get('Carved Red Clay Water Pitcher (Kolshi)').id],
+    },
+    {
+      title: 'Lost-Wax & Bell Metal: The Metalcraft of Dhamrai',
+      description: 'Showcasing the rare 500-year artisanal traditions of bell-metal casting, deepam peacocks, and temple gongs from Dhamrai.',
+      bannerUrl: HERITAGE_IMAGES.artworks.brassPeacockLamp,
+      ticketPrice: 60.0,
+      startTime: twoDaysAhead,
+      endTime: new Date(now.getTime() + 7 * 24 * 3600 * 1000),
+      vipStartTime: new Date(now.getTime() + 24 * 3600 * 1000),
+      organizerId: organizerNaveed.id,
+      artworks: [brassLamp.id, artworkMap.get('Hand-Chiseled Kansa Bell-Metal Ritual Thali').id],
+    },
+    {
+      title: 'Golden Fiber & Bamboo: Vernacular Craft Traditions',
+      description: 'Concluded exhibition celebrating rural women artisans weaving Shital Pati cane mats, golden jute tapestries, and bamboo light fixtures.',
+      bannerUrl: HERITAGE_IMAGES.artworks.shitalPatiMat,
+      ticketPrice: 50.0,
+      startTime: fiveDaysAgo,
+      endTime: oneDayAgo,
+      vipStartTime: new Date(now.getTime() - 6 * 24 * 3600 * 1000),
+      organizerId: organizerAnisur.id,
+      artworks: [artworkMap.get('Sylhet Murta Cane Diamond Weave Shital Pati').id, bambooLamp.id, artworkMap.get('Golden Fiber Braided Jute Wall Hanging').id],
+    },
+  ];
+
+  for (const exh of exhibitionsData) {
+    const existing = await prisma.exhibition.findFirst({
+      where: { title: exh.title, organizerId: exh.organizerId },
+    });
+
+    let createdExh: any;
+    if (existing) {
+      createdExh = await prisma.exhibition.update({
+        where: { id: existing.id },
         data: {
+          description: exh.description,
           bannerUrl: exh.bannerUrl,
+          ticketPrice: exh.ticketPrice,
           startTime: exh.startTime,
           endTime: exh.endTime,
           vipStartTime: exh.vipStartTime,
-          vipEndTime: exh.vipEndTime,
         },
       });
-      console.log(`[Seed] Refreshed Exhibition: ${exh.title}`);
+      console.log(`[Seed] Updated exhibition: "${exh.title}"`);
+    } else {
+      createdExh = await prisma.exhibition.create({
+        data: {
+          title: exh.title,
+          description: exh.description,
+          bannerUrl: exh.bannerUrl,
+          ticketPrice: exh.ticketPrice,
+          startTime: exh.startTime,
+          endTime: exh.endTime,
+          vipStartTime: exh.vipStartTime,
+          organizerId: exh.organizerId,
+        },
+      });
+      console.log(`[Seed] Created exhibition: "${exh.title}"`);
     }
 
-    // Seed a valid ticket token for buyer Tanvir Ahmed on "Threads of Bengal"
-    if (exh.title.includes('Threads of Bengal')) {
-      const existingTicket = await prisma.exhibitionTicket.findFirst({
-        where: { exhibitionId: existingExh.id, buyerId: tanvir.id },
+    // Link exhibition artworks
+    for (let i = 0; i < exh.artworks.length; i++) {
+      const artId = exh.artworks[i];
+      const linkExists = await prisma.exhibitionArtwork.findUnique({
+        where: {
+          exhibitionId_artworkId: {
+            exhibitionId: createdExh.id,
+            artworkId: artId,
+          },
+        },
+      });
+      if (!linkExists) {
+        await prisma.exhibitionArtwork.create({
+          data: {
+            exhibitionId: createdExh.id,
+            artworkId: artId,
+            wallPosition: i + 1,
+            posX: (i + 1) * 3.5,
+            posY: 1.8,
+          },
+        });
+      }
+    }
+
+    // Pre-issue a VIP admission ticket for Buyer Tanvir on the Sacred Soil exhibition
+    if (exh.title.includes('Sacred Soil')) {
+      const ticketToken = 'NK-EXH-2026-T7K2';
+      const existingTicket = await prisma.exhibitionTicket.findUnique({
+        where: { ticketToken },
       });
       if (!existingTicket) {
         await prisma.exhibitionTicket.create({
           data: {
-            ticketToken: 'NK-EXH-2026-T7K2',
-            exhibitionId: existingExh.id,
-            buyerId: tanvir.id,
-            isVip: false,
+            ticketToken,
+            exhibitionId: createdExh.id,
+            buyerId: buyerTanvir.id,
+            isVip: true,
+            purchasedAt: oneDayAgo,
           },
         });
-        console.log(`[Seed] Issued demo ticket NK-EXH-2026-T7K2 to Tanvir Ahmed`);
+        console.log(`[Seed] Issued VIP Exhibition Admission Ticket: ${ticketToken}`);
       }
     }
   }
 
   // ---------------------------------------------------------------------------
-  // 5. Seed Real Artwork Discussion Comments & Likes
+  // 6. Seed Community Comments
   // ---------------------------------------------------------------------------
-  const firstArt = artworkRecords['Sonargaon Heritage Jamdani Saree'];
-  if (firstArt) {
-    const existingComments = await prisma.artworkComment.findMany({
-      where: { artworkId: firstArt.id },
+  const gramKantha = artworkMap.get('Gram Bangla Heirloom Nakshi Kantha');
+  if (gramKantha) {
+    const existingComment = await prisma.artworkComment.findFirst({
+      where: { artworkId: gramKantha.id, userId: buyerTanvir.id },
     });
-    if (existingComments.length === 0) {
-      await prisma.artworkComment.createMany({
-        data: [
-          {
-            artworkId: firstArt.id,
-            userId: sadia.id,
-            content: 'The zari density on the border is exceptional! Master Alkas weaves like poetry.',
-            createdAt: new Date(now.getTime() - 3600000 * 12),
-          },
-          {
-            artworkId: firstArt.id,
-            userId: tanvir.id,
-            content: 'Authentic 200-ply muslin is exceedingly rare today. Truly an heirloom investment.',
-            createdAt: new Date(now.getTime() - 3600000 * 5),
-          },
-        ],
+    if (!existingComment) {
+      await prisma.artworkComment.create({
+        data: {
+          artworkId: gramKantha.id,
+          userId: buyerTanvir.id,
+          content: 'The running kantha stitchwork along the riverine boat border is masterwork quality. Truly an heirloom piece of rural folk artistry.',
+        },
       });
-      console.log('[Seed] Added authentic discussion comments to Jamdani Saree');
+      await prisma.artworkComment.create({
+        data: {
+          artworkId: gramKantha.id,
+          userId: buyerSadia.id,
+          content: 'Reminds me of my grandmother’s heirloom quilts from Jessore. Spectacular preservation of our cultural motifs!',
+        },
+      });
+      console.log('[Seed] Added authentic community comments to Gram Bangla Kantha');
     }
   }
 
-  console.log('[Seed] Production-grade authentic dataset seeding completed successfully!');
+  console.log('[Seed] Production-grade seeding completed successfully with 100% authentic Bengali heritage assets!');
 }
 
 main()
   .catch((e) => {
-    console.error('[Seed] Error:', e);
+    console.error('[Seed] Error during seeding:', e);
     process.exit(1);
   })
   .finally(async () => {

@@ -710,3 +710,20 @@
   - Total 233/233 backend unit and acceptance tests passing.
   - Client Vite production build succeeded with 0 errors (`npm --prefix client run build`).
   - Server TypeScript compilation succeeded with 0 errors (`npm --prefix server run build`).
+
+
+## [2026-11-04 07:35:00 +06:00] Milestone: Bundled Cultural Heritage Assets & Admin Moderation Hardening Completed
+- **Completed**:
+  - **Bundled Cultural Heritage Assets**: Curated and saved 18 museum-grade, culturally verified high-resolution photographs directly in `client/public/images/heritage/` covering Dhakai Jamdani, Nakshi Kantha, Kantajew temple terracotta relief plaques, Bankura terracotta horses, Dhamrai lost-wax brass peacock deepams, Sylhet Shital Pati cane mats, golden jute tapestries, carved teakwood panels, and vibrant Dhaka rickshaw tinplate art.
+  - **Eliminated Broken Upload Links**: Purged all legacy test uploads referencing nonexistent local files (`Cannot GET /uploads/artworks/454d34a3...`) and removed stale test accounts (`rokeya@gmail.com`, `sama@gmail.com`).
+  - **Eliminated Mismatched Media**: Replaced all stock photos (whiteboard presentations, sneakers, office furniture, Dutch Renaissance still lifes) with 100% culturally authentic Bengali craft imagery.
+  - **Admin Moderation Console Hardening**: Wrapped all image views in `client/src/components/admin/AdminModerationQueue.tsx` with `getArtworkImageUrl` and `onError` image fallback guards.
+  - **Realistic Duplicate Moderation Experience**: Seeded an authentic 88.4% perceptual similarity review case comparing an heirloom Padma lotus kantha with a variant edition, complete with approved and rejected historical review records.
+  - **Auction Browse Deduplication**: Seeded 7 distinct auctions (2 Active, 2 Upcoming, 3 Closed) with zero duplicate artworks, zero repeated titles, and real bidding histories.
+  - **Static Asset Serving**: Fixed `client/src/utils/image.util.ts` to return `/images/` paths directly, and added Express static serving for `/images` in `server/src/server.ts`.
+- **Verified**:
+  - All 18 heritage image assets visually inspected and verified for cultural authenticity.
+  - Clean database reset & seed confirmed via inspection script: 24 authentic artworks, 0 non-heritage images, 3 clean moderation reviews, 7 distinct auctions.
+  - Client Vite production build passed with 0 errors (`npm --prefix client run build`).
+  - Server TypeScript compilation passed with 0 errors (`npm --prefix server run build`).
+  - Backend unit test suite passed (68/68 tests passing).

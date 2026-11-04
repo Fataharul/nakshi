@@ -22,6 +22,7 @@ import {
   ModerationFilter,
   ModerationSort,
 } from '../../types/moderation';
+import { getArtworkImageUrl, DEFAULT_ARTWORK_IMAGE } from '../../utils/image.util';
 
 export const AdminModerationQueue: React.FC = () => {
   // Primary state
@@ -575,7 +576,7 @@ export const AdminModerationQueue: React.FC = () => {
 
                           <div className="h-56 sm:h-64 rounded-lg overflow-hidden bg-surface-container-high border border-outline/20 mb-4 group relative">
                             <img
-                              src={item.sourceArtwork.imageUrl}
+                              src={getArtworkImageUrl(item.sourceArtwork.imageUrl)} onError={(e) => { e.currentTarget.src = DEFAULT_ARTWORK_IMAGE; }}
                               alt={item.sourceArtwork.title}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             />
@@ -637,7 +638,7 @@ export const AdminModerationQueue: React.FC = () => {
 
                             <div className="h-56 sm:h-64 rounded-lg overflow-hidden bg-surface-container-high border border-outline/20 mb-4 group relative">
                               <img
-                                src={item.suspectedMatchArtwork.imageUrl}
+                                src={getArtworkImageUrl(item.suspectedMatchArtwork.imageUrl)} onError={(e) => { e.currentTarget.src = DEFAULT_ARTWORK_IMAGE; }}
                                 alt={item.suspectedMatchArtwork.title}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                               />
@@ -832,7 +833,7 @@ export const AdminModerationQueue: React.FC = () => {
                           <td className="py-3.5 px-4 font-semibold text-on-surface flex items-center gap-2">
                             <div className="w-8 h-8 rounded bg-surface-container-high overflow-hidden shrink-0">
                               <img
-                                src={record.sourceArtwork.imageUrl}
+                                src={getArtworkImageUrl(record.sourceArtwork.imageUrl)} onError={(e) => { e.currentTarget.src = DEFAULT_ARTWORK_IMAGE; }}
                                 alt={record.sourceArtwork.title}
                                 className="w-full h-full object-cover"
                               />
@@ -922,7 +923,7 @@ export const AdminModerationQueue: React.FC = () => {
                   </div>
                   <div className="h-80 rounded-xl bg-surface-container-high border border-outline/30 overflow-hidden flex items-center justify-center">
                     <img
-                      src={inspectingItem.sourceArtwork.imageUrl}
+                      src={getArtworkImageUrl(inspectingItem.sourceArtwork.imageUrl)} onError={(e) => { e.currentTarget.src = DEFAULT_ARTWORK_IMAGE; }}
                       alt={inspectingItem.sourceArtwork.title}
                       className="w-full h-full object-contain"
                     />
@@ -946,7 +947,7 @@ export const AdminModerationQueue: React.FC = () => {
                   <div className="h-80 rounded-xl bg-surface-container-high border border-outline/30 overflow-hidden flex items-center justify-center">
                     {inspectingItem.suspectedMatchArtwork ? (
                       <img
-                        src={inspectingItem.suspectedMatchArtwork.imageUrl}
+                        src={getArtworkImageUrl(inspectingItem.suspectedMatchArtwork.imageUrl)} onError={(e) => { e.currentTarget.src = DEFAULT_ARTWORK_IMAGE; }}
                         alt={inspectingItem.suspectedMatchArtwork.title}
                         className="w-full h-full object-contain"
                       />

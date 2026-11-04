@@ -68,6 +68,19 @@ for (const uploadDir of localUploadPaths) {
   }
 }
 
+// Serve client public images statically as fallback for /images
+const localImagePaths = [
+  path.resolve('./client/public/images'),
+  path.resolve('../client/public/images'),
+  path.resolve(__dirname, '../../../client/public/images'),
+  path.resolve(__dirname, '../../client/public/images'),
+];
+for (const imgDir of localImagePaths) {
+  if (fs.existsSync(imgDir)) {
+    app.use('/images', express.static(imgDir));
+  }
+}
+
 // Health Check Endpoint (used by Playwright webServer and deployment health checks)
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
