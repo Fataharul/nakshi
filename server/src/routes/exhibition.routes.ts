@@ -24,12 +24,24 @@ const optionalJWT = (req: Request, res: Response, next: NextFunction): void => {
 // Public Browse
 router.get('/', ExhibitionController.getAll);
 
-// Organizer / Admin Creation
+// Organizer / Admin Creation, Modification, and Deletion
 router.post(
   '/',
   authenticateJWT,
   requireRoles(Role.ORGANIZER, Role.ADMIN),
   ExhibitionController.create
+);
+router.put(
+  '/:id',
+  authenticateJWT,
+  requireRoles(Role.ORGANIZER, Role.ADMIN),
+  ExhibitionController.update
+);
+router.delete(
+  '/:id',
+  authenticateJWT,
+  requireRoles(Role.ORGANIZER, Role.ADMIN),
+  ExhibitionController.delete
 );
 
 // Exhibition Details (optional auth to determine userTicket)

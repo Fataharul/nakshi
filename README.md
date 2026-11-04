@@ -173,6 +173,8 @@ npm run dev
 - **Virtual Exhibitions (`/api/exhibitions`)**:
   - `GET /api/exhibitions` — Public browse of virtual exhibitions with dynamic status filtering (`ACTIVE`, `VIP_EXCLUSIVE`, `UPCOMING`, `CLOSED`).
   - `POST /api/exhibitions` — Create new virtual curation with custom walls, schedule, and owned artworks (`ORGANIZER` / `ADMIN` role).
+  - `PUT /api/exhibitions/:id` — Update exhibition metadata, schedules, walls, and owned artworks (`ORGANIZER` / `ADMIN` role).
+  - `DELETE /api/exhibitions/:id` — Delete exhibition and cascade associated records (`ORGANIZER` / `ADMIN` role).
   - `GET /api/exhibitions/:id` — Exhibition curation details, schedule windows, and user admission pass status.
   - `POST /api/exhibitions/:id/ticket` — Reserve and purchase an exhibition pass (General or VIP) using internal credits.
   - `POST /api/exhibitions/:id/validate-ticket` — Validate ticket token against exhibition schedule, VIP preview window, and strict hall matching.

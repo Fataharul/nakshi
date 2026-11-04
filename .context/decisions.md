@@ -470,3 +470,24 @@
 - **Rationale**:
   - Delivers an art-first, museum-grade virtual exhibition experience across all filter tabs (`ALL`: 6, `ACTIVE`: 3, `VIP_EXCLUSIVE`: 1, `UPCOMING`: 1, `CLOSED`: 1).
   - Maintains 100% test compatibility with `e2e/05_exhibitions.spec.ts` and zero broken links.
+
+## 35. Multi-Artwork Curated Exhibitions, Strict Organizer Ownership Enforcement, and Exhibition CRUD Suite
+- **Timestamp**: 2026-11-04 21:20:00 +06:00
+- **Context**: Exhibitions previously had only 1 artwork per wall (causing virtual rooms to feel sparse), and artworks in exhibitions were originally seeded under marketplace craft artisans (e.g. Rokeya Begum), violating the platform rule that curators can only curate artworks they own and preventing organizers from curating or managing their own paintings. Furthermore, organizers lacked UI and API mechanisms to update or delete existing exhibitions.
+- **Decision**:
+  - **24 Authentic Fine Art Paintings (4 Artworks per Exhibition)**:
+    - Expanded the curated collection to 24 distinct fine art paintings across modernist geometric abstraction, riverine watercolors, impressionist storm seascapes, Old Dhaka neo-expressionism, and tactile sculptural bas-reliefs bundled in `client/public/images/paintings/` with 64-bit Sharp dHashes.
+    - All 6 exhibitions now contain exactly 4 distinct paintings partitioned across 2 gallery walls (2 paintings per wall), eliminating single-artwork wall sparseness.
+  - **Strict Organizer Ownership Architecture**:
+    - Reassigned all 20 modern paintings to Curator Naveed Chowdhury (`organizer@nakshi.test`) and 4 historical paintings to Curator Dr. Anisur Rahman (`anisur@nakshi.test`).
+    - Purged artisan clutter: verified that Rokeya Begum and other marketplace artisans own 0 exhibition paintings and retain their authentic handcrafted heritage craft items.
+    - Backend enforcement in `server/src/services/exhibition.service.ts` strictly verifies that all `artworkIds` belong to the authenticated organizer (`artistId: organizerId`).
+  - **Full Exhibition CRUD Management**:
+    - Backend API: Registered `PUT /api/exhibitions/:id` and `DELETE /api/exhibitions/:id` with strict ownership checks (curator or Admin), date validation, wall reconfiguration, and cascaded cleanup.
+    - Frontend: Implemented `ExhibitionService.updateExhibition` and `ExhibitionService.deleteExhibition`.
+    - Components: Created `client/src/components/exhibition/EditExhibitionModal.tsx` pre-populated with exhibition metadata, schedule, walls, and only the organizer's owned fine art pieces.
+    - Organizer Dashboard: Enhanced `OrganizerDashboardView.tsx` with Edit button, Delete button (with confirmation dialog), and live state synchronization.
+  - **Automated Verification**:
+    - Added dedicated Playwright E2E suite `e2e/organizer_exhibition_crud.spec.ts` testing authentication, owned artwork filtering, editing, creation, deletion, and backend unauthorized curation rejection.
+- **Rationale**:
+    - Provides a complete, robust curation workflow for organizers and museum curators while upholding zero-clutter separation between marketplace crafts and fine art exhibitions.

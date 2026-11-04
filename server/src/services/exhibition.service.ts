@@ -289,6 +289,129 @@ export class ExhibitionService {
   }
 
   /**
+   * Update an existing exhibition (Organizer / Admin)
+   */
+  public static async update(id: string, organizerId: string, input: Partial<CreateExhibitionInput>) {
+    const user = await prisma.user.findUnique({ where: { id: organizerId } });
+    if (!user || (user.role !== Role.ORGANIZER && user.role !== Role.ADMIN)) {
+      throw new AppError('Only registered Organizers or Admins can modify virtual exhibitions', 403);
+    }
+
+    const existing = await prisma.exhibition.findUnique({
+      where: { id },
+      include: { artworks: true },
+    });
+
+    if (!existing) {
+      throw new AppError('Exhibition not found', 404);
+    }
+
+    if (existing.organizerId !== organizerId && user.role !== Role.ADMIN) {
+      throw new AppError('You can only modify exhibitions you organized', 403);
+    }
+
+    const startTime = input.startTime ? new Date(input.startTime) : existing.startTime;
+    const endTime = input.endTime ? new Date(input.endTime) : existing.endTime;
+
+    if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+      throw new AppError('Valid start and end times are required', 400);
+    }
+
+    if (endTime <= startTime) {
+      throw new AppError('End time must be after start time', 400);
+    }
+
+    const ticketPrice = input.ticketPrice !== undefined ? Math.max(0, Number(input.ticketPrice)) : Number(existing.ticketPrice);
+
+    await prisma.$transaction(async (tx) => {
+      const updateData: any = {
+        title: input.title !== undefined ? input.title.trim() : existing.title,
+        description: input.description !== undefined ? input.description.trim() : existing.description,
+        bannerUrl: input.bannerUrl !== undefined ? input.bannerUrl : existing.bannerUrl,
+        ticketPrice,
+        startTime,
+        endTime,
+        layoutConfig: input.layoutConfig !== undefined ? input.layoutConfig : existing.layoutConfig,
+      };
+
+      if (input.vipStartTime !== undefined) {
+        updateData.vipStartTime = input.vipStartTime ? new Date(input.vipStartTime) : null;
+      }
+      if (input.vipEndTime !== undefined) {
+        updateData.vipEndTime = input.vipEndTime ? new Date(input.vipEndTime) : null;
+      }
+
+      await tx.exhibition.update({
+        where: { id },
+        data: updateData,
+      });
+
+      if (input.artworkIds && Array.isArray(input.artworkIds)) {
+        // Enforce that organizers can only showcase their own uploaded artworks
+        const ownedArtworks = await tx.artwork.findMany({
+          where: {
+            id: { in: input.artworkIds },
+            artistId: organizerId,
+          },
+          select: { id: true },
+        });
+
+        const ownedIds = new Set(ownedArtworks.map((a) => a.id));
+        const unownedIds = input.artworkIds.filter((artId) => !ownedIds.has(artId));
+
+        if (user.role !== Role.ADMIN && unownedIds.length > 0) {
+          throw new AppError('Organizers can only showcase their own uploaded artworks in their exhibitions', 400);
+        }
+
+        // Replace artworks
+        await tx.exhibitionArtwork.deleteMany({ where: { exhibitionId: id } });
+
+        for (let i = 0; i < input.artworkIds.length; i++) {
+          await tx.exhibitionArtwork.create({
+            data: {
+              exhibitionId: id,
+              artworkId: input.artworkIds[i],
+              wallPosition: i + 1,
+              posX: (i % 3) * 30 + 15,
+              posY: Math.floor(i / 3) * 40 + 20,
+            },
+          });
+        }
+      }
+    });
+
+    return this.getById(id, organizerId);
+  }
+
+  /**
+   * Delete an existing exhibition (Organizer / Admin)
+   */
+  public static async delete(id: string, organizerId: string) {
+    const user = await prisma.user.findUnique({ where: { id: organizerId } });
+    if (!user || (user.role !== Role.ORGANIZER && user.role !== Role.ADMIN)) {
+      throw new AppError('Only registered Organizers or Admins can delete virtual exhibitions', 403);
+    }
+
+    const existing = await prisma.exhibition.findUnique({ where: { id } });
+    if (!existing) {
+      throw new AppError('Exhibition not found', 404);
+    }
+
+    if (existing.organizerId !== organizerId && user.role !== Role.ADMIN) {
+      throw new AppError('You can only delete exhibitions you organized', 403);
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.exhibitionArtwork.deleteMany({ where: { exhibitionId: id } });
+      await tx.exhibitionTicket.deleteMany({ where: { exhibitionId: id } });
+      await tx.exhibitionVisit.deleteMany({ where: { exhibitionId: id } });
+      await tx.exhibition.delete({ where: { id } });
+    });
+
+    return { success: true, message: 'Exhibition deleted successfully' };
+  }
+
+  /**
    * Purchase a ticket for an exhibition using internal credits
    */
   public static async purchaseTicket(userId: string, exhibitionId: string, isVip: boolean = false) {

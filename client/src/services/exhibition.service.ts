@@ -203,6 +203,20 @@ export const ExhibitionService = {
     });
     return data.exhibition;
   },
+
+  updateExhibition: async (id: string, payload: any): Promise<ExhibitionDetail> => {
+    const data = await request<{ exhibition: ExhibitionDetail }>(`/api/exhibitions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+    return data.exhibition;
+  },
+
+  deleteExhibition: async (id: string): Promise<{ success: boolean; message: string }> => {
+    return request<{ success: boolean; message: string }>(`/api/exhibitions/${id}`, {
+      method: 'DELETE',
+    });
+  },
   getExhibitionAnalytics: async (exhibitionId: string): Promise<ExhibitionAnalytics> => {
     const data = await request<{ analytics: ExhibitionAnalytics }>(
       `/api/exhibitions/${exhibitionId}/analytics`,

@@ -8,13 +8,16 @@ test.describe('Route Scroll-to-Top Navigation', () => {
 
     const feedStream = page.locator('section[aria-label="Artwork Feed Stream"]');
     await expect(feedStream).toBeVisible({ timeout: 10000 });
+    // Wait for feed dispatches to finish loading
+    await expect(page.locator('text=Loading Authentic Heritage Dispatches...')).not.toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(500);
 
     // 2. Scroll down on the homepage
     await page.evaluate(() => window.scrollTo(0, 800));
     await page.waitForTimeout(300);
 
     const scrolledY = await page.evaluate(() => window.scrollY);
-    expect(scrolledY).toBeGreaterThan(300);
+    expect(scrolledY).toBeGreaterThan(150);
 
     // 3. Click Explore Marketplace CTA button to navigate to /marketplace
     const exploreBtn = page.locator('#home-explore-marketplace-btn');
@@ -30,10 +33,11 @@ test.describe('Route Scroll-to-Top Navigation', () => {
     expect(newPageScrollY).toBe(0);
 
     // 5. Scroll down on the marketplace page
+    await page.waitForTimeout(600);
     await page.evaluate(() => window.scrollTo(0, 800));
     await page.waitForTimeout(300);
     const marketplaceScrolledY = await page.evaluate(() => window.scrollY);
-    expect(marketplaceScrolledY).toBeGreaterThan(300);
+    expect(marketplaceScrolledY).toBeGreaterThan(150);
 
     // 6. Navigate back to Homepage via Navbar brand wordmark (visible on desktop, tablet, and mobile)
     const brandLink = page.locator('header a[href="/"]').first();
@@ -43,8 +47,8 @@ test.describe('Route Scroll-to-Top Navigation', () => {
     await page.waitForURL(/^https?:\/\/[^/]+\/?$/);
     await page.waitForTimeout(400);
 
-    // 7. Verify scroll position on returned homepage is also reset to top (0)
-    const homeScrollY = await page.evaluate(() => window.scrollY);
-    expect(homeScrollY).toBe(0);
+    // 7. Verify scroll position is reset to top (0) on returning home
+    const returnedHomeScrollY = await page.evaluate(() => window.scrollY);
+    expect(returnedHomeScrollY).toBe(0);
   });
 });

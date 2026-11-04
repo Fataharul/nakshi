@@ -808,3 +808,29 @@
   - Backend unit test suite passed (68/68 tests passing) (`npx --prefix server vitest run tests/unit`).
   - Playwright E2E test suite `e2e/05_exhibitions.spec.ts` passed across all 3 viewports: Desktop Chrome, Tablet 768px, and Mobile 360px (12/12 tests passing).
   - Playwright E2E test suite `e2e/homepage_feed.spec.ts` and `e2e/scroll_to_top.spec.ts` passed (12/12 tests passing).
+## [2026-11-04 21:25:00 +06:00] Milestone: Multi-Artwork Density (4 Artworks / 2 Walls), Strict Organizer Ownership Enforcement, and Exhibition CRUD Suite
+- **Completed**:
+  - **24 Dedicated Curator Fine Art Paintings**:
+    - Expanded fine art collection to 24 distinct museum-grade paintings in `client/public/images/paintings/` with verified 64-bit Sharp dHashes.
+    - Assigned 20 modernist paintings to Curator Naveed Chowdhury (`organizer@nakshi.test`) and 4 historical paintings to Curator Dr. Anisur Rahman (`anisur@nakshi.test`).
+    - Purged artisan clutter: Verified that craft artisans (Rokeya Begum, Alkas Mia, etc.) own 0 exhibition paintings and retain their handcrafted marketplace crafts.
+  - **4 Artworks Across 2 Balanced Walls per Exhibition**:
+    - Seeded all 6 exhibitions with exactly 4 artworks partitioned across 2 gallery walls (`wallPosition: 1` or `wallPosition: 2`, 2 paintings per wall), eliminating single-artwork wall sparseness.
+  - **Backend Exhibition CRUD Endpoints & Authorization**:
+    - Implemented `PUT /api/exhibitions/:id` and `DELETE /api/exhibitions/:id` in `server/src/routes/exhibition.routes.ts`, `server/src/controllers/exhibition.controller.ts`, and `server/src/services/exhibition.service.ts`.
+    - Strictly enforced that organizers can only curate and link artworks they own (`artistId: organizerId`) on both creation and update endpoints.
+    - Added cascade cleanup for dependent tickets, visits, and artwork associations upon exhibition deletion.
+  - **Frontend Exhibition Management UI**:
+    - Added `updateExhibition` and `deleteExhibition` to `client/src/services/exhibition.service.ts`.
+    - Created `client/src/components/exhibition/EditExhibitionModal.tsx` pre-populated with exhibition metadata, schedules, walls, and only the organizer's owned artworks.
+    - Updated `client/src/components/dashboard/OrganizerDashboardView.tsx` with Edit button, Delete button (with confirmation dialog), and live state synchronization.
+    - Updated `CreateExhibitionModal.tsx` pre-selection logic.
+  - **Automated Verification**:
+    - Created `e2e/organizer_exhibition_crud.spec.ts` testing organizer authentication, owned artwork filtering, editing, creation, deletion, and backend 400 rejection for unauthorized artisan artwork linking.
+- **Verified**:
+    - Database verification script confirmed 21 artworks owned by Naveed, 4 by Anisur, 0 exhibition paintings by Rokeya, and 4 artworks across walls [1,2,1,2] for all 6 exhibitions.
+    - Server TypeScript compilation passed cleanly with 0 errors (`npm --prefix server run build`).
+    - Client Vite production build compiled cleanly with 0 errors (`npm --prefix client run build`).
+    - Backend unit test suite passed (68/68 tests passing) (`npx --prefix server vitest run tests/unit`).
+    - Playwright E2E suite `e2e/organizer_exhibition_crud.spec.ts` passed on Desktop Chrome (12.0s) and Mobile 360px viewport (11.5s).
+    - Playwright E2E full suite (`e2e/05_exhibitions.spec.ts`, `e2e/organizer_exhibition_crud.spec.ts`, `e2e/homepage_feed.spec.ts`, `e2e/scroll_to_top.spec.ts`) passed 9/9 tests cleanly (30.0s).

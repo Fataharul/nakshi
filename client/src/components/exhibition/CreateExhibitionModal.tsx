@@ -80,9 +80,9 @@ export const CreateExhibitionModal: React.FC<CreateExhibitionModalProps> = ({
         // Exclude rejected artworks
         const eligible = artworks.filter((a) => a.moderationStatus !== 'REJECTED');
         setMyArtworks(eligible);
-        // Pre-select all or first few artworks
+        // Pre-select first 4 artworks
         if (eligible.length > 0) {
-          setSelectedArtworkIds(eligible.map((a) => a.id));
+          setSelectedArtworkIds(eligible.slice(0, 4).map((a) => a.id));
         }
       })
       .catch((err) => {
