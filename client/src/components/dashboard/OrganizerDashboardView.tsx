@@ -19,6 +19,7 @@ import { Artwork } from '../../types/artwork';
 import { ExhibitionService, Exhibition } from '../../services/exhibition.service';
 import { getArtworkImageUrl, DEFAULT_ARTWORK_IMAGE } from '../../utils/image.util';
 import { TopUpCreditsModal } from '../wallet/TopUpCreditsModal';
+import { EditExhibitionModal } from '../exhibition/EditExhibitionModal';
 
 interface OrganizerDashboardViewProps {
   user: User;
@@ -45,6 +46,24 @@ export const OrganizerDashboardView: React.FC<OrganizerDashboardViewProps> = ({
   const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
   const [isLoadingExhibitions, setIsLoadingExhibitions] = useState<boolean>(true);
   const [isTopUpOpen, setIsTopUpOpen] = useState<boolean>(false);
+  const [editingExhibition, setEditingExhibition] = useState<Exhibition | null>(null);
+
+  const handleExhibitionUpdated = (updated: Exhibition) => {
+    setExhibitions((prev) => prev.map((e) => (e.id === updated.id ? { ...e, ...updated } : e)));
+    setEditingExhibition(null);
+  };
+
+  const handleDeleteExhibition = async (id: string, title: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${title}"? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      await ExhibitionService.deleteExhibition(id);
+      setExhibitions((prev) => prev.filter((e) => e.id !== id));
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete exhibition');
+    }
+  };
 
   const fetchOrganizerExhibitions = async () => {
     try {
@@ -372,11 +391,33 @@ export const OrganizerDashboardView: React.FC<OrganizerDashboardViewProps> = ({
                           {new Date(exh.startTime).toLocaleDateString()}
                         </span>
 
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                          <button
+                            type="button"
+                            id={`edit-exhibition-btn-${exh.id}`}
+                            onClick={() => setEditingExhibition(exh)}
+                            className="px-2.5 py-1.5 rounded-lg border border-outline/30 text-on-surface text-xs font-semibold hover:bg-surface-container transition-all flex items-center gap-1 cursor-pointer"
+                            title="Edit Exhibition"
+                          >
+                            <Edit className="w-3.5 h-3.5 text-primary" />
+                            <span>Edit</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            id={`delete-exhibition-btn-${exh.id}`}
+                            onClick={() => handleDeleteExhibition(exh.id, exh.title)}
+                            className="p-1.5 rounded-lg border border-outline/30 text-error hover:bg-error/10 hover:border-error/40 transition-all flex items-center justify-center cursor-pointer"
+                            title="Delete Exhibition"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+
                           <Link
                             to={`/dashboard/organizer/exhibitions/${exh.id}/analytics`}
                             id={`exhibition-analytics-btn-${exh.id}`}
-                            className="px-3 py-2 rounded-lg border border-outline/30 text-on-surface text-xs font-semibold uppercase tracking-wider hover:bg-surface-container transition-all flex items-center gap-1"
+                            className="px-2.5 py-1.5 rounded-lg border border-outline/30 text-on-surface text-xs font-semibold hover:bg-surface-container transition-all flex items-center gap-1"
+                            title="View Visitor Analytics"
                           >
                             <BarChart3 className="w-3.5 h-3.5" />
                             <span>Analytics</span>
@@ -384,7 +425,7 @@ export const OrganizerDashboardView: React.FC<OrganizerDashboardViewProps> = ({
 
                           <Link
                             to={`/exhibitions/${exh.id}`}
-                            className="px-4 py-2 rounded-lg bg-primary text-on-primary text-xs font-semibold uppercase tracking-wider hover:bg-surface-tint transition-all shadow-xs flex items-center gap-1"
+                            className="px-3 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:bg-surface-tint transition-all shadow-xs flex items-center gap-1"
                           >
                             <span>Enter Hall</span>
                             <ArrowRight className="w-3.5 h-3.5" />
@@ -504,6 +545,17 @@ export const OrganizerDashboardView: React.FC<OrganizerDashboardViewProps> = ({
         isOpen={isTopUpOpen}
         onClose={() => setIsTopUpOpen(false)}
       />
+
+      {/* Edit Exhibition Modal */}
+      {editingExhibition && (
+        <EditExhibitionModal
+          isOpen={Boolean(editingExhibition)}
+          exhibition={editingExhibition}
+          onClose={() => setEditingExhibition(null)}
+          onExhibitionUpdated={handleExhibitionUpdated}
+          onOpenUploadArtwork={onOpenAddModal}
+        />
+      )}
     </div>
   );
 };

@@ -34,6 +34,28 @@ export class ExhibitionController {
     }
   }
 
+  public static async update(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = req.params.id as string;
+      const organizerId = (req as any).user!.id;
+      const exhibition = await ExhibitionService.update(id, organizerId, req.body);
+      res.status(200).json({ exhibition });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public static async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = req.params.id as string;
+      const organizerId = (req as any).user!.id;
+      const result = await ExhibitionService.delete(id, organizerId);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   public static async purchaseTicket(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = (req as any).user!.id;

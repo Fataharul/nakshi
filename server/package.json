@@ -10,6 +10,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
+    "clean:data": "tsx prisma/clean-test-data.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:acceptance": "vitest run tests/acceptance"

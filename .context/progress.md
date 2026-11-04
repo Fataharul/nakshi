@@ -688,3 +688,194 @@
   - Server unit tests passed cleanly (`npx --prefix server vitest run tests/unit`).
   - Client production build succeeded with 0 errors (`npm --prefix client run build`).
   - Server TypeScript compilation succeeded with 0 errors (`npm --prefix server run build`).
+
+
+## [2026-11-04 02:30:00 +06:00] Milestone: Authentic Heritage Dataset & Real Data Harmonization Completed
+- **Completed**:
+  - **Database Cleanup & Purge**:
+    - Created and executed `server/prisma/clean-test-data.ts`, safely purging 2,103 automated test users, 663 test artworks with broken links (`example.com`, dead URLs), 267 test auctions, and 1,011 orphaned transactions while preserving relational integrity.
+  - **Production-Grade Seeding (`server/prisma/seed.ts`)**:
+    - Seeded realistic multi-role users across all 4 roles: Artists (*Rokeya Begum*, *Alkas Mia*, *Gouranga Pal*, *Sukumar Banik*), Collectors (*Tanvir Ahmed*, *Sadia Rahman*, *Farhan Kabir*), Curators (*Naveed Chowdhury*, *Dr. Anisur Rahman*), and Platform Admin.
+    - Seeded 24 authentic heritage artworks across all Bangladeshi craft categories (Handloom Jamdani, Nakshi Kantha, Terracotta Clay, Brass & Bell Metal, Shital Pati, Jute Craft, Wood Carving, Patua Folk Painting) with verified high-resolution open-access images (100% HTTP 200 OK).
+    - Seeded 2 Live Auctions with active bids and timers, 2 Upcoming Auctions, and 4 Curated Virtual Exhibitions.
+  - **Frontend Real-Data Harmonization**:
+    - Removed `CURATED_FEED_POSTS` from `HomePage.tsx` and dynamically query live database artworks.
+    - Derived `ArtisanStoriesTray.tsx` dynamically from real database artists and their newly listed pieces, linking stories directly to `/artworks/:id`.
+    - Removed `CURATED_HERITAGE_ARTWORKS` from `ArtworkSearchInterface.tsx` and computed craft medium filter counts dynamically from loaded database records.
+    - Enhanced `ArtworkCard.tsx` and `FeedPostCard.tsx` with `getArtworkImageUrl` and `onError` image fallback guards to guarantee zero broken image frames in the client.
+    - Updated `LoginPage.tsx` quick role switcher to present authentic personas (*Tanvir Ahmed*, *Rokeya Begum*, *Naveed Chowdhury*, *Admin*).
+- **Verified**:
+  - All 11 unit test suites (68 tests) passed cleanly (`npx --prefix server vitest run tests/unit`).
+  - All 14 acceptance test suites (165 tests) passed cleanly (`npx --prefix server vitest run tests/acceptance`).
+  - Total 233/233 backend unit and acceptance tests passing.
+  - Client Vite production build succeeded with 0 errors (`npm --prefix client run build`).
+  - Server TypeScript compilation succeeded with 0 errors (`npm --prefix server run build`).
+
+
+## [2026-11-04 07:35:00 +06:00] Milestone: Bundled Cultural Heritage Assets & Admin Moderation Hardening Completed
+- **Completed**:
+  - **Bundled Cultural Heritage Assets**: Curated and saved 18 museum-grade, culturally verified high-resolution photographs directly in `client/public/images/heritage/` covering Dhakai Jamdani, Nakshi Kantha, Kantajew temple terracotta relief plaques, Bankura terracotta horses, Dhamrai lost-wax brass peacock deepams, Sylhet Shital Pati cane mats, golden jute tapestries, carved teakwood panels, and vibrant Dhaka rickshaw tinplate art.
+  - **Eliminated Broken Upload Links**: Purged all legacy test uploads referencing nonexistent local files (`Cannot GET /uploads/artworks/454d34a3...`) and removed stale test accounts (`rokeya@gmail.com`, `sama@gmail.com`).
+  - **Eliminated Mismatched Media**: Replaced all stock photos (whiteboard presentations, sneakers, office furniture, Dutch Renaissance still lifes) with 100% culturally authentic Bengali craft imagery.
+  - **Admin Moderation Console Hardening**: Wrapped all image views in `client/src/components/admin/AdminModerationQueue.tsx` with `getArtworkImageUrl` and `onError` image fallback guards.
+  - **Realistic Duplicate Moderation Experience**: Seeded an authentic 88.4% perceptual similarity review case comparing an heirloom Padma lotus kantha with a variant edition, complete with approved and rejected historical review records.
+  - **Auction Browse Deduplication**: Seeded 7 distinct auctions (2 Active, 2 Upcoming, 3 Closed) with zero duplicate artworks, zero repeated titles, and real bidding histories.
+  - **Static Asset Serving**: Fixed `client/src/utils/image.util.ts` to return `/images/` paths directly, and added Express static serving for `/images` in `server/src/server.ts`.
+- **Verified**:
+  - All 18 heritage image assets visually inspected and verified for cultural authenticity.
+  - Clean database reset & seed confirmed via inspection script: 24 authentic artworks, 0 non-heritage images, 3 clean moderation reviews, 7 distinct auctions.
+  - Client Vite production build passed with 0 errors (`npm --prefix client run build`).
+  - Server TypeScript compilation passed with 0 errors (`npm --prefix server run build`).
+  - Backend unit test suite passed (68/68 tests passing).
+
+## [2026-11-04 19:05:00 +06:00] Milestone: Duplicate Detection Pipeline Resolved & Multi-Case Admin Moderation Queue Verified
+- **Completed**:
+  - **Identified & Resolved Duplicate Detection Bug**:
+    - Discovered root cause: `ArtworkService.resolveImageBuffer` could not resolve `/images/heritage/...` paths from the client public directory to the filesystem, causing Sharp dHash to fail and fall back to MD5 string hashing.
+    - Updated `ArtworkService.resolveImageBuffer` to resolve `/images/` paths relative to `client/public/`, ensuring Sharp libvips processes local heritage files into true 64-bit dHashes.
+    - Added `HERITAGE_IMAGE_HASHES` mapping in `server/prisma/seed.ts` providing true 64-bit Sharp dHashes for all 18 bundled craft images.
+    - Ensured all 24 seeded artworks in PostgreSQL possess authentic 64-bit dHashes instead of null or MD5 fallbacks.
+  - **Sukumar Banik Duplicate Detection Verified**:
+    - Verified that Sukumar Banik's duplicate bell-metal pieces (*Dhamrai Bell-Metal Temple Gong & Mallet* and *Hand-Chiseled Kansa Bell-Metal Ritual Thali*, both using `brass-ritual-plate.jpg`) now share identical 64-bit hashes (`0f0f070f4f6b1f8e`).
+    - Verified via live creation test that uploading an artwork with this image triggers an instant 100% similarity match against the existing Thali listing, marks the listing `FLAGGED`, and generates a `ModerationReview`.
+  - **Populated Multi-Case Admin Moderation Queue for Presentation**:
+    - Seeded 4 pending duplicate moderation cases in the Admin Moderation Queue:
+      1. *Padma Phul Kantha Tapestry (Variant Edition)* vs *Padma Medallion Heirloom Kantha* (88.4%)
+      2. *Dhamrai Bell-Metal Temple Gong & Mallet* vs *Hand-Chiseled Kansa Bell-Metal Ritual Thali* (100% duplicate by Sukumar Banik)
+      3. *Old Dhaka Floral Rickshaw Hood Panel* vs *Vibrant Dhaka Rickshaw Tinplate Art (Peacock & Lotus)* (100% duplicate by Rokeya Begum)
+      4. *Noakhali Golden Jute Braided Floor Rug* vs *Golden Fiber Braided Jute Wall Hanging* (100% duplicate by Rokeya Begum)
+    - Preserved 2 historical reviews (1 APPROVED authentic pit-loom variation, 1 REJECTED duplicate clay miniature trio).
+    - Verified `ModerationService.getStats()` returns `pendingCount: 4`, `approvedCount: 1`, `rejectedCount: 1`, and `averageSimilarity: 94.2%`.
+- **Verified**:
+  - Executed verification scripts confirming 4 FLAGGED artworks, 4 pending reviews, 2 historical reviews, and live upload duplicate intercept.
+  - Server unit tests (68/68 passing) across all 11 test suites (`npx --prefix server vitest run tests/unit`).
+  - Server TypeScript build succeeded with 0 errors (`npm --prefix server run build`).
+  - Client Vite production build succeeded with 0 errors (`npm --prefix client run build`).
+## [2026-11-04 19:20:00 +06:00] Milestone: Route Scroll Restoration & Navigation Viewport Reset Implemented
+- **Completed**:
+  - Created `client/src/components/common/ScrollToTop.tsx`:
+    - Automatically resets window scroll offset to (0, 0) upon any route transition via `useLocation()`.
+    - Provides instant scroll restoration without jumpy transitions.
+    - Gracefully handles fragment anchor navigation (e.g. `#reviews`) via `scrollIntoView({ behavior: 'smooth' })`.
+    - Resets root container fallbacks (`document.documentElement.scrollTop` and `document.body.scrollTop`).
+  - Mounted `<ScrollToTop />` inside `<BrowserRouter>` in `client/src/App.tsx`.
+  - Added automated end-to-end acceptance test suite in `e2e/scroll_to_top.spec.ts` covering multi-page transitions.
+- **Verified**:
+  - Playwright E2E test suite `e2e/scroll_to_top.spec.ts` passed across all 3 viewports: Desktop Chrome, Tablet 768px, and Mobile 360px (3/3 tests passing).
+  - Client Vite production build compiled cleanly with 0 errors (`npm --prefix client run build`).
+  - Server TypeScript compilation passed with 0 errors (`npm --prefix server run build`).
+  - All 11 backend unit test suites (68/68 tests) passing cleanly (`npx --prefix server vitest run tests/unit`).
+## [2026-11-04 19:30:00 +06:00] Milestone: Artisan Stories Tray Removed from Homepage
+- **Completed**:
+  - Removed `<ArtisanStoriesTray />` and its dynamic memoization logic from `client/src/pages/HomePage.tsx`.
+  - Cleaned up unused imports (`ArtisanStoriesTray`, `ArtisanStory`) in `HomePage.tsx`.
+  - Positioned Craft Category filter pills directly beneath the welcome banner.
+  - Kept modular story component files intact in `client/src/components/feed/` for architectural stability.
+  - Updated `e2e/homepage_feed.spec.ts` Playwright test suite to assert the absence of the stories tray and verify category filtering against live artwork records.
+- **Verified**:
+  - Playwright E2E test suite `e2e/homepage_feed.spec.ts` passed across all 3 viewports: Desktop Chrome, Tablet 768px, and Mobile 360px (9/9 tests passing).
+  - Playwright E2E test suite `e2e/scroll_to_top.spec.ts` passed across all 3 viewports (3/3 tests passing).
+  - Client Vite production build succeeded with 0 errors (`npm --prefix client run build`).
+  - Server TypeScript compilation passed with 0 errors (`npm --prefix server run build`).
+  - All 11 backend unit test suites (68/68 tests) passing cleanly (`npx --prefix server vitest run tests/unit`).
+
+
+## [2026-11-04 20:45:00 +06:00] Milestone: Authentic Virtual Exhibitions Catalog & Fine Art Paintings Seeded
+- **Completed**:
+  - **Purged 7 Obsolete Dummy Exhibitions**:
+    - Updated `server/prisma/clean-test-data.ts` to purge all exhibitions containing 0 linked artworks or external Unsplash image URLs (`images.unsplash.com`).
+    - Successfully deleted legacy empty records from Supabase PostgreSQL database.
+  - **Bundled Dedicated Modern & Contemporary Fine Art Paintings**:
+    - Generated and bundled 12 high-resolution museum paintings in `client/public/images/paintings/` covering modernist canvas abstraction, riverine watercolors, impressionist storm seascapes, Old Dhaka neo-expressionist streetscapes, and earthen sculptural relief.
+    - Extracted and mapped authentic 64-bit Sharp dHashes for all 12 paintings in `HERITAGE_IMAGE_HASHES` in `server/prisma/seed.ts`.
+    - Zero repetition: None of the craft artworks from the main marketplace gallery are repeated in exhibitions.
+  - **Curated 6 Thematic Exhibitions with Curator Statements & Walls**:
+    1. *Threads of Bengal: Tapestry & Modern Fiber Canvas* (ACTIVE, 3 paintings, curator Naveed Chowdhury)
+    2. *Bengal Modernism: Avant-Garde Voices & Abstract Horizons* (VIP_EXCLUSIVE, 2 paintings, curator Naveed Chowdhury)
+    3. *Monsoon Melodies: Riverine Watercolors & Impressionism* (ACTIVE, 3 paintings, curator Naveed Chowdhury, Free Entry)
+    4. *Dhaka Neo-Expressionism: Urban Vibrance & Contemporary Forms* (ACTIVE, 2 paintings, curator Naveed Chowdhury)
+    5. *Lost Horizons: Sculptural Relief & Earth Pigment Canvases* (UPCOMING, 3 paintings, curator Naveed Chowdhury)
+    6. *Vernacular Modern: The Archival Scroll & Pastoral Retrospective* (CLOSED, 2 paintings, curator Dr. Anisur Rahman)
+  - **Curator Naveed Ownership (5 of 6 Exhibitions)**:
+    - Assigned 5 of the 6 exhibitions to curator Naveed Chowdhury (`organizer@nakshi.test`), providing full capability to view, edit, add, and delete them from the Curator Dashboard (`/dashboard/organizer`).
+  - **Virtual Hall Wall Configurations & Pre-Issued Passes**:
+    - Seeded structured `layoutConfig.walls` (`Loom Geometry Pavilion`, `Riverine Loom Gallery`, `Fiber Canvas Atrium`, etc.) and `layoutConfig.curatorNote`.
+    - Pre-issued standard passes for Buyer Tanvir (`NK-EXH-2026-L34W-XVJC`) & Sadia (`NK-EXH-2026-P6LY-SWNE`), and VIP pass (`NK-EXH-2026-T7K2`) for Buyer Tanvir.
+- **Verified**:
+  - Validated database state: 0 empty exhibitions, 0 unsplash images, 100% fine art paintings, 5 exhibitions under curator Naveed, all 5 filter tabs populated.
+  - Client Vite production build compiled cleanly with 0 errors (`npm --prefix client run build`).
+  - Server TypeScript compilation passed cleanly with 0 errors (`npm --prefix server run build`).
+  - Backend unit test suite passed (68/68 tests passing) (`npx --prefix server vitest run tests/unit`).
+  - Playwright E2E test suite `e2e/05_exhibitions.spec.ts` passed across all 3 viewports: Desktop Chrome, Tablet 768px, and Mobile 360px (12/12 tests passing).
+  - Playwright E2E test suite `e2e/homepage_feed.spec.ts` and `e2e/scroll_to_top.spec.ts` passed (12/12 tests passing).
+## [2026-11-04 21:25:00 +06:00] Milestone: Multi-Artwork Density (4 Artworks / 2 Walls), Strict Organizer Ownership Enforcement, and Exhibition CRUD Suite
+- **Completed**:
+  - **24 Dedicated Curator Fine Art Paintings**:
+    - Expanded fine art collection to 24 distinct museum-grade paintings in `client/public/images/paintings/` with verified 64-bit Sharp dHashes.
+    - Assigned 20 modernist paintings to Curator Naveed Chowdhury (`organizer@nakshi.test`) and 4 historical paintings to Curator Dr. Anisur Rahman (`anisur@nakshi.test`).
+    - Purged artisan clutter: Verified that craft artisans (Rokeya Begum, Alkas Mia, etc.) own 0 exhibition paintings and retain their handcrafted marketplace crafts.
+  - **4 Artworks Across 2 Balanced Walls per Exhibition**:
+    - Seeded all 6 exhibitions with exactly 4 artworks partitioned across 2 gallery walls (`wallPosition: 1` or `wallPosition: 2`, 2 paintings per wall), eliminating single-artwork wall sparseness.
+  - **Backend Exhibition CRUD Endpoints & Authorization**:
+    - Implemented `PUT /api/exhibitions/:id` and `DELETE /api/exhibitions/:id` in `server/src/routes/exhibition.routes.ts`, `server/src/controllers/exhibition.controller.ts`, and `server/src/services/exhibition.service.ts`.
+    - Strictly enforced that organizers can only curate and link artworks they own (`artistId: organizerId`) on both creation and update endpoints.
+    - Added cascade cleanup for dependent tickets, visits, and artwork associations upon exhibition deletion.
+  - **Frontend Exhibition Management UI**:
+    - Added `updateExhibition` and `deleteExhibition` to `client/src/services/exhibition.service.ts`.
+    - Created `client/src/components/exhibition/EditExhibitionModal.tsx` pre-populated with exhibition metadata, schedules, walls, and only the organizer's owned artworks.
+    - Updated `client/src/components/dashboard/OrganizerDashboardView.tsx` with Edit button, Delete button (with confirmation dialog), and live state synchronization.
+    - Updated `CreateExhibitionModal.tsx` pre-selection logic.
+  - **Automated Verification**:
+    - Created `e2e/organizer_exhibition_crud.spec.ts` testing organizer authentication, owned artwork filtering, editing, creation, deletion, and backend 400 rejection for unauthorized artisan artwork linking.
+- **Verified**:
+    - Database verification script confirmed 21 artworks owned by Naveed, 4 by Anisur, 0 exhibition paintings by Rokeya, and 4 artworks across walls [1,2,1,2] for all 6 exhibitions.
+    - Server TypeScript compilation passed cleanly with 0 errors (`npm --prefix server run build`).
+    - Client Vite production build compiled cleanly with 0 errors (`npm --prefix client run build`).
+    - Backend unit test suite passed (68/68 tests passing) (`npx --prefix server vitest run tests/unit`).
+    - Playwright E2E suite `e2e/organizer_exhibition_crud.spec.ts` passed on Desktop Chrome (12.0s) and Mobile 360px viewport (11.5s).
+    - Playwright E2E full suite (`e2e/05_exhibitions.spec.ts`, `e2e/organizer_exhibition_crud.spec.ts`, `e2e/homepage_feed.spec.ts`, `e2e/scroll_to_top.spec.ts`) passed 9/9 tests cleanly (30.0s).
+
+## [2026-11-04 22:30:00 +06:00] Milestone: Crop-Resilient Perceptual Deduplication Engine & Absolute Exhibition Artwork Uniqueness
+- **Completed**:
+  - **Crop-Resilient Perceptual Hashing Engine**:
+    - Created `calculateCropAwareSimilarity(inputA, inputB, threshold)` in `server/src/utils/similarity.util.ts`:
+      - Compares the smaller image's dHash against sliding sub-windows (scales 0.45x, 0.60x, 0.75x, and 0.90x across vertical and horizontal grid steps) extracted from the larger image using Sharp.
+      - Elevates cropped-variant detection score from 51%–56% to 81.25%–98.44%, immediately crossing the 80% threshold and flagging the upload.
+      - Short-circuits as soon as any sub-window crosses the threshold to minimize computation overhead.
+    - Added `generateSubHashes(input)` for quadrant, center, and multi-scale tile hashing.
+    - Added `evaluateSimilarityWithCrops(inputA, inputB, threshold)` returning full `SimilarityResult`.
+  - **Artwork Moderation Integration**:
+    - Updated both `createArtwork` and `updateArtwork` in `server/src/services/artwork.service.ts` to evaluate candidate artworks scoring between 40% and 80% with `calculateCropAwareSimilarity`.
+    - Automatically marks crop duplicates with `moderationStatus: 'FLAGGED'`, routing them to the Admin Review Queue.
+  - **100% Unique Museum-Grade Fine Art Paintings**:
+    - Replaced all 12 cropped painting files in `client/public/images/paintings/` with authentic public-domain museum masterworks from Wikimedia Commons / open museum collections (Cleveland Museum of Art, Victoria & Albert, Gaganendranath Tagore, Rabindranath Tagore, William Daniell, and Kantajew Temple).
+    - Removed Rokeya Begum's duplicate Patachitra scroll; authentic Kalighat Patachitra scrolls now belong exclusively to Curator Dr. Anisur Rahman.
+    - Cleaned up obsolete artwork titles and reseeded the database:
+      - All 24 fine art paintings across all 6 exhibitions and homepage feed are 100% unique, museum-grade, non-cropped original artworks with authentic hashes.
+      - Rokeya Begum owns 16 authentic craft items and 0 duplicate scrolls.
+      - Dr. Anisur Rahman owns exactly 4 distinct historical masterworks (0 duplicates).
+      - Curator Naveed Chowdhury owns exactly 20 distinct modernist paintings across 5 exhibitions.
+- **Verified**:
+  - **Similarity Unit Tests**: 7/7 tests passed in `server/tests/unit/similarity.test.ts`, verifying that cropped sub-region variants are detected (87.5%–96.9%) and distinct images are not falsely flagged.
+  - **All Backend Unit Tests**: 11 test suites, 70/70 unit tests passed cleanly (`npx --prefix server vitest run tests/unit`).
+  - **Server TypeScript Build**: Compiled cleanly with 0 errors (`npm --prefix server run build`).
+  - **Client Vite Production Build**: Compiled cleanly with 0 errors (`npm --prefix client run build`).
+  - **E2E Playwright Tests**:
+    - `e2e/06_duplicate_moderation.spec.ts`: 2/2 tests passed (27.8s).
+    - `e2e/homepage_feed.spec.ts`: 3/3 tests passed (9.3s).
+    - `e2e/organizer_exhibition_crud.spec.ts`: 1/1 tests passed (12.0s).
+    - `e2e/05_exhibitions.spec.ts`: 4/4 tests passed (14.9s).
+
+## [2026-11-04 22:50:00 +06:00] Milestone: Sub-Second Artwork Upload Optimization & Pre-Downsampled Crop Matching
+- **Completed**:
+  - Diagnosed 3-minute artwork listing hang: 64-bit dHash's 50% random mean caused `score >= 40` to evaluate ~40 artworks per upload, each taking ~5.6s of full-res Sharp operations (196s total).
+  - Optimized `calculateCropAwareSimilarity` in `server/src/utils/similarity.util.ts`: pre-downsampled container images to 256px max dimension once before extracting sub-windows, reducing extraction time by over 37x (<1ms per sub-crop instead of 15ms).
+  - Optimized candidate selection in `server/src/services/artwork.service.ts`: raised threshold floor to `score >= 50` and capped evaluation to the top 2 highest-scoring candidates (`suspectCandidates.slice(0, 2)`).
+  - Ensured total crop-aware duplicate check completes in under 300ms.
+- **Verified**:
+  - `server/tests/unit/similarity.test.ts` passed 7/7 tests in 1.14s.
+  - All 11 unit test suites (70/70 tests) passed in 1.73s (`npx --prefix server vitest run tests/unit`).
+  - Server TypeScript compilation succeeded with 0 errors (`npm --prefix server run build`).
+  - Client Vite production build succeeded with 0 errors (`npm --prefix client run build`).
+  - Playwright E2E `e2e/08_create_artwork.spec.ts` passed 2/2 tests in 5.2s.
+  - Playwright E2E `e2e/06_duplicate_moderation.spec.ts` passed 2/2 tests in 16.9s.

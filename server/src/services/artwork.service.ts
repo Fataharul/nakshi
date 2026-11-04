@@ -7,6 +7,7 @@ import { Role } from '@prisma/client';
 import {
   generateDHash,
   calculateSimilarityScore,
+  calculateCropAwareSimilarity,
   DEFAULT_SIMILARITY_THRESHOLD,
 } from '../utils/similarity.util';
 
@@ -51,6 +52,22 @@ export class ArtworkService {
         path.resolve('./server' + trimmed),
         path.resolve(__dirname, '../../uploads', relative),
         path.resolve(__dirname, '../../../uploads', relative),
+      ];
+      for (const candidate of candidates) {
+        if (fs.existsSync(candidate)) {
+          return fs.readFileSync(candidate);
+        }
+      }
+    }
+
+    // Resolve /images/ paths relative to the client public directory (heritage assets)
+    if (trimmed.startsWith('/images/')) {
+      const relative = trimmed.replace(/^\//, '');
+      const candidates = [
+        path.resolve(__dirname, '../../../client/public', relative),
+        path.resolve(__dirname, '../../../../client/public', relative),
+        path.resolve('./client/public', relative),
+        path.resolve('.' + trimmed),
       ];
       for (const candidate of candidates) {
         if (fs.existsSync(candidate)) {
@@ -189,7 +206,14 @@ export class ArtworkService {
     // Do not compare if user is using the default placeholder image
     const isUsingPlaceholder = !input.imageUrl || input.imageUrl.trim() === DEFAULT_ARTWORK_IMAGE;
 
+    // 3. Evaluate against 80% threshold
+    const threshold = process.env.SIMILARITY_THRESHOLD
+      ? parseFloat(process.env.SIMILARITY_THRESHOLD)
+      : DEFAULT_SIMILARITY_THRESHOLD;
+
     if (!isUsingPlaceholder && !similarityError) {
+      const suspectCandidates: { id: string; imageUrl: string; score: number }[] = [];
+
       for (const existing of existingArtworks) {
         // Do not match against listings that use the system default placeholder
         if (existing.imageUrl === DEFAULT_ARTWORK_IMAGE) continue;
@@ -201,17 +225,35 @@ export class ArtworkService {
               maxSimilarity = score;
               suspectedMatchId = existing.id;
             }
+            if (score >= 50 && score <= threshold) {
+              suspectCandidates.push({ id: existing.id, imageUrl: existing.imageUrl, score });
+            }
           } catch {
             // skip invalid hash
           }
         }
       }
-    }
 
-    // 3. Evaluate against 80% threshold
-    const threshold = process.env.SIMILARITY_THRESHOLD
-      ? parseFloat(process.env.SIMILARITY_THRESHOLD)
-      : DEFAULT_SIMILARITY_THRESHOLD;
+      // If global similarity did not cross threshold, evaluate crop-aware similarity on suspect candidates
+      if (maxSimilarity <= threshold && suspectCandidates.length > 0) {
+        const newBuffer = await this.resolveImageBuffer(imageUrl);
+        if (newBuffer) {
+          suspectCandidates.sort((a, b) => b.score - a.score);
+          const topCandidates = suspectCandidates.slice(0, 2);
+          for (const cand of topCandidates) {
+            const candBuffer = await this.resolveImageBuffer(cand.imageUrl);
+            if (candBuffer) {
+              const cropScore = await calculateCropAwareSimilarity(newBuffer, candBuffer, threshold);
+              if (cropScore > maxSimilarity) {
+                maxSimilarity = cropScore;
+                suspectedMatchId = cand.id;
+                if (maxSimilarity > threshold) break;
+              }
+            }
+          }
+        }
+      }
+    }
 
     const isDuplicate = (!isUsingPlaceholder && maxSimilarity > threshold) || similarityError;
     const moderationStatus = isDuplicate ? 'FLAGGED' : 'APPROVED';
@@ -602,7 +644,13 @@ export class ArtworkService {
       });
 
       const isUsingPlaceholder = targetImageUrl === DEFAULT_ARTWORK_IMAGE;
+      const threshold = process.env.SIMILARITY_THRESHOLD
+        ? parseFloat(process.env.SIMILARITY_THRESHOLD)
+        : DEFAULT_SIMILARITY_THRESHOLD;
+
       if (!isUsingPlaceholder && !similarityError) {
+        const suspectCandidates: { id: string; imageUrl: string; score: number }[] = [];
+
         for (const other of existingArtworks) {
           if (other.imageUrl === DEFAULT_ARTWORK_IMAGE) continue;
           if (other.imageHash && other.imageHash.length === 16) {
@@ -612,16 +660,34 @@ export class ArtworkService {
                 maxSimilarity = score;
                 suspectedMatchId = other.id;
               }
+              if (score >= 50 && score <= threshold) {
+                suspectCandidates.push({ id: other.id, imageUrl: other.imageUrl, score });
+              }
             } catch {
               // skip invalid hash
             }
           }
         }
-      }
 
-      const threshold = process.env.SIMILARITY_THRESHOLD
-        ? parseFloat(process.env.SIMILARITY_THRESHOLD)
-        : DEFAULT_SIMILARITY_THRESHOLD;
+        if (maxSimilarity <= threshold && suspectCandidates.length > 0) {
+          const newBuffer = await this.resolveImageBuffer(targetImageUrl);
+          if (newBuffer) {
+            suspectCandidates.sort((a, b) => b.score - a.score);
+            const topCandidates = suspectCandidates.slice(0, 2);
+            for (const cand of topCandidates) {
+              const candBuffer = await this.resolveImageBuffer(cand.imageUrl);
+              if (candBuffer) {
+                const cropScore = await calculateCropAwareSimilarity(newBuffer, candBuffer, threshold);
+                if (cropScore > maxSimilarity) {
+                  maxSimilarity = cropScore;
+                  suspectedMatchId = cand.id;
+                  if (maxSimilarity > threshold) break;
+                }
+              }
+            }
+          }
+        }
+      }
 
       isDuplicate = (!isUsingPlaceholder && maxSimilarity > threshold) || similarityError;
       newModerationStatus = isDuplicate ? 'FLAGGED' : 'APPROVED';
