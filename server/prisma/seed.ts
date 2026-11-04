@@ -356,6 +356,7 @@ async function main() {
       weightUnit: 'kg',
       price: 850.0,
       imageUrl: HERITAGE_IMAGES.artworks.kanthaLotus,
+      imageHash: '2f1ad002ac7b3b00', // MD5 fallback hash for kantha-lotus.jpg
       like: 41,
       availability: ArtworkAvailability.AVAILABLE,
       moderationStatus: ModerationStatus.APPROVED,
@@ -374,9 +375,10 @@ async function main() {
       weightUnit: 'kg',
       price: 840.0,
       imageUrl: HERITAGE_IMAGES.artworks.kanthaLotusVariant,
+      imageHash: 'accc11f8db67b92d', // MD5 fallback hash for kantha-lotus-variant.jpg
       like: 12,
       availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.PENDING, // Flagged for duplicate review (88.4% match)
+      moderationStatus: ModerationStatus.FLAGGED, // Flagged for duplicate review (88.4% match)
       artistId: artistRokeya.id,
     },
     {
@@ -504,6 +506,7 @@ async function main() {
       weightUnit: 'kg',
       price: 440.0,
       imageUrl: HERITAGE_IMAGES.artworks.brassRitualPlate,
+      imageHash: '625ea2a4e1244250', // MD5 fallback hash for brass-ritual-plate.jpg
       like: 31,
       availability: ArtworkAvailability.AVAILABLE,
       moderationStatus: ModerationStatus.APPROVED,
@@ -522,9 +525,10 @@ async function main() {
       weightUnit: 'kg',
       price: 490.0,
       imageUrl: HERITAGE_IMAGES.artworks.brassRitualPlate,
+      imageHash: '625ea2a4e1244250', // MD5 fallback hash for brass-ritual-plate.jpg (matches Ritual Thali => duplicate)
       like: 29,
       availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
+      moderationStatus: ModerationStatus.FLAGGED, // Duplicate of Hand-Chiseled Kansa Bell-Metal Ritual Thali
       artistId: artistSukumar.id,
     },
 
@@ -580,6 +584,7 @@ async function main() {
       weightUnit: 'kg',
       price: 210.0,
       imageUrl: HERITAGE_IMAGES.artworks.juteTapestry,
+      imageHash: '1938fad7c339323c', // MD5 fallback hash for jute-tapestry.jpg
       like: 38,
       availability: ArtworkAvailability.AVAILABLE,
       moderationStatus: ModerationStatus.APPROVED,
@@ -598,9 +603,10 @@ async function main() {
       weightUnit: 'kg',
       price: 240.0,
       imageUrl: HERITAGE_IMAGES.artworks.juteTapestry,
+      imageHash: '1938fad7c339323c', // MD5 fallback hash for jute-tapestry.jpg (matches Wall Hanging => duplicate)
       like: 33,
       availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
+      moderationStatus: ModerationStatus.FLAGGED, // Duplicate of Golden Fiber Braided Jute Wall Hanging
       artistId: artistRokeya.id,
     },
 
@@ -638,6 +644,7 @@ async function main() {
       weightUnit: 'kg',
       price: 310.0,
       imageUrl: HERITAGE_IMAGES.artworks.folkRickshawArt,
+      imageHash: '8c68394a141bee22', // MD5 fallback hash for folk-rickshaw-art.jpg
       like: 92,
       availability: ArtworkAvailability.AVAILABLE,
       moderationStatus: ModerationStatus.APPROVED,
@@ -656,9 +663,10 @@ async function main() {
       weightUnit: 'kg',
       price: 220.0,
       imageUrl: HERITAGE_IMAGES.artworks.folkRickshawArt,
+      imageHash: '8c68394a141bee22', // MD5 fallback hash for folk-rickshaw-art.jpg (matches Peacock & Lotus => duplicate)
       like: 44,
       availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
+      moderationStatus: ModerationStatus.FLAGGED, // Duplicate of Vibrant Dhaka Rickshaw Tinplate Art
       artistId: artistRokeya.id,
     },
     {
@@ -909,7 +917,60 @@ async function main() {
   });
   console.log('[Seed] Created Pending Duplicate Moderation Review: Padma Phul Kantha Variant vs Heirloom Kantha (88.4%)');
 
-  // 2. HISTORICAL APPROVED REVIEW: Verified authentic variation
+  // Artwork references for new pending duplicate pairs
+  const ritualThali = artworkMap.get('Hand-Chiseled Kansa Bell-Metal Ritual Thali');
+  const templeGong = artworkMap.get('Dhamrai Bell-Metal Temple Gong & Mallet');
+  const rickshawPeacock = artworkMap.get('Vibrant Dhaka Rickshaw Tinplate Art (Peacock & Lotus)');
+  const rickshawHood = artworkMap.get('Old Dhaka Floral Rickshaw Hood Panel');
+  const juteWallHanging = artworkMap.get('Golden Fiber Braided Jute Wall Hanging');
+  const juteFloorRug = artworkMap.get('Noakhali Golden Jute Braided Floor Rug');
+
+  // 2. PENDING REVIEW: Bell-Metal duplicate — Temple Gong vs Ritual Thali (100% hash match)
+  await prisma.moderationReview.create({
+    data: {
+      sourceArtworkId: templeGong.id,
+      suspectedMatchId: ritualThali.id,
+      similarityScore: 100.0,
+      adminId: null,
+      actionTaken: null,
+      adminNotes: 'Identical image hash detected by perceptual dHash engine. Possible duplicate listing by same artist.',
+      createdAt: new Date(now.getTime() - 4 * 3600 * 1000), // 4 hours ago
+      reviewedAt: null,
+    },
+  });
+  console.log('[Seed] Created Pending Duplicate Moderation Review: Temple Gong vs Ritual Thali (100%)');;
+
+  // 3. PENDING REVIEW: Folk Art duplicate — Rickshaw Hood Panel vs Peacock Tinplate (100% hash match)
+  await prisma.moderationReview.create({
+    data: {
+      sourceArtworkId: rickshawHood.id,
+      suspectedMatchId: rickshawPeacock.id,
+      similarityScore: 100.0,
+      adminId: null,
+      actionTaken: null,
+      adminNotes: 'Exact image match flagged by visual similarity engine. Rickshaw hood panel shares identical artwork source.',
+      createdAt: new Date(now.getTime() - 7 * 3600 * 1000), // 7 hours ago
+      reviewedAt: null,
+    },
+  });
+  console.log('[Seed] Created Pending Duplicate Moderation Review: Rickshaw Hood Panel vs Peacock Tinplate Art (100%)');;
+
+  // 4. PENDING REVIEW: Jute Craft duplicate — Floor Rug vs Wall Hanging (100% hash match)
+  await prisma.moderationReview.create({
+    data: {
+      sourceArtworkId: juteFloorRug.id,
+      suspectedMatchId: juteWallHanging.id,
+      similarityScore: 100.0,
+      adminId: null,
+      actionTaken: null,
+      adminNotes: 'Same image file identified across two separate listings. Automatic duplicate flag raised.',
+      createdAt: new Date(now.getTime() - 11 * 3600 * 1000), // 11 hours ago
+      reviewedAt: null,
+    },
+  });
+  console.log('[Seed] Created Pending Duplicate Moderation Review: Jute Floor Rug vs Jute Wall Hanging (100%)');;
+
+  // 5. HISTORICAL APPROVED REVIEW: Verified authentic variation
   await prisma.moderationReview.create({
     data: {
       sourceArtworkId: scarfPiece.id,
@@ -924,7 +985,7 @@ async function main() {
   });
   console.log('[Seed] Created History Approved Moderation Review: Sonargaon Muslin Scarf vs Jamdani Saree (82.1%)');
 
-  // 3. HISTORICAL REJECTED REVIEW: Intercepted duplicate upload
+  // 6. HISTORICAL REJECTED REVIEW: Intercepted duplicate upload
   await prisma.moderationReview.create({
     data: {
       sourceArtworkId: miniatureTrio.id,

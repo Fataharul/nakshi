@@ -59,6 +59,22 @@ export class ArtworkService {
       }
     }
 
+    // Resolve /images/ paths relative to the client public directory (heritage assets)
+    if (trimmed.startsWith('/images/')) {
+      const relative = trimmed.replace(/^\//, '');
+      const candidates = [
+        path.resolve(__dirname, '../../../client/public', relative),
+        path.resolve(__dirname, '../../../../client/public', relative),
+        path.resolve('./client/public', relative),
+        path.resolve('.' + trimmed),
+      ];
+      for (const candidate of candidates) {
+        if (fs.existsSync(candidate)) {
+          return fs.readFileSync(candidate);
+        }
+      }
+    }
+
     if (fs.existsSync(trimmed)) {
       return fs.readFileSync(trimmed);
     }
