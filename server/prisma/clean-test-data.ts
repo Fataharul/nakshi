@@ -176,13 +176,16 @@ async function main() {
   });
   console.log(`[Cleanup] Deleted ${deletedUsers.count} test users.`);
 
-  // Also clean up any lingering duplicate test exhibitions with 179... in title
+  // Also clean up any lingering duplicate test exhibitions, empty dummy exhibitions, or unsplash banners
   const testExhibitions = await prisma.exhibition.findMany({
     where: {
       OR: [
         { title: { contains: '179' } },
         { title: { contains: 'Test' } },
         { title: { contains: 'Playwright' } },
+        { bannerUrl: { contains: 'unsplash' } },
+        { bannerUrl: { contains: 'placeholder' } },
+        { artworks: { none: {} } },
       ],
     },
     select: { id: true },

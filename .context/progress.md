@@ -778,3 +778,33 @@
   - Client Vite production build succeeded with 0 errors (`npm --prefix client run build`).
   - Server TypeScript compilation passed with 0 errors (`npm --prefix server run build`).
   - All 11 backend unit test suites (68/68 tests) passing cleanly (`npx --prefix server vitest run tests/unit`).
+
+
+## [2026-11-04 20:45:00 +06:00] Milestone: Authentic Virtual Exhibitions Catalog & Fine Art Paintings Seeded
+- **Completed**:
+  - **Purged 7 Obsolete Dummy Exhibitions**:
+    - Updated `server/prisma/clean-test-data.ts` to purge all exhibitions containing 0 linked artworks or external Unsplash image URLs (`images.unsplash.com`).
+    - Successfully deleted legacy empty records from Supabase PostgreSQL database.
+  - **Bundled Dedicated Modern & Contemporary Fine Art Paintings**:
+    - Generated and bundled 12 high-resolution museum paintings in `client/public/images/paintings/` covering modernist canvas abstraction, riverine watercolors, impressionist storm seascapes, Old Dhaka neo-expressionist streetscapes, and earthen sculptural relief.
+    - Extracted and mapped authentic 64-bit Sharp dHashes for all 12 paintings in `HERITAGE_IMAGE_HASHES` in `server/prisma/seed.ts`.
+    - Zero repetition: None of the craft artworks from the main marketplace gallery are repeated in exhibitions.
+  - **Curated 6 Thematic Exhibitions with Curator Statements & Walls**:
+    1. *Threads of Bengal: Tapestry & Modern Fiber Canvas* (ACTIVE, 3 paintings, curator Naveed Chowdhury)
+    2. *Bengal Modernism: Avant-Garde Voices & Abstract Horizons* (VIP_EXCLUSIVE, 2 paintings, curator Naveed Chowdhury)
+    3. *Monsoon Melodies: Riverine Watercolors & Impressionism* (ACTIVE, 3 paintings, curator Naveed Chowdhury, Free Entry)
+    4. *Dhaka Neo-Expressionism: Urban Vibrance & Contemporary Forms* (ACTIVE, 2 paintings, curator Naveed Chowdhury)
+    5. *Lost Horizons: Sculptural Relief & Earth Pigment Canvases* (UPCOMING, 3 paintings, curator Naveed Chowdhury)
+    6. *Vernacular Modern: The Archival Scroll & Pastoral Retrospective* (CLOSED, 2 paintings, curator Dr. Anisur Rahman)
+  - **Curator Naveed Ownership (5 of 6 Exhibitions)**:
+    - Assigned 5 of the 6 exhibitions to curator Naveed Chowdhury (`organizer@nakshi.test`), providing full capability to view, edit, add, and delete them from the Curator Dashboard (`/dashboard/organizer`).
+  - **Virtual Hall Wall Configurations & Pre-Issued Passes**:
+    - Seeded structured `layoutConfig.walls` (`Loom Geometry Pavilion`, `Riverine Loom Gallery`, `Fiber Canvas Atrium`, etc.) and `layoutConfig.curatorNote`.
+    - Pre-issued standard passes for Buyer Tanvir (`NK-EXH-2026-L34W-XVJC`) & Sadia (`NK-EXH-2026-P6LY-SWNE`), and VIP pass (`NK-EXH-2026-T7K2`) for Buyer Tanvir.
+- **Verified**:
+  - Validated database state: 0 empty exhibitions, 0 unsplash images, 100% fine art paintings, 5 exhibitions under curator Naveed, all 5 filter tabs populated.
+  - Client Vite production build compiled cleanly with 0 errors (`npm --prefix client run build`).
+  - Server TypeScript compilation passed cleanly with 0 errors (`npm --prefix server run build`).
+  - Backend unit test suite passed (68/68 tests passing) (`npx --prefix server vitest run tests/unit`).
+  - Playwright E2E test suite `e2e/05_exhibitions.spec.ts` passed across all 3 viewports: Desktop Chrome, Tablet 768px, and Mobile 360px (12/12 tests passing).
+  - Playwright E2E test suite `e2e/homepage_feed.spec.ts` and `e2e/scroll_to_top.spec.ts` passed (12/12 tests passing).

@@ -450,3 +450,23 @@
 
 
 
+
+
+## 34. Dedicated Fine Art Painting Exhibitions & Curator Ownership Harmonization
+- **Timestamp**: 2026-11-04 20:45:00 +06:00
+- **Context**: The virtual exhibitions catalog (`/exhibitions`) was previously flooded with empty dummy exhibitions (7 records with 0 linked artworks and external Unsplash photo banners), and the VIP exclusive preview filter tab failed to return records due to missing `vipEndTime` definitions. Additionally, exhibitions reused existing craft artworks from the marketplace gallery rather than presenting distinct fine art collections.
+- **Decision**:
+  - **Purged Obsolete Dummy Exhibitions**: Enhanced [`server/prisma/clean-test-data.ts`](file:///e:/Nakshi/server/prisma/clean-test-data.ts) to detect and purge all exhibitions having 0 linked artworks or referencing external Unsplash banners (`images.unsplash.com`), cleaning up legacy dummy records.
+  - **Dedicated Modern & Contemporary Paintings Collection**: Seeded 12 new original fine art paintings (oil on canvas, contemporary acrylics, riverine impressionist watercolors, and tactile earth pigment bas-reliefs) bundled directly into `client/public/images/paintings/` with authentic 64-bit Sharp dHashes, ensuring zero repetition with the 26 craft items in the main marketplace gallery.
+  - **Curated 6 Thematic Virtual Exhibitions**:
+    1. *Threads of Bengal: Tapestry & Modern Fiber Canvas* (ACTIVE / Live Hall, 3 paintings, curator Naveed Chowdhury)
+    2. *Bengal Modernism: Avant-Garde Voices & Abstract Horizons* (VIP_EXCLUSIVE / VIP Preview, 2 paintings, curator Naveed Chowdhury, `vipStartTime` to `vipEndTime` active window)
+    3. *Monsoon Melodies: Riverine Watercolors & Impressionism* (ACTIVE / Live Hall, 3 paintings, curator Naveed Chowdhury, Complimentary Free Admission)
+    4. *Dhaka Neo-Expressionism: Urban Vibrance & Contemporary Forms* (ACTIVE / Live Hall, 2 paintings, curator Naveed Chowdhury)
+    5. *Lost Horizons: Sculptural Relief & Earth Pigment Canvases* (UPCOMING, 3 paintings, curator Naveed Chowdhury)
+    6. *Vernacular Modern: The Archival Scroll & Pastoral Retrospective* (CLOSED / Concluded Archive, 2 paintings, curator Dr. Anisur Rahman)
+  - **Curator Naveed Ownership (5 of 6 Exhibitions)**: Assigned 5 exhibitions to curator Naveed Chowdhury (`organizer@nakshi.test`), providing full administrative access to add, edit, modify, and delete virtual exhibitions directly from the Organizer Dashboard (`/dashboard/organizer`).
+  - **Structured Wall Layouts & Curator Statements**: Embedded `layoutConfig.walls` and `layoutConfig.curatorNote` in JSON for all exhibitions, giving virtual rooms distinct exhibition walls and visitor statement cards.
+- **Rationale**:
+  - Delivers an art-first, museum-grade virtual exhibition experience across all filter tabs (`ALL`: 6, `ACTIVE`: 3, `VIP_EXCLUSIVE`: 1, `UPCOMING`: 1, `CLOSED`: 1).
+  - Maintains 100% test compatibility with `e2e/05_exhibitions.spec.ts` and zero broken links.

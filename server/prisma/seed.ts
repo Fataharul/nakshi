@@ -41,6 +41,20 @@ const HERITAGE_IMAGES = {
     woodCarvedPanel: '/images/heritage/wood-carved-panel.jpg',
     folkRickshawArt: '/images/heritage/folk-rickshaw-art.jpg',
     patuaScrollPainting: '/images/heritage/patua-scroll-painting.jpg',
+
+    // Dedicated Fine Art & Modern Paintings for Curated Exhibitions
+    threadsModernTapestry: '/images/paintings/threads-modern-tapestry.jpg',
+    threadsTapestryCanvas: '/images/paintings/threads-tapestry-canvas.jpg',
+    monsoonMeghnaOil: '/images/paintings/monsoon-meghna-oil.jpg',
+    weaverShuttleAbstract: '/images/paintings/weaver-shuttle-abstract.jpg',
+    abstractUmberCanvas: '/images/paintings/abstract-umber-canvas.jpg',
+    driftingBoatsWatercolor: '/images/paintings/drifting-boats-watercolor.jpg',
+    monsoonSquallPadma: '/images/paintings/monsoon-squall-padma.jpg',
+    rainRiverReeds: '/images/paintings/rain-river-reeds.jpg',
+    neonDhakaAlleyway: '/images/paintings/neon-dhaka-alleyway.jpg',
+    earthPigmentStratum: '/images/paintings/earth-pigment-stratum.jpg',
+    ancientFriezeReimagined: '/images/paintings/ancient-frieze-reimagined.jpg',
+    vesselSilenceStillLife: '/images/paintings/vessel-silence-still-life.jpg',
   },
 };
 
@@ -64,6 +78,19 @@ const HERITAGE_IMAGE_HASHES: Record<string, string> = {
   [HERITAGE_IMAGES.artworks.terracottaPitcher]: '717175fdcc494907',
   [HERITAGE_IMAGES.artworks.terracottaTemplePlaque]: '0f0f038e070f0fcc',
   [HERITAGE_IMAGES.artworks.woodCarvedPanel]: '3f3ffdffdf8f8f0f',
+  // Fine art painting hashes
+  ['/images/paintings/abstract-umber-canvas.jpg']: '2b2b271f5b332367',
+  ['/images/paintings/ancient-frieze-reimagined.jpg']: 'e0f090e0a894d86c',
+  ['/images/paintings/drifting-boats-watercolor.jpg']: 'faeee27a9a9af2b2',
+  ['/images/paintings/earth-pigment-stratum.jpg']: '65692d09695b0949',
+  ['/images/paintings/monsoon-meghna-oil.jpg']: '4321597151214515',
+  ['/images/paintings/monsoon-squall-padma.jpg']: 'e4a4a69cd8d8fccc',
+  ['/images/paintings/neon-dhaka-alleyway.jpg']: '6d2d2fe95665cec6',
+  ['/images/paintings/rain-river-reeds.jpg']: 'c16919982f2f3d0b',
+  ['/images/paintings/threads-modern-tapestry.jpg']: '3333331b25332726',
+  ['/images/paintings/threads-tapestry-canvas.jpg']: 'e8b236360616baf0',
+  ['/images/paintings/vessel-silence-still-life.jpg']: '4141516123394161',
+  ['/images/paintings/weaver-shuttle-abstract.jpg']: '1b3b3b1b1b1b0f9b',
 };
 
 async function main() {
@@ -701,6 +728,226 @@ async function main() {
       moderationStatus: ModerationStatus.APPROVED,
       artistId: artistRokeya.id,
     },
+
+    // -------------------------------------------------------------------------
+    // DEDICATED MODERN & CONTEMPORARY FINE ART PAINTINGS (FOR EXHIBITIONS)
+    // -------------------------------------------------------------------------
+    {
+      title: 'Symphony of the Pit-Loom (Modernist Fiber Canvas)',
+      description: 'A contemporary fine art acrylic and mixed-media painting on stretched canvas exploring modernist geometric abstraction inspired by Bengali textile weavings, with rhythmic lines in crimson, gold leaf, and deep indigo.',
+      medium: 'Contemporary Canvas',
+      style: 'Modernist Geometric Abstraction',
+      dimensions: '120cm x 90cm',
+      height: 120,
+      width: 90,
+      depth: 3.5,
+      weight: 3.2,
+      weightUnit: 'kg',
+      price: 1450.0,
+      imageUrl: HERITAGE_IMAGES.artworks.threadsModernTapestry,
+      like: 52,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistAlkas.id,
+    },
+    {
+      title: 'Rhythms of the River Meghna (Expressionist Oil Canvas)',
+      description: 'An expressive modern oil painting on canvas capturing the vast Meghna river during a gathering monsoon storm with broad palette knife strokes and dynamic cloud formations.',
+      medium: 'Modernist Oil Painting',
+      style: 'Monsoon Expressionism',
+      dimensions: '110cm x 85cm',
+      height: 110,
+      width: 85,
+      depth: 3.0,
+      weight: 2.8,
+      weightUnit: 'kg',
+      price: 1200.0,
+      imageUrl: HERITAGE_IMAGES.artworks.monsoonMeghnaOil,
+      like: 47,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistGouranga.id,
+    },
+    {
+      title: 'Echoes of the Weaver Shuttle (Abstract Mixed Media)',
+      description: 'A high modernist abstract composition on raw Belgian linen with indigo washes, ochre glazes, geometric loom shuttle forms, and metallic gold leaf accents.',
+      medium: 'Abstract Expressionism',
+      style: 'Textile-Inspired High Modernism',
+      dimensions: '100cm x 80cm',
+      height: 100,
+      width: 80,
+      depth: 3.0,
+      weight: 2.5,
+      weightUnit: 'kg',
+      price: 1350.0,
+      imageUrl: HERITAGE_IMAGES.artworks.weaverShuttleAbstract,
+      like: 39,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistAlkas.id,
+    },
+    {
+      title: 'Geometric Solitude in Burnt Umber',
+      description: 'A high modernist abstract expressionist oil painting on heavy canvas with thick impasto texture in burnt umber, raw sienna, terracotta, and subtle ivory white highlights.',
+      medium: 'Abstract Expressionism',
+      style: 'Dhaka Modernist Impasto',
+      dimensions: '130cm x 100cm',
+      height: 130,
+      width: 100,
+      depth: 4.0,
+      weight: 4.1,
+      weightUnit: 'kg',
+      price: 1800.0,
+      imageUrl: HERITAGE_IMAGES.artworks.abstractUmberCanvas,
+      like: 63,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistSukumar.id,
+    },
+    {
+      title: 'Textile Horizon Study No. 4',
+      description: 'Modernist acrylic study exploring textural canvas grain, minimalist geometric horizontal bands, and warm earthy pigments.',
+      medium: 'Contemporary Canvas',
+      style: 'Minimalist Color Field',
+      dimensions: '95cm x 75cm',
+      height: 95,
+      width: 75,
+      depth: 2.5,
+      weight: 2.2,
+      weightUnit: 'kg',
+      price: 890.0,
+      imageUrl: HERITAGE_IMAGES.artworks.threadsTapestryCanvas,
+      like: 31,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistRokeya.id,
+    },
+    {
+      title: 'Drifting Country Boats at Sundown',
+      description: 'An evocative masterwork watercolor on deckled heavy Arches paper depicting traditional wooden Bengali country boats drifting peacefully across twilight river waters with soft lavender and amber reflections.',
+      medium: 'Watercolor & Gouache',
+      style: 'Atmospheric Riverine Impressionism',
+      dimensions: '76cm x 56cm',
+      height: 76,
+      width: 56,
+      depth: 1.5,
+      weight: 1.1,
+      weightUnit: 'kg',
+      price: 780.0,
+      imageUrl: HERITAGE_IMAGES.artworks.driftingBoatsWatercolor,
+      like: 71,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistRokeya.id,
+    },
+    {
+      title: 'Monsoon Squall over Padma',
+      description: 'A dramatic impressionist oil on canvas portraying a gathering monsoon storm over the mighty Padma river with heavy dark clouds, cutting silvery sunbeams, and choppy waves.',
+      medium: 'Modernist Oil Painting',
+      style: 'Riverine Storm Impressionism',
+      dimensions: '105cm x 80cm',
+      height: 105,
+      width: 80,
+      depth: 3.0,
+      weight: 2.9,
+      weightUnit: 'kg',
+      price: 1150.0,
+      imageUrl: HERITAGE_IMAGES.artworks.monsoonSquallPadma,
+      like: 58,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistGouranga.id,
+    },
+    {
+      title: 'Rain Over River Reeds & Lotus',
+      description: 'A fluid and lyrical contemporary watercolor capturing tall river reeds and blooming white water lilies under a sudden tropical monsoon downpour.',
+      medium: 'Watercolor & Gouache',
+      style: 'Wet-on-Wet Tropical Landscape',
+      dimensions: '70cm x 50cm',
+      height: 70,
+      width: 50,
+      depth: 1.5,
+      weight: 0.9,
+      weightUnit: 'kg',
+      price: 650.0,
+      imageUrl: HERITAGE_IMAGES.artworks.rainRiverReeds,
+      like: 42,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistRokeya.id,
+    },
+    {
+      title: 'Neon Alleyway & Midnight Transit',
+      description: 'A contemporary neo-expressionist acrylic on canvas portraying a vibrant Old Dhaka night street scene with electric neon light casting reflections on rain-slicked cobblestones and rickshaws.',
+      medium: 'Contemporary Canvas',
+      style: 'Dhaka Neo-Expressionism',
+      dimensions: '115cm x 90cm',
+      height: 115,
+      width: 90,
+      depth: 3.5,
+      weight: 3.0,
+      weightUnit: 'kg',
+      price: 1300.0,
+      imageUrl: HERITAGE_IMAGES.artworks.neonDhakaAlleyway,
+      like: 84,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistRokeya.id,
+    },
+    {
+      title: 'Earth & Ochre Stratum II (Sculptural Relief)',
+      description: 'A contemporary tactile sculptural relief painting on heavy raw linen composed of natural alluvial river clay, terracotta dust, deep fissures, and striated sand strata.',
+      medium: 'Sculptural Bas-Relief',
+      style: 'Tactile Earth Pigment Canvas',
+      dimensions: '120cm x 90cm',
+      height: 120,
+      width: 90,
+      depth: 4.5,
+      weight: 5.2,
+      weightUnit: 'kg',
+      price: 1600.0,
+      imageUrl: HERITAGE_IMAGES.artworks.earthPigmentStratum,
+      like: 65,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistGouranga.id,
+    },
+    {
+      title: 'Ancient Frieze Reimagined (Bas-Relief Canvas)',
+      description: 'A modern bas-relief painting on wood panel blending sculpted terracotta clay and gold leaf accents, portraying abstracted classical Bengali temple dancers emerging from aged ochre.',
+      medium: 'Sculptural Bas-Relief',
+      style: 'Neo-Classical Relief Painting',
+      dimensions: '90cm x 60cm',
+      height: 90,
+      width: 60,
+      depth: 3.5,
+      weight: 3.8,
+      weightUnit: 'kg',
+      price: 950.0,
+      imageUrl: HERITAGE_IMAGES.artworks.ancientFriezeReimagined,
+      like: 49,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistGouranga.id,
+    },
+    {
+      title: 'Vessel of Silence (Modernist Still Life)',
+      description: 'A poetic modernist still-life oil on canvas depicting hand-thrown earthen clay vessels on a textured tabletop in soft diffuse side light.',
+      medium: 'Modernist Oil Painting',
+      style: 'Meditative Tonalism',
+      dimensions: '80cm x 65cm',
+      height: 80,
+      width: 65,
+      depth: 2.5,
+      weight: 2.0,
+      weightUnit: 'kg',
+      price: 820.0,
+      imageUrl: HERITAGE_IMAGES.artworks.vesselSilenceStillLife,
+      like: 36,
+      availability: ArtworkAvailability.AVAILABLE,
+      moderationStatus: ModerationStatus.APPROVED,
+      artistId: artistSukumar.id,
+    },
   ];
 
   const artworkMap = new Map<string, any>();
@@ -1020,133 +1267,205 @@ async function main() {
   console.log('[Seed] Created History Rejected Moderation Review: Clay Horse Trio vs Terracotta Horse (94.7%)');
 
   // ---------------------------------------------------------------------------
-  // 5. Seed Curated Exhibitions & Issued Ticket
+  // 5. Seed Curated Exhibitions & Issued Tickets (Modern & Fine Art Paintings)
   // ---------------------------------------------------------------------------
+  // Cleanly purge all existing exhibitions, visits, links, and tickets to guarantee a fresh catalog
+  await prisma.exhibitionArtwork.deleteMany({});
+  await prisma.exhibitionTicket.deleteMany({});
+  await prisma.exhibitionVisit.deleteMany({});
+  await prisma.exhibition.deleteMany({});
+  console.log('[Seed] Purged obsolete exhibition records for clean curated catalog.');
+
+  // Fetch painting artwork references
+  const threadsModernTapestry = artworkMap.get('Symphony of the Pit-Loom (Modernist Fiber Canvas)');
+  const monsoonMeghna = artworkMap.get('Rhythms of the River Meghna (Expressionist Oil Canvas)');
+  const weaverShuttle = artworkMap.get('Echoes of the Weaver Shuttle (Abstract Mixed Media)');
+  const abstractUmber = artworkMap.get('Geometric Solitude in Burnt Umber');
+  const threadsTapestryCanvas = artworkMap.get('Textile Horizon Study No. 4');
+  const driftingBoats = artworkMap.get('Drifting Country Boats at Sundown');
+  const monsoonSquall = artworkMap.get('Monsoon Squall over Padma');
+  const rainRiverReeds = artworkMap.get('Rain Over River Reeds & Lotus');
+  const neonDhaka = artworkMap.get('Neon Alleyway & Midnight Transit');
+  const rickshawArt = artworkMap.get('Vibrant Dhaka Rickshaw Tinplate Art (Peacock & Lotus)');
+  const earthPigment = artworkMap.get('Earth & Ochre Stratum II (Sculptural Relief)');
+  const ancientFrieze = artworkMap.get('Ancient Frieze Reimagined (Bas-Relief Canvas)');
+  const vesselSilence = artworkMap.get('Vessel of Silence (Modernist Still Life)');
+  const patuaScroll = artworkMap.get('Bengal Patachitra Folk Scroll (Baul Dancers)');
+
   const exhibitionsData = [
+    // 1. ACTIVE LIVE HALL (Curator Naveed Chowdhury) - satisfies E2E "Threads of Bengal" test
     {
-      title: 'Bengal Threads & Looms: The Living Heritage of Jamdani',
-      description: 'An immersive digital retrospective spotlighting the UNESCO-inscribed masterweavers of the Shitalakshya river basin and royal Mughal pit-loom traditions.',
-      theme: 'Handloom Textiles & Royal Heritage',
-      bannerUrl: HERITAGE_IMAGES.artworks.jamdaniSonargaon,
+      title: 'Threads of Bengal: Tapestry & Modern Fiber Canvas',
+      description: 'An immersive digital retrospective spotlighting contemporary Bangladeshi modernist painters translating ancient handloom pit-loom geometry into dynamic acrylic and mixed-media canvases.',
+      bannerUrl: HERITAGE_IMAGES.artworks.threadsModernTapestry,
       ticketPrice: 75.0,
       startTime: oneDayAgo,
       endTime: fiveDaysAhead,
-      vipStartTime: new Date(now.getTime() - 36 * 3600 * 1000),
+      vipStartTime: new Date(now.getTime() - 48 * 3600 * 1000),
+      vipEndTime: oneDayAgo,
       organizerId: organizerNaveed.id,
-      artworks: [sonargaonJamdani.id, artworkMap.get('Nilambari Midnight-Indigo Jamdani Saree').id, tealJamdani.id],
+      layoutConfig: {
+        walls: ['Loom Geometry Pavilion', 'Riverine Texture Gallery', 'Fiber Canvas Atrium'],
+        curatorNote: 'This curated showcase bridges centuries of pit-loom geometric rhythm with cutting-edge Bangladeshi modernist painting. Contemporary painters translate warp and weft into dynamic impasto and acrylic canvases.',
+      },
+      artworks: [threadsModernTapestry.id, monsoonMeghna.id, weaverShuttle.id],
     },
+    // 2. VIP EXCLUSIVE PREVIEW (Curator Naveed Chowdhury)
     {
-      title: 'Sacred Soil: Terracotta Architecture of Ancient Bengal',
-      description: 'A virtual walk through Kantaji Temple terracotta friezes, Paharpur Buddhist Vihara relief art, and historic burnt-clay iconography.',
-      bannerUrl: HERITAGE_IMAGES.artworks.terracottaTemplePlaque,
+      title: 'Bengal Modernism: Avant-Garde Voices & Abstract Horizons',
+      description: 'A private collector preview exploring the revolutionary mid-century shift toward non-figurative abstraction in Dhaka. Heavy impasto earth pigments in burnt sienna, umber, and gold evoke deep philosophical resonance.',
+      bannerUrl: HERITAGE_IMAGES.artworks.abstractUmberCanvas,
       ticketPrice: 90.0,
-      startTime: new Date(now.getTime() + 12 * 3600 * 1000),
-      endTime: new Date(now.getTime() + 6 * 24 * 3600 * 1000),
-      vipStartTime: oneDayAgo, // Currently in VIP Preview window!
-      organizerId: organizerAnisur.id,
-      artworks: [terracottaPlaque.id, terracottaHorse.id, artworkMap.get('Carved Red Clay Water Pitcher (Kolshi)').id],
-    },
-    {
-      title: 'Lost-Wax & Bell Metal: The Metalcraft of Dhamrai',
-      description: 'Showcasing the rare 500-year artisanal traditions of bell-metal casting, deepam peacocks, and temple gongs from Dhamrai.',
-      bannerUrl: HERITAGE_IMAGES.artworks.brassPeacockLamp,
-      ticketPrice: 60.0,
-      startTime: twoDaysAhead,
+      startTime: new Date(now.getTime() + 2 * 24 * 3600 * 1000),
       endTime: new Date(now.getTime() + 7 * 24 * 3600 * 1000),
-      vipStartTime: new Date(now.getTime() + 24 * 3600 * 1000),
+      vipStartTime: oneDayAgo, // Active right now!
+      vipEndTime: new Date(now.getTime() + 2 * 24 * 3600 * 1000), // Active for next 2 days
       organizerId: organizerNaveed.id,
-      artworks: [brassLamp.id, artworkMap.get('Hand-Chiseled Kansa Bell-Metal Ritual Thali').id],
+      layoutConfig: {
+        walls: ['Abstract Expressionist Wing', 'Avant-Garde Salon'],
+        curatorNote: 'A private collector preview exploring the revolutionary mid-century shift toward non-figurative art in Dhaka. Rich tactile textures in burnt sienna, umber, and metallic pigments evoke philosophical solitude.',
+      },
+      artworks: [abstractUmber.id, threadsTapestryCanvas.id],
     },
+    // 3. ACTIVE LIVE HALL - FREE ADMISSION (Curator Naveed Chowdhury)
     {
-      title: 'Golden Fiber & Bamboo: Vernacular Craft Traditions',
-      description: 'Concluded exhibition celebrating rural women artisans weaving Shital Pati cane mats, golden jute tapestries, and bamboo light fixtures.',
-      bannerUrl: HERITAGE_IMAGES.artworks.shitalPatiMat,
+      title: 'Monsoon Melodies: Riverine Watercolors & Impressionism',
+      description: 'Water is the lifeblood and muse of Bangladesh. In this complimentary public gallery, fluid wet-on-wet watercolors and dramatic storm impressionism celebrate the lyrical power of riverine life.',
+      bannerUrl: HERITAGE_IMAGES.artworks.driftingBoatsWatercolor,
+      ticketPrice: 0.0, // Free Complimentary Entry
+      startTime: oneDayAgo,
+      endTime: new Date(now.getTime() + 6 * 24 * 3600 * 1000),
+      vipStartTime: new Date(now.getTime() - 36 * 3600 * 1000),
+      vipEndTime: oneDayAgo,
+      organizerId: organizerNaveed.id,
+      layoutConfig: {
+        walls: ['Monsoon Waters Hall', 'Storm Light Promenade'],
+        curatorNote: 'Water is the lifeblood and muse of Bangladesh. In this free public hall, fluid wet-on-wet watercolors and dramatic storm impressionism celebrate the lyrical power of riverine life.',
+      },
+      artworks: [driftingBoats.id, monsoonSquall.id, rainRiverReeds.id],
+    },
+    // 4. ACTIVE LIVE HALL (Curator Naveed Chowdhury)
+    {
+      title: 'Dhaka Neo-Expressionism: Urban Vibrance & Contemporary Forms',
+      description: 'Old Dhaka’s dizzying kinetic energy, electric neon signboards, and bold vernacular rickshaw pop-art meet modern painterly expressionism in this immersive urban showcase.',
+      bannerUrl: HERITAGE_IMAGES.artworks.neonDhakaAlleyway,
+      ticketPrice: 45.0,
+      startTime: new Date(now.getTime() - 2 * 24 * 3600 * 1000),
+      endTime: new Date(now.getTime() + 4 * 24 * 3600 * 1000),
+      vipStartTime: new Date(now.getTime() - 3 * 24 * 3600 * 1000),
+      vipEndTime: new Date(now.getTime() - 2 * 24 * 3600 * 1000),
+      organizerId: organizerNaveed.id,
+      layoutConfig: {
+        walls: ['Electric City Corridor', 'Folk Modernity Gallery'],
+        curatorNote: 'Old Dhaka’s dizzying kinetic energy, electric signboards, and bold vernacular rickshaw pop-art meet modern painterly expressionism in this immersive urban showcase.',
+      },
+      artworks: [neonDhaka.id, rickshawArt.id],
+    },
+    // 5. UPCOMING EXHIBITION (Curator Naveed Chowdhury)
+    {
+      title: 'Lost Horizons: Sculptural Relief & Earth Pigment Canvases',
+      description: 'Opening next week: artists employ alluvial silt, baked terracotta powder, and sculptural impasto to create tactile three-dimensional paintings that honor the earth.',
+      bannerUrl: HERITAGE_IMAGES.artworks.earthPigmentStratum,
+      ticketPrice: 60.0,
+      startTime: new Date(now.getTime() + 3 * 24 * 3600 * 1000),
+      endTime: new Date(now.getTime() + 10 * 24 * 3600 * 1000),
+      vipStartTime: new Date(now.getTime() + 2 * 24 * 3600 * 1000),
+      vipEndTime: new Date(now.getTime() + 3 * 24 * 3600 * 1000),
+      organizerId: organizerNaveed.id,
+      layoutConfig: {
+        walls: ['Earthen Pigment Sanctuary', 'Sculptural Relief Court'],
+        curatorNote: 'Opening next week: artists employ alluvial silt, baked terracotta powder, and sculptural impasto to create tactile three-dimensional paintings that honor the earth.',
+      },
+      artworks: [earthPigment.id, ancientFrieze.id, vesselSilence.id],
+    },
+    // 6. CLOSED CONCLUDED ARCHIVE (Curator Dr. Anisur Rahman)
+    {
+      title: 'Vernacular Modern: The Archival Scroll & Pastoral Retrospective',
+      description: 'This concluded retrospective surveyed the intersection of rural storytelling scrolls with early post-liberation pastoral modernism in Bangladesh.',
+      bannerUrl: HERITAGE_IMAGES.artworks.patuaScrollPainting,
       ticketPrice: 50.0,
       startTime: fiveDaysAgo,
       endTime: oneDayAgo,
       vipStartTime: new Date(now.getTime() - 6 * 24 * 3600 * 1000),
+      vipEndTime: new Date(now.getTime() - 5 * 24 * 3600 * 1000),
       organizerId: organizerAnisur.id,
-      artworks: [artworkMap.get('Sylhet Murta Cane Diamond Weave Shital Pati').id, bambooLamp.id, artworkMap.get('Golden Fiber Braided Jute Wall Hanging').id],
+      layoutConfig: {
+        walls: ['Narrative Scroll Archive', 'Pastoral Retrospective Wing'],
+        curatorNote: 'This concluded retrospective surveyed the intersection of rural storytelling scrolls with early post-liberation pastoral modernism in Bangladesh.',
+      },
+      artworks: [patuaScroll.id, ancientFrieze.id],
     },
   ];
 
   for (const exh of exhibitionsData) {
-    const existing = await prisma.exhibition.findFirst({
-      where: { title: exh.title, organizerId: exh.organizerId },
+    const createdExh = await prisma.exhibition.create({
+      data: {
+        title: exh.title,
+        description: exh.description,
+        bannerUrl: exh.bannerUrl,
+        ticketPrice: exh.ticketPrice,
+        startTime: exh.startTime,
+        endTime: exh.endTime,
+        vipStartTime: exh.vipStartTime,
+        vipEndTime: exh.vipEndTime,
+        layoutConfig: exh.layoutConfig,
+        organizerId: exh.organizerId,
+      },
     });
+    console.log(`[Seed] Created curated exhibition: "${exh.title}" (Organizer: ${exh.organizerId === organizerNaveed.id ? 'Naveed' : 'Anisur'})`);
 
-    let createdExh: any;
-    if (existing) {
-      createdExh = await prisma.exhibition.update({
-        where: { id: existing.id },
-        data: {
-          description: exh.description,
-          bannerUrl: exh.bannerUrl,
-          ticketPrice: exh.ticketPrice,
-          startTime: exh.startTime,
-          endTime: exh.endTime,
-          vipStartTime: exh.vipStartTime,
-        },
-      });
-      console.log(`[Seed] Updated exhibition: "${exh.title}"`);
-    } else {
-      createdExh = await prisma.exhibition.create({
-        data: {
-          title: exh.title,
-          description: exh.description,
-          bannerUrl: exh.bannerUrl,
-          ticketPrice: exh.ticketPrice,
-          startTime: exh.startTime,
-          endTime: exh.endTime,
-          vipStartTime: exh.vipStartTime,
-          organizerId: exh.organizerId,
-        },
-      });
-      console.log(`[Seed] Created exhibition: "${exh.title}"`);
-    }
-
-    // Link exhibition artworks
+    // Link exhibition artworks with wall positions
     for (let i = 0; i < exh.artworks.length; i++) {
       const artId = exh.artworks[i];
-      const linkExists = await prisma.exhibitionArtwork.findUnique({
-        where: {
-          exhibitionId_artworkId: {
-            exhibitionId: createdExh.id,
-            artworkId: artId,
-          },
+      await prisma.exhibitionArtwork.create({
+        data: {
+          exhibitionId: createdExh.id,
+          artworkId: artId,
+          wallPosition: i + 1,
+          posX: (i + 1) * 3.5,
+          posY: 1.8,
         },
       });
-      if (!linkExists) {
-        await prisma.exhibitionArtwork.create({
-          data: {
-            exhibitionId: createdExh.id,
-            artworkId: artId,
-            wallPosition: i + 1,
-            posX: (i + 1) * 3.5,
-            posY: 1.8,
-          },
-        });
-      }
     }
 
-    // Pre-issue a VIP admission ticket for Buyer Tanvir on the Sacred Soil exhibition
-    if (exh.title.includes('Sacred Soil')) {
-      const ticketToken = 'NK-EXH-2026-T7K2';
-      const existingTicket = await prisma.exhibitionTicket.findUnique({
-        where: { ticketToken },
+    // Pre-issue tickets for test personas
+    if (exh.title.includes('Threads of Bengal')) {
+      // Standard ticket for Tanvir Ahmed
+      await prisma.exhibitionTicket.create({
+        data: {
+          ticketToken: 'NK-EXH-2026-L34W-XVJC',
+          exhibitionId: createdExh.id,
+          buyerId: buyerTanvir.id,
+          isVip: false,
+          purchasedAt: oneDayAgo,
+        },
       });
-      if (!existingTicket) {
-        await prisma.exhibitionTicket.create({
-          data: {
-            ticketToken,
-            exhibitionId: createdExh.id,
-            buyerId: buyerTanvir.id,
-            isVip: true,
-            purchasedAt: oneDayAgo,
-          },
-        });
-        console.log(`[Seed] Issued VIP Exhibition Admission Ticket: ${ticketToken}`);
-      }
+      // Standard ticket for Sadia Rahman
+      await prisma.exhibitionTicket.create({
+        data: {
+          ticketToken: 'NK-EXH-2026-P6LY-SWNE',
+          exhibitionId: createdExh.id,
+          buyerId: buyerSadia.id,
+          isVip: false,
+          purchasedAt: oneDayAgo,
+        },
+      });
+      console.log('[Seed] Issued Standard Admission Tickets for Threads of Bengal (Tanvir & Sadia)');
+    }
+
+    if (exh.title.includes('Bengal Modernism')) {
+      // Pre-issue a VIP admission ticket for Buyer Tanvir on Bengal Modernism
+      const ticketToken = 'NK-EXH-2026-T7K2';
+      await prisma.exhibitionTicket.create({
+        data: {
+          ticketToken,
+          exhibitionId: createdExh.id,
+          buyerId: buyerTanvir.id,
+          isVip: true,
+          purchasedAt: oneDayAgo,
+        },
+      });
+      console.log(`[Seed] Issued VIP Exhibition Admission Ticket: ${ticketToken} (Tanvir Ahmed)`);
     }
   }
 
