@@ -5,6 +5,8 @@ import {
   calculateHammingDistance,
   calculateSimilarityScore,
   evaluateSimilarity,
+  calculateCropAwareSimilarity,
+  evaluateSimilarityWithCrops,
   DEFAULT_SIMILARITY_THRESHOLD,
 } from '../../src/utils/similarity.util';
 
@@ -128,5 +130,51 @@ describe('Similarity & Perceptual Hashing Engine (Requirement 2.7)', () => {
     // Perceptual dHash is robust to resize and JPEG compression: similarity must be very high (>80%)
     expect(evaluation.similarityScore).toBeGreaterThan(80);
     expect(evaluation.isDuplicate).toBe(true);
+  });
+
+  it('should detect visual duplicate between an original and cropped sub-region variant', async () => {
+    // Original 400x400 image with distinct geometric features
+    const svg = `
+      <svg width="400" height="400">
+        <rect width="400" height="400" fill="#a45c40"/>
+        <circle cx="200" cy="200" r="100" fill="#1b1c19"/>
+        <rect x="50" y="50" width="80" height="80" fill="#fbf9f4"/>
+      </svg>
+    `;
+    const origBuffer = await sharp(Buffer.from(svg)).png().toBuffer();
+    // 75% crop extracted from the original
+    const croppedBuffer = await sharp(origBuffer)
+      .extract({ left: 50, top: 50, width: 300, height: 300 })
+      .png()
+      .toBuffer();
+
+    const cropScore = await calculateCropAwareSimilarity(origBuffer, croppedBuffer);
+    expect(cropScore).toBeGreaterThan(80);
+
+    const evalResult = await evaluateSimilarityWithCrops(origBuffer, croppedBuffer);
+    expect(evalResult.isDuplicate).toBe(true);
+    expect(evalResult.similarityScore).toBeGreaterThan(80);
+  });
+
+  it('should not flag genuinely distinct images as duplicates under crop-aware evaluation', async () => {
+    const svgA = `
+      <svg width="200" height="200">
+        <rect width="200" height="200" fill="#86452a"/>
+        <circle cx="100" cy="100" r="40" fill="#ffffff"/>
+      </svg>
+    `;
+    const svgB = `
+      <svg width="200" height="200">
+        <rect width="200" height="200" fill="#1b1c19"/>
+        <polygon points="20,180 100,20 180,180" fill="#fbf9f4"/>
+      </svg>
+    `;
+    const bufA = await sharp(Buffer.from(svgA)).png().toBuffer();
+    const bufB = await sharp(Buffer.from(svgB)).png().toBuffer();
+
+    const score = await calculateCropAwareSimilarity(bufA, bufB);
+    expect(score).toBeLessThan(80);
+    const evalResult = await evaluateSimilarityWithCrops(bufA, bufB);
+    expect(evalResult.isDuplicate).toBe(false);
   });
 });

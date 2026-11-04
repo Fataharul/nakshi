@@ -834,3 +834,34 @@
     - Backend unit test suite passed (68/68 tests passing) (`npx --prefix server vitest run tests/unit`).
     - Playwright E2E suite `e2e/organizer_exhibition_crud.spec.ts` passed on Desktop Chrome (12.0s) and Mobile 360px viewport (11.5s).
     - Playwright E2E full suite (`e2e/05_exhibitions.spec.ts`, `e2e/organizer_exhibition_crud.spec.ts`, `e2e/homepage_feed.spec.ts`, `e2e/scroll_to_top.spec.ts`) passed 9/9 tests cleanly (30.0s).
+
+## [2026-11-04 22:30:00 +06:00] Milestone: Crop-Resilient Perceptual Deduplication Engine & Absolute Exhibition Artwork Uniqueness
+- **Completed**:
+  - **Crop-Resilient Perceptual Hashing Engine**:
+    - Created `calculateCropAwareSimilarity(inputA, inputB, threshold)` in `server/src/utils/similarity.util.ts`:
+      - Compares the smaller image's dHash against sliding sub-windows (scales 0.45x, 0.60x, 0.75x, and 0.90x across vertical and horizontal grid steps) extracted from the larger image using Sharp.
+      - Elevates cropped-variant detection score from 51%–56% to 81.25%–98.44%, immediately crossing the 80% threshold and flagging the upload.
+      - Short-circuits as soon as any sub-window crosses the threshold to minimize computation overhead.
+    - Added `generateSubHashes(input)` for quadrant, center, and multi-scale tile hashing.
+    - Added `evaluateSimilarityWithCrops(inputA, inputB, threshold)` returning full `SimilarityResult`.
+  - **Artwork Moderation Integration**:
+    - Updated both `createArtwork` and `updateArtwork` in `server/src/services/artwork.service.ts` to evaluate candidate artworks scoring between 40% and 80% with `calculateCropAwareSimilarity`.
+    - Automatically marks crop duplicates with `moderationStatus: 'FLAGGED'`, routing them to the Admin Review Queue.
+  - **100% Unique Museum-Grade Fine Art Paintings**:
+    - Replaced all 12 cropped painting files in `client/public/images/paintings/` with authentic public-domain museum masterworks from Wikimedia Commons / open museum collections (Cleveland Museum of Art, Victoria & Albert, Gaganendranath Tagore, Rabindranath Tagore, William Daniell, and Kantajew Temple).
+    - Removed Rokeya Begum's duplicate Patachitra scroll; authentic Kalighat Patachitra scrolls now belong exclusively to Curator Dr. Anisur Rahman.
+    - Cleaned up obsolete artwork titles and reseeded the database:
+      - All 24 fine art paintings across all 6 exhibitions and homepage feed are 100% unique, museum-grade, non-cropped original artworks with authentic hashes.
+      - Rokeya Begum owns 16 authentic craft items and 0 duplicate scrolls.
+      - Dr. Anisur Rahman owns exactly 4 distinct historical masterworks (0 duplicates).
+      - Curator Naveed Chowdhury owns exactly 20 distinct modernist paintings across 5 exhibitions.
+- **Verified**:
+  - **Similarity Unit Tests**: 7/7 tests passed in `server/tests/unit/similarity.test.ts`, verifying that cropped sub-region variants are detected (87.5%–96.9%) and distinct images are not falsely flagged.
+  - **All Backend Unit Tests**: 11 test suites, 70/70 unit tests passed cleanly (`npx --prefix server vitest run tests/unit`).
+  - **Server TypeScript Build**: Compiled cleanly with 0 errors (`npm --prefix server run build`).
+  - **Client Vite Production Build**: Compiled cleanly with 0 errors (`npm --prefix client run build`).
+  - **E2E Playwright Tests**:
+    - `e2e/06_duplicate_moderation.spec.ts`: 2/2 tests passed (27.8s).
+    - `e2e/homepage_feed.spec.ts`: 3/3 tests passed (9.3s).
+    - `e2e/organizer_exhibition_crud.spec.ts`: 1/1 tests passed (12.0s).
+    - `e2e/05_exhibitions.spec.ts`: 4/4 tests passed (14.9s).

@@ -91,30 +91,30 @@ const HERITAGE_IMAGE_HASHES: Record<string, string> = {
   [HERITAGE_IMAGES.artworks.terracottaTemplePlaque]: '0f0f038e070f0fcc',
   [HERITAGE_IMAGES.artworks.woodCarvedPanel]: '3f3ffdffdf8f8f0f',
   // Fine art painting hashes
-  ['/images/paintings/abstract-umber-canvas.jpg']: '2b2b271f5b332367',
-  ['/images/paintings/ancient-frieze-reimagined.jpg']: 'e0f090e0a894d86c',
-  ['/images/paintings/clay-stratum-detail.jpg']: '99eccc59d49f7192',
-  ['/images/paintings/drifting-boats-watercolor.jpg']: 'faeee27a9a9af2b2',
-  ['/images/paintings/earth-pigment-stratum.jpg']: '65692d09695b0949',
-  ['/images/paintings/earthen-pitcher-tonal.jpg']: '0001312141692929',
-  ['/images/paintings/indigo-linen-rhythm.jpg']: '0d3d3b0d3d1d050f',
-  ['/images/paintings/monsoon-meghna-oil.jpg']: '4321597151214515',
-  ['/images/paintings/monsoon-squall-padma.jpg']: 'e4a4a69cd8d8fccc',
-  ['/images/paintings/neon-dhaka-alleyway.jpg']: '6d2d2fe95665cec6',
-  ['/images/paintings/old-dhaka-night-glow.jpg']: '4d2d6dafb3e2cb8f',
-  ['/images/paintings/padma-wave-study.jpg']: 'b22396bc9cd8bede',
-  ['/images/paintings/patua-narrative-detail.jpg']: 'a287ecec9784d0ed',
-  ['/images/paintings/rain-river-reeds.jpg']: 'c16919982f2f3d0b',
-  ['/images/paintings/riverine-dawn-haze.jpg']: 'eee979bb39bbe131',
-  ['/images/paintings/storm-surge-meghna.jpg']: 'baa4f8b340c18c22',
-  ['/images/paintings/temple-frieze-study.jpg']: 'a1a4d465592ab258',
-  ['/images/paintings/threads-modern-tapestry.jpg']: '3333331b25332726',
-  ['/images/paintings/threads-tapestry-canvas.jpg']: 'e8b236360616baf0',
-  ['/images/paintings/umber-texture-study.jpg']: '93869e7e37cbe6c3',
-  ['/images/paintings/vessel-silence-still-life.jpg']: '4141516123394161',
-  ['/images/paintings/warp-geometric-study.jpg']: '616373136565516a',
-  ['/images/paintings/water-lily-monsoon.jpg']: 'e8b930eed7d7df54',
-  ['/images/paintings/weaver-shuttle-abstract.jpg']: '1b3b3b1b1b1b0f9b',
+  ['/images/paintings/abstract-umber-canvas.jpg']: 'd4d4d8e0a4ccdc98',
+  ['/images/paintings/ancient-frieze-reimagined.jpg']: '1f0f6f0f572b2793',
+  ['/images/paintings/clay-stratum-detail.jpg']: 'e3cbc3c563c7c5e1',
+  ['/images/paintings/drifting-boats-watercolor.jpg']: '0511158565650d49',
+  ['/images/paintings/earth-pigment-stratum.jpg']: '9a96d2f696a4b2b6',
+  ['/images/paintings/earthen-pitcher-tonal.jpg']: '4f6ee03c83e12518',
+  ['/images/paintings/indigo-linen-rhythm.jpg']: 'e8ccccdedecaa2c7',
+  ['/images/paintings/monsoon-meghna-oil.jpg']: 'bcdea68eaedebaea',
+  ['/images/paintings/monsoon-squall-padma.jpg']: '1b5b594327270313',
+  ['/images/paintings/neon-dhaka-alleyway.jpg']: '9292d016a99a3139',
+  ['/images/paintings/old-dhaka-night-glow.jpg']: '0e4fc9cbccbab79b',
+  ['/images/paintings/padma-wave-study.jpg']: 'e0d0f2f2f899a492',
+  ['/images/paintings/patua-narrative-detail.jpg']: '6f2d8d9d99191919',
+  ['/images/paintings/rain-river-reeds.jpg']: '3e96e667d0d0c2f4',
+  ['/images/paintings/riverine-dawn-haze.jpg']: '0f0f2f2f240e8f83',
+  ['/images/paintings/storm-surge-meghna.jpg']: '8a8e31b4cc6eeecc',
+  ['/images/paintings/temple-frieze-study.jpg']: '0f0f0b0707071a0c',
+  ['/images/paintings/threads-modern-tapestry.jpg']: 'cccccce4daccd8d9',
+  ['/images/paintings/threads-tapestry-canvas.jpg']: '174dc9c9f1e9450f',
+  ['/images/paintings/umber-texture-study.jpg']: 'd3652d14a4e4cd81',
+  ['/images/paintings/vessel-silence-still-life.jpg']: 'bebeae9cdcc69e8a',
+  ['/images/paintings/warp-geometric-study.jpg']: '0d1d9d9949484c0c',
+  ['/images/paintings/water-lily-monsoon.jpg']: 'f69c0571f1b1b130',
+  ['/images/paintings/weaver-shuttle-abstract.jpg']: 'e4c4c4e4e4e4f064',
 };
 
 async function main() {
@@ -734,24 +734,6 @@ async function main() {
       moderationStatus: ModerationStatus.FLAGGED, // Duplicate of Vibrant Dhaka Rickshaw Tinplate Art
       artistId: artistRokeya.id,
     },
-    {
-      title: 'Bengal Patachitra Folk Scroll (Baul Dancers)',
-      description: 'Traditional Kalighat/Patachitra scroll painted on handmade cloth-backed paper using organic natural pigments. Depicts rural Baul mystical singers and dancers under a sacred banyan tree.',
-      medium: 'Patua Folk Painting',
-      style: 'Kalighat Organic Pigment Scroll',
-      dimensions: '90cm x 55cm',
-      height: 90,
-      width: 55,
-      depth: 0.2,
-      weight: 0.4,
-      weightUnit: 'kg',
-      price: 410.0,
-      imageUrl: HERITAGE_IMAGES.artworks.patuaScrollPainting,
-      like: 68,
-      availability: ArtworkAvailability.AVAILABLE,
-      moderationStatus: ModerationStatus.APPROVED,
-      artistId: artistRokeya.id,
-    },
 
     // -------------------------------------------------------------------------
     // DEDICATED MODERN & CONTEMPORARY FINE ART PAINTINGS (OWNED BY CURATORS)
@@ -812,10 +794,10 @@ async function main() {
       artistId: organizerNaveed.id,
     },
     {
-      title: 'Warp Geometry & Golden Weft (Contemporary Study)',
-      description: 'A focused study on geometric pit-loom warp threads and gold zari rhythm with rich acrylic impasto on linen.',
-      medium: 'Contemporary Canvas',
-      style: 'Loom Geometry',
+      title: 'Shaded Flame: Modernist Geometric Study',
+      description: 'An iconic Bengali modernist cubist masterwork by Gaganendranath Tagore exploring geometric flame forms, architectural planes, and dramatic chiaroscuro in mixed media.',
+      medium: 'Watercolor & Mixed Media on Paper',
+      style: 'Bengal Modernist Cubism',
       dimensions: '90cm x 70cm',
       height: 90,
       width: 70,
@@ -866,10 +848,10 @@ async function main() {
       artistId: organizerNaveed.id,
     },
     {
-      title: 'Sienna Impasto & Textural Solitude',
-      description: 'Thick palette knife relief painting in raw sienna and umber exploring emotional resonance and silent horizons.',
-      medium: 'Abstract Expressionism',
-      style: 'Textural Impasto',
+      title: 'Dwarkapuri: Cubist Architectural Vision',
+      description: 'A seminal cubist architectural composition by Gaganendranath Tagore depicting mystical geometric structures in deep umber, burnt sienna, and shadow play.',
+      medium: 'Watercolor & Ink on Paper',
+      style: 'Bengal Cubism & Architectural Modernism',
       dimensions: '85cm x 65cm',
       height: 85,
       width: 65,
@@ -884,10 +866,10 @@ async function main() {
       artistId: organizerNaveed.id,
     },
     {
-      title: 'Indigo Rhythm on Belgian Linen',
-      description: 'Layered organic indigo pigments and geometric reed forms painted on unbleached raw linen canvas.',
-      medium: 'Contemporary Canvas',
-      style: 'Organic Modernism',
+      title: 'Expressionist Portrait in Indigo & Sepia',
+      description: 'A powerful expressionist portrait by Nobel laureate Rabindranath Tagore, characterized by brooding introspective eyes, rhythmic sepia ink washes, and mystical depth.',
+      medium: 'Ink & Watercolor on Paper',
+      style: 'Tagore Modernist Expressionism',
       dimensions: '90cm x 75cm',
       height: 90,
       width: 75,
@@ -956,10 +938,10 @@ async function main() {
       artistId: organizerNaveed.id,
     },
     {
-      title: 'Riverine Dawn Haze & Drifting Sails',
-      description: 'Delicate wet-on-wet watercolor depicting misty dawn over Bengali riverways with translucent sail silhouettes.',
-      medium: 'Watercolor & Gouache',
-      style: 'Riverine Impressionism',
+      title: 'A Budgerow on the Ganges (Historic Riverine Watercolor)',
+      description: 'A historic circa 1830 watercolor painting portraying a traditional Bengal budgerow riverboat navigating the misty morning waters of the Ganges.',
+      medium: 'Historic Watercolor on Paper',
+      style: 'Colonial Bengal Riverine Impressionism',
       dimensions: '65cm x 48cm',
       height: 65,
       width: 48,
@@ -992,10 +974,10 @@ async function main() {
       artistId: organizerNaveed.id,
     },
     {
-      title: 'Old Dhaka Night Reflections',
-      description: 'Vivid urban night study capturing luminous neon magenta and cyan street glow against old city architecture.',
-      medium: 'Contemporary Canvas',
-      style: 'Urban Neo-Expressionism',
+      title: 'City in the Night (1925 Modernist Masterwork)',
+      description: 'A celebrated 1925 nocturnal urban painting by Gaganendranath Tagore depicting glowing city corridors, dramatic chiaroscuro shadows, and jewel-toned illumination.',
+      medium: 'Watercolor & Gouache on Paper',
+      style: 'Nocturnal Urban Expressionism',
       dimensions: '90cm x 70cm',
       height: 90,
       width: 70,
@@ -1010,10 +992,10 @@ async function main() {
       artistId: organizerNaveed.id,
     },
     {
-      title: 'Padma Storm Surges & Distant Sail',
-      description: 'Expressive study of dark monsoon river swells and dramatic silvery sunbeams cutting through clouds.',
-      medium: 'Modernist Oil Painting',
-      style: 'Impressionist River Seascape',
+      title: 'Bay of Bengal Maritime Squall Passing Off',
+      description: 'A dramatic maritime seascape by master painter William Daniell depicting tempestuous waves, clearing storm squalls, and nautical drama in the Bay of Bengal.',
+      medium: 'Oil on Canvas',
+      style: 'Romantic Maritime Realism',
       dimensions: '80cm x 60cm',
       height: 80,
       width: 60,
@@ -1028,10 +1010,10 @@ async function main() {
       artistId: organizerNaveed.id,
     },
     {
-      title: 'Water Lilies in Monsoon Downpour',
-      description: 'Lyrical watercolor study of lush emerald lotus pads under heavy summer raindrops.',
-      medium: 'Watercolor & Gouache',
-      style: 'Botanical Impressionism',
+      title: 'Shapla Blooms in Monsoon Wetland (Nymphaea Nouchali)',
+      description: 'A vibrant natural study capturing Bangladesh’s national flower—the red and white Shapla water lily—blooming across peaceful riverine wetlands during peak monsoon.',
+      medium: 'Botanical Fine Art Study',
+      style: 'Wetland Impressionism',
       dimensions: '60cm x 45cm',
       height: 60,
       width: 45,
@@ -1100,10 +1082,10 @@ async function main() {
       artistId: organizerNaveed.id,
     },
     {
-      title: 'Alluvial Clay Fissures & Sand Relief',
-      description: 'Tactile relief study of dried alluvial riverbed fissures with ochre pigment washes and mineral textures.',
+      title: 'Kantajew Temple Basement Terracotta Strata',
+      description: 'Detailed study of the intricate 18th-century terracotta relief strata at the basement tier of Dinajpur’s Kantajew Temple, depicting rhythmic pastoral narratives.',
       medium: 'Sculptural Bas-Relief',
-      style: 'Earth Stratum Study',
+      style: 'Classical Terracotta Relief',
       dimensions: '85cm x 65cm',
       height: 85,
       width: 65,
@@ -1138,10 +1120,10 @@ async function main() {
       artistId: organizerAnisur.id,
     },
     {
-      title: 'Temple Frieze Classical Dancer Relief',
-      description: 'Bas-relief study of classical Bengali temple dancer postures sculpted in river clay with warm gold patina.',
+      title: 'Kantajew Terracotta Plaque: Classical Courtyard Relief',
+      description: 'Historical river-clay architectural plaque from Kantajew Temple showcasing classical dancer and courtier motifs in warm terracotta ochre.',
       medium: 'Sculptural Bas-Relief',
-      style: 'Classical Terracotta Study',
+      style: 'Classical Dinajpur Terracotta',
       dimensions: '75cm x 50cm',
       height: 75,
       width: 50,
@@ -1156,8 +1138,8 @@ async function main() {
       artistId: organizerAnisur.id,
     },
     {
-      title: 'Earthen Pitchers in Morning Light',
-      description: 'Serene tonal study of village terracotta pottery grouped in soft morning mist.',
+      title: 'Kumbhakar Clay Vessels in Morning Light',
+      description: 'Poetic photographic and tonal study of hand-thrown earthen pitchers drying in rural potter courtyards with shallow depth of field.',
       medium: 'Modernist Oil Painting',
       style: 'Earthen Tonalism',
       dimensions: '70cm x 55cm',
@@ -1174,10 +1156,10 @@ async function main() {
       artistId: organizerAnisur.id,
     },
     {
-      title: 'Village Storytellers & Sacred Banyan',
-      description: 'Narrative scroll fragment showing rural storytellers beneath a sprawling banyan tree in natural plant dyes.',
+      title: 'Kalighat Narrative Patachitra (Cleveland Museum Collection)',
+      description: 'Authentic 19th-century Kalighat folk painting on handmade cloth-backed paper with organic mineral pigments, preserved in the Cleveland Museum of Art collection.',
       medium: 'Patua Folk Painting',
-      style: 'Narrative Scroll Art',
+      style: '19th-Century Kalighat Watercolor',
       dimensions: '80cm x 50cm',
       height: 80,
       width: 50,
@@ -1523,29 +1505,29 @@ async function main() {
   const threadsModernTapestry = artworkMap.get('Symphony of the Pit-Loom (Modernist Fiber Canvas)');
   const monsoonMeghna = artworkMap.get('Rhythms of the River Meghna (Expressionist Oil Canvas)');
   const weaverShuttle = artworkMap.get('Echoes of the Weaver Shuttle (Abstract Mixed Media)');
-  const warpGeometric = artworkMap.get('Warp Geometry & Golden Weft (Contemporary Study)');
+  const warpGeometric = artworkMap.get('Shaded Flame: Modernist Geometric Study');
   const abstractUmber = artworkMap.get('Geometric Solitude in Burnt Umber');
   const threadsTapestryCanvas = artworkMap.get('Textile Horizon Study No. 4');
-  const umberTexture = artworkMap.get('Sienna Impasto & Textural Solitude');
-  const indigoLinen = artworkMap.get('Indigo Rhythm on Belgian Linen');
+  const umberTexture = artworkMap.get('Dwarkapuri: Cubist Architectural Vision');
+  const indigoLinen = artworkMap.get('Expressionist Portrait in Indigo & Sepia');
   const driftingBoats = artworkMap.get('Drifting Country Boats at Sundown');
   const monsoonSquall = artworkMap.get('Monsoon Squall over Padma');
   const rainRiverReeds = artworkMap.get('Rain Over River Reeds & Lotus');
-  const riverineDawnHaze = artworkMap.get('Riverine Dawn Haze & Drifting Sails');
+  const riverineDawnHaze = artworkMap.get('A Budgerow on the Ganges (Historic Riverine Watercolor)');
   const neonDhaka = artworkMap.get('Neon Alleyway & Midnight Transit');
-  const oldDhakaNightGlow = artworkMap.get('Old Dhaka Night Reflections');
-  const padmaWaveStudy = artworkMap.get('Padma Storm Surges & Distant Sail');
-  const waterLilyMonsoon = artworkMap.get('Water Lilies in Monsoon Downpour');
+  const oldDhakaNightGlow = artworkMap.get('City in the Night (1925 Modernist Masterwork)');
+  const padmaWaveStudy = artworkMap.get('Bay of Bengal Maritime Squall Passing Off');
+  const waterLilyMonsoon = artworkMap.get('Shapla Blooms in Monsoon Wetland (Nymphaea Nouchali)');
   const earthPigment = artworkMap.get('Earth & Ochre Stratum II (Sculptural Relief)');
   const ancientFrieze = artworkMap.get('Ancient Frieze Reimagined (Bas-Relief Canvas)');
   const vesselSilence = artworkMap.get('Vessel of Silence (Modernist Still Life)');
-  const clayStratumDetail = artworkMap.get('Alluvial Clay Fissures & Sand Relief');
+  const clayStratumDetail = artworkMap.get('Kantajew Temple Basement Terracotta Strata');
 
   // Anisur's 4 historical paintings
   const patuaScroll = artworkMap.get('Bengal Patachitra Folk Scroll (Baul Dancers)');
-  const templeFriezeStudy = artworkMap.get('Temple Frieze Classical Dancer Relief');
-  const earthenPitcherTonal = artworkMap.get('Earthen Pitchers in Morning Light');
-  const patuaNarrativeDetail = artworkMap.get('Village Storytellers & Sacred Banyan');
+  const templeFriezeStudy = artworkMap.get('Kantajew Terracotta Plaque: Classical Courtyard Relief');
+  const earthenPitcherTonal = artworkMap.get('Kumbhakar Clay Vessels in Morning Light');
+  const patuaNarrativeDetail = artworkMap.get('Kalighat Narrative Patachitra (Cleveland Museum Collection)');
 
   const exhibitionsData = [
     // 1. ACTIVE LIVE HALL (Curator Naveed Chowdhury) - 4 paintings, 2 walls

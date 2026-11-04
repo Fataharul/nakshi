@@ -491,3 +491,29 @@
     - Added dedicated Playwright E2E suite `e2e/organizer_exhibition_crud.spec.ts` testing authentication, owned artwork filtering, editing, creation, deletion, and backend unauthorized curation rejection.
 - **Rationale**:
     - Provides a complete, robust curation workflow for organizers and museum curators while upholding zero-clutter separation between marketplace crafts and fine art exhibitions.
+
+
+## 36. Crop-Resilient Multi-Scale Perceptual Deduplication Engine & Absolute Artwork Uniqueness
+- **Timestamp**: 2026-11-04 22:30:00 +06:00
+- **Context**: 
+  - Standard global dHash (9x8 grayscale perceptual hashing) failed to detect cropped or reframed variants of existing paintings: an original and its cropped sub-region yielded similarity scores of only 51%–56%, falling far below the platform's 80% duplicate detection threshold.
+  - In the seeded catalog, Dr. Anisur Rahman had two listings ("Bengal Patachitra Folk Scroll" and "Village Storytellers & Sacred Banyan") where the latter was a cropped variant of the former. Additionally, Rokeya Begum had an identical "Bengal Patachitra Folk Scroll" seeded under her name, and the 12 exhibition variants previously created were crops of the first 12 paintings.
+- **Decision**:
+  - **Crop-Resilient Similarity Engine ([`server/src/utils/similarity.util.ts`](file:///e:/Nakshi/server/src/utils/similarity.util.ts))**:
+    - Retained the canonical 16-character hexadecimal 64-bit `generateDHash(input)` for backward compatibility and fast indexing.
+    - Implemented `generateSubHashes(input)` to generate localized hashes across quadrant, center, and multi-scale sub-windows.
+    - Implemented `calculateCropAwareSimilarity(inputA, inputB, threshold)`: when comparing two images, it identifies the larger image and evaluates sliding sub-windows (at scales of 0.45x, 0.60x, 0.75x, and 0.90x across vertical and horizontal grid steps). If any sub-window perceptual dHash matches the smaller image's dHash at $> 80\%$, it immediately returns the high match score (81.25%–98.44%), breaking early.
+    - Added `evaluateSimilarityWithCrops(inputA, inputB, threshold)` returning complete `SimilarityResult` structures.
+  - **Artwork Moderation Pipeline Integration ([`server/src/services/artwork.service.ts`](file:///e:/Nakshi/server/src/services/artwork.service.ts))**:
+    - In both `createArtwork` and `updateArtwork`, any candidate artwork yielding a global similarity between 40% and 80% is automatically routed to `calculateCropAwareSimilarity`.
+    - Cropped uploads exceeding the 80% threshold are immediately intercepted, assigned `moderationStatus: 'FLAGGED'`, and queued for Admin comparative inspection.
+  - **100% Unique, Museum-Grade Fine Art Paintings**:
+    - Replaced all 12 cropped painting files in `client/public/images/paintings/` with authentic public-domain museum masterworks from Wikimedia Commons / open museum collections (Cleveland Museum of Art, Victoria & Albert, Gaganendranath Tagore, Rabindranath Tagore, William Daniell, and Kantajew Temple).
+    - Removed Rokeya Begum's duplicate Patachitra scroll; authentic Kalighat Patachitra scrolls now belong exclusively to Curator Dr. Anisur Rahman.
+    - Cleaned up obsolete artwork titles and reseeded the database. Every one of the 24 fine art paintings across all 6 exhibitions and homepage feed now features an independent, verified dHash and authentic provenance.
+- **Automated Verification**:
+  - Unit tests in `server/tests/unit/similarity.test.ts` verify both crop detection (87.5%–96.9%) and non-flagging of genuinely distinct images. All 70 unit tests across 11 test suites pass cleanly.
+  - Playwright E2E suites (`e2e/06_duplicate_moderation.spec.ts`, `e2e/homepage_feed.spec.ts`, `e2e/05_exhibitions.spec.ts`, `e2e/organizer_exhibition_crud.spec.ts`) pass without failures.
+- **Rationale**:
+  - Resolves a critical vulnerability where crop modifications evaded copyright and duplicate protection.
+  - Eliminates duplicate artwork clutter across the homepage and exhibition halls while adhering to museum-grade authenticity.
